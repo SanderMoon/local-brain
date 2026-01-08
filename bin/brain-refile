@@ -25,7 +25,7 @@ fi
 
 BRAIN_PATH=$(get_current_brain_path)
 
-INBOX="$BRAIN_PATH/00_inbox.md"
+INBOX="$BRAIN_PATH/00_dump.md"
 ACTIVE_DIR="$BRAIN_PATH/01_active"
 TEMP_PROCESSED=$(mktemp)
 TEMP_INBOX=$(mktemp)
@@ -38,24 +38,24 @@ trap cleanup EXIT
 
 show_help() {
   cat << 'EOF'
-brain-refile - Process inbox items
+brain-refile - Process dump items
 
 Usage:
- brain refile    Process inbox items one by one
+ brain refile    Process dump items one by one
 
 Workflow:
- 1. Shows each inbox item
+ 1. Shows each dump item
  2. Select destination project with fuzzy finder
  3. Item is moved to project's todo.md
- 4. Repeat until inbox is empty or cancelled
+ 4. Repeat until dump is empty or cancelled
 
 Tips:
  - Press Enter to select a project
  - Press Esc to skip an item
- - Items that are skipped remain in inbox
+ - Items that are skipped remain in dump
 
 Example:
- brain refile    # Start processing inbox
+ brain refile    # Start processing dump
 EOF
 }
 
@@ -94,25 +94,25 @@ if [[ $PROJECT_COUNT -eq 0 ]]; then
   exit 1
 fi
 
-# Read inbox and filter out header and empty lines
-echo "Reading inbox..."
+# Read dump and filter out header and empty lines
+echo "Reading dump..."
 ITEMS=()
 LINE_NUMS=()
 LINE_NUM=0
 
 while IFS= read -r line; do
-  LINE_NUM=$((LINE_NUM + 1))
-  # Skip empty lines and markdown headers
-  if [[ -n "${line// /}" ]] && [[ ! "$line" =~ ^#+ ]]; then
-    ITEMS+=("$line")
-    LINE_NUMS+=("$LINE_NUM")
-  fi
+      LINE_NUM=$((LINE_NUM + 1))
+      # Skip empty lines, markdown headers, and non-list items
+      if [[ -n "${line// /}" ]] && [[ ! "$line" =~ ^#+ ]] && [[ "$line" =~ ^- ]]; then
+          ITEMS+=("$line")
+          LINE_NUMS+=("$LINE_NUM")
+      fi
 done < "$INBOX"
 
 # Check if there are items to process
 ITEM_COUNT=${#ITEMS[@]}
 if [[ $ITEM_COUNT -eq 0 ]]; then
-  echo "Inbox is empty! Nothing to refile."
+  echo "Dump is empty! Nothing to refile."
   exit 0
 fi
 
@@ -172,7 +172,10 @@ if [[ $PROCESSED_COUNT -gt 0 ]]; then
   echo "Updating inbox..."
 
   # Read processed line numbers into array
-  readarray -t PROCESSED_LINES < "$TEMP_PROCESSED"
+  PROCESSED_LINES=()
+  while IFS= read -r line; do
+      PROCESSED_LINES+=("$line")
+  done < "$TEMP_PROCESSED"
 
   # Sort in reverse order so we delete from bottom to top
   # IFS=$'\n' PROCESSED_LINES=($(sort -rn <<<"${PROCESSED_LINES[*]}"))

@@ -62,7 +62,7 @@ for brain_dir in "$SCAN_ROOT"/*; do
     BRAIN_NAME=$(basename "$brain_dir")
     
     # Validation: Look for signature files
-    if [[ -d "$brain_dir/01_active" ]] && [[ -f "$brain_dir/00_inbox.md" ]]; then
+    if [[ -d "$brain_dir/01_active" ]] && [[ -f "$brain_dir/00_dump.md" ]]; then
         
         # Check if already registered
         if brain_exists "$BRAIN_NAME"; then

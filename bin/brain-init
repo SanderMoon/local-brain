@@ -86,7 +86,7 @@ LOCATION="$BRAIN_ROOT/$BRAIN_NAME"
 
 if [[ -d "$LOCATION" ]] && [[ -n "$(ls -A "$LOCATION" 2>/dev/null)" ]]; then
     # Check if it looks like a brain (adoption/recovery)
-    if [[ -d "$LOCATION/01_active" ]] && [[ -f "$LOCATION/00_inbox.md" ]]; then
+    if [[ -d "$LOCATION/01_active" ]] && [[ -f "$LOCATION/00_dump.md" ]]; then
         echo "Found existing brain data at $LOCATION."
         echo "Adopting it into configuration..."
     else
@@ -97,8 +97,8 @@ else
     # Create new
     echo "Initializing brain '$BRAIN_NAME' at $LOCATION..."
     mkdir -p "$LOCATION"/{01_active,02_areas,03_resources,99_archive}
-    cat > "$LOCATION/00_inbox.md" << 'EOF'
-# Inbox
+    cat > "$LOCATION/00_dump.md" << 'EOF'
+# Dump
 
 Quick capture landing zone. Process with `brain refile`.
 

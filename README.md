@@ -48,14 +48,14 @@ brain go
 ## Daily Workflow
 
 ### Capture Everything
-Don't break your flow. Quickly dump thoughts into your inbox from anywhere.
+Don't break your flow. Quickly dump thoughts into your dump from anywhere.
 ```bash
 brain add "Schedule dentist appointment"
 brain add "Review architecture for my-idea"
 ```
 
 ### Process & Refile
-Later, review your inbox and move tasks to specific projects.
+Later, review your dump and move tasks to specific projects.
 ```bash
 brain refile
 ```
@@ -73,17 +73,17 @@ brain project clone https://github.com/me/new-tool.git
 |---------|-------------|
 | `brain project new <name>`| Create a new project. |
 | `brain project list` | List all active projects (Alias: `brain projects`). |
-| `brain add "text"` | Quick capture to inbox. |
+| `brain add "text"` | Quick capture to dump. |
 | `brain todo` | Fuzzy search open tasks. |
 | `brain go` | Enter project context (Shell or Tmux). |
 | `brain init [name]` | Create a new brain in `~/brains/<name>`. |
-| `brain import [path]` | Scan folder and register existing brains. |
 | `brain switch [name]` | Switch active brain. |
 | `brain rename <old> <new>`| Rename a brain folder and config. |
 | `brain delete [name]` | Permanently delete a brain. |
 | `brain project link <url>`| Link a git repository to the current project. |
 | `brain project pull`| Clone/Update linked repositories. |
 | `brain project clone <url>` | Import a git repo as a new project. |
+| `brain import [path]` | Scan folder and register existing brains. |
 
 ## Customization
 
@@ -104,7 +104,7 @@ Data is centralized in `~/brains/` (or your `$BRAIN_ROOT`). The active brain is 
 ```
 ~/brains/
 └── default/             # Your default brain
-    ├── 00_inbox.md
+    ├── 00_dump.md
     ├── 01_active/
     │   └── project-name/
     │       ├── notes.md
