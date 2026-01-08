@@ -9,21 +9,21 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate and source library
-if [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh" ]]; then
+if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
     # 1. Dev/Repo location
-    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh"
-elif [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh" ]]; then
+    source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
+elif [[ -f "$(dirname "$SCRIPT_DIR")/../lib/brain/brain-config.sh" ]]; then
     # 2. System install (via Makefile)
-    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh"
-elif [[ -f "/.config/brain/lib/brain-config.sh" ]]; then
+    source "$(dirname "$SCRIPT_DIR")/../lib/brain/brain-config.sh"
+elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
     # 3. User config location
-    source "/.config/brain/lib/brain-config.sh"
-    BRAIN_PATH=$(get_current_brain_path)
+    source "$HOME/.config/brain/lib/brain-config.sh"
 else
-    # Fallback to default if library not found
-    BRAIN_PATH="$BRAIN_PATH"
+    echo "Error: brain-config.sh library not found." >&2
+    exit 1
 fi
 
+BRAIN_PATH=$(get_current_brain_path)
 
 INBOX="$BRAIN_PATH/00_inbox.md"
 ACTIVE_DIR="$BRAIN_PATH/01_active"

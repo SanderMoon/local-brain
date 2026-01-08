@@ -52,7 +52,7 @@ get_current_brain_path() {
     if [[ -z "$current_brain" ]]; then
         # Fallback to default location if no brain configured
         echo "$HOME/brain"
-        return 1
+        return 0
     fi
 
     get_brain_path "$current_brain"
@@ -133,6 +133,26 @@ update_brain_symlink() {
     ln -sf "$brain_path" "$BRAIN_SYMLINK"
 }
 
+# Set focused project for current brain
+set_focused_project() {
+    local project_name="$1"
+    local current_brain=$(get_current_brain)
+
+    init_config_file
+
+    local tmp_file=$(mktemp)
+    jq --arg brain "$current_brain" --arg project "$project_name" \
+       '.brains[$brain].focus = $project' \
+       "$CONFIG_FILE" > "$tmp_file" && mv "$tmp_file" "$CONFIG_FILE"
+}
+
+# Get focused project for current brain
+get_focused_project() {
+    local current_brain=$(get_current_brain)
+    init_config_file
+    jq -r --arg brain "$current_brain" '.brains[$brain].focus // empty' "$CONFIG_FILE"
+}
+
 # Get linked repositories for a project
 # Returns list of local paths in ~/dev
 get_linked_repos() {
@@ -177,4 +197,6 @@ export -f add_brain
 export -f set_current_brain
 export -f update_brain_symlink
 export -f init_config_file
+export -f set_focused_project
+export -f get_focused_project
 export -f get_linked_repos
