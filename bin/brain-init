@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # brain-init: Initialize a new brain location
-# Interactive command to create and configure a new brain
+# Enforces centralized storage in ~/brains/
 
 set -euo pipefail
 
@@ -10,142 +10,54 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate and source library
 if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
-    # 1. Dev/Repo location (flat lib/)
     source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
 elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
-    # 2. System install (PREFIX/lib/brain/)
     source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
 elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
-    # 3. User config location (Fallback)
     source "$HOME/.config/brain/lib/brain-config.sh"
 else
     echo "Error: brain-config.sh library not found." >&2
     exit 1
 fi
 
-BRAIN_PATH=$(get_current_brain_path)
-
 show_help() {
     cat << 'EOF'
 brain-init - Initialize a new brain
 
 Usage:
-  brain init [location] [options]
+  brain init [name]
 
-Options:
-  --name <name>        Name for this brain (default: uses directory name)
-  --set-current        Set as current brain immediately
-  --non-interactive    Skip interactive prompts (requires location argument)
-  --help, -h           Show this help
-
-Interactive Mode:
-  If no location provided, enters interactive mode to:
-  - Choose brain location
-  - Specify brain name
-  - Set as current (optional)
+  If no name provided, defaults to 'default'.
+  Brains are always created in ~/brains/<name>.
 
 Examples:
-  brain init                              # Interactive mode
-  brain init ~/work-brain                 # Use directory name as brain name
-  brain init ~/work-brain --name work     # Specify custom name
-  brain init ~/personal --set-current     # Create and switch immediately
+  brain init              # Creates ~/brains/default
+  brain init work         # Creates ~/brains/work
 
-What gets created:
-  <location>/
-  ├── 00_inbox.md          # Inbox for quick captures
-  ├── 01_active/           # Active projects
-  ├── 02_areas/            # Ongoing responsibilities
-  ├── 03_resources/        # Reference material
-  └── 99_archive/          # Completed projects
+Structure created:
+  ~/brains/<name>/
+  ├── 00_inbox.md
+  ├── 01_active/
+  ├── 02_areas/
+  ├── 03_resources/
+  └── 99_archive/
 EOF
 }
 
 # Parse arguments
-LOCATION=""
 BRAIN_NAME=""
-SET_CURRENT=false
-INTERACTIVE=true
 
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --help|-h)
-            show_help
-            exit 0
-            ;;
-        --name)
-            BRAIN_NAME="$2"
-            shift 2
-            ;;
-        --set-current)
-            SET_CURRENT=true
-            shift
-            ;;
-        --non-interactive)
-            INTERACTIVE=false
-            shift
-            ;;
-        *)
-            if [[ -z "$LOCATION" ]]; then
-                LOCATION="$1"
-                INTERACTIVE=false
-            else
-                echo "Error: Unknown argument '$1'"
-                exit 1
-            fi
-            shift
-            ;;
-    esac
-done
-
-# Interactive mode
-if $INTERACTIVE; then
-    echo "═══════════════════════════════════════════"
-    echo "  Initialize New Brain"
-    echo "═══════════════════════════════════════════"
-    echo ""
-
-    # Ask for location
-    echo "Where would you like to create your brain?"
-    read -p "Location [~/brain]: " input_location
-    LOCATION="${input_location:-$HOME/brain}"
-
-    # Expand tilde
-    LOCATION="${LOCATION/#\~/$HOME}"
-
-    # Ask for name
-    default_name=$(basename "$LOCATION")
-    read -p "Brain name [$default_name]: " input_name
-    BRAIN_NAME="${input_name:-$default_name}"
-
-    # Ask if set as current
-    if [[ -n "$(get_current_brain 2>/dev/null)" ]]; then
-        read -p "Set as current brain? [y/N]: " set_current_input
-        if [[ "$set_current_input" =~ ^[Yy] ]]; then
-            SET_CURRENT=true
-        fi
-    else
-        # No current brain, automatically set as current
-        SET_CURRENT=true
-        echo "→ Will set as current brain (no existing brain configured)"
+if [[ $# -gt 0 ]]; then
+    if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+        show_help
+        exit 0
     fi
+    BRAIN_NAME="$1"
+else
+    BRAIN_NAME="default"
 fi
 
-# Validate location
-if [[ -z "$LOCATION" ]]; then
-    echo "Error: Location required"
-    echo "Usage: brain init <location> [--name <name>]"
-    exit 1
-fi
-
-# Expand tilde
-LOCATION="${LOCATION/#\~/$HOME}"
-
-# Derive brain name if not provided
-if [[ -z "$BRAIN_NAME" ]]; then
-    BRAIN_NAME=$(basename "$LOCATION")
-fi
-
-# Validate brain name (alphanumeric, hyphens, underscores only)
+# Validate brain name
 if [[ ! "$BRAIN_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
     echo "Error: Brain name can only contain letters, numbers, hyphens, and underscores"
     exit 1
@@ -153,76 +65,58 @@ fi
 
 # Check if brain already exists in config
 if brain_exists "$BRAIN_NAME"; then
-    echo "Error: Brain '$BRAIN_NAME' already exists"
-    echo "Existing location: $(get_brain_path "$BRAIN_NAME")"
-    echo ""
-    echo "To use a different name: brain init $LOCATION --name other-name"
-    echo "To switch to existing: brain switch $BRAIN_NAME"
-    exit 1
-fi
-
-# Check if location already exists and is not empty
-ADOPTING=false
-if [[ -d "$LOCATION" ]] && [[ -n "$(ls -A "$LOCATION" 2>/dev/null)" ]]; then
-    # Check for brain structure
-    if [[ -d "$LOCATION/01_active" ]] && [[ -f "$LOCATION/00_inbox.md" ]]; then
-        echo "→ Found existing brain structure at '$LOCATION'. Adopting into configuration..."
-        ADOPTING=true
+    EXISTING_PATH=$(get_brain_path "$BRAIN_NAME")
+    if [[ -d "$EXISTING_PATH" ]]; then
+        echo "Error: Brain '$BRAIN_NAME' already configured and exists."
+        echo "Location: $EXISTING_PATH"
+        echo "Use 'brain switch $BRAIN_NAME' to activate it."
+        exit 1
     else
-        echo "Warning: Directory '$LOCATION' already exists and is not empty"
-        read -p "Continue anyway? [y/N]: " continue_input
-        if [[ ! "$continue_input" =~ ^[Yy] ]]; then
-            echo "Aborted"
-            exit 1
-        fi
+        echo "Warning: Brain '$BRAIN_NAME' is registered in config but missing on disk."
+        echo "Repairing/Re-initializing at standardized location..."
+        # Proceed to re-create
     fi
 fi
 
-# Create directory structure
-if ! $ADOPTING; then
-    echo ""
-    echo "Creating brain at: $LOCATION"
-    mkdir -p "$LOCATION"/{01_active,02_areas,03_resources,99_archive}
+# Define standardized location base
+BRAIN_ROOT="${BRAIN_ROOT:-$HOME/brains}"
 
-    # Create inbox
+# Check directory collision
+LOCATION="$BRAIN_ROOT/$BRAIN_NAME"
+
+if [[ -d "$LOCATION" ]] && [[ -n "$(ls -A "$LOCATION" 2>/dev/null)" ]]; then
+    # Check if it looks like a brain (adoption/recovery)
+    if [[ -d "$LOCATION/01_active" ]] && [[ -f "$LOCATION/00_inbox.md" ]]; then
+        echo "Found existing brain data at $LOCATION."
+        echo "Adopting it into configuration..."
+    else
+        echo "Error: Directory $LOCATION exists and is not empty."
+        exit 1
+    fi
+else
+    # Create new
+    echo "Initializing brain '$BRAIN_NAME' at $LOCATION..."
+    mkdir -p "$LOCATION"/{01_active,02_areas,03_resources,99_archive}
     cat > "$LOCATION/00_inbox.md" << 'EOF'
 # Inbox
 
 Quick capture landing zone. Process with `brain refile`.
 
 EOF
-    echo "✓ Created directory structure"
-else
-    echo "✓ Brain structure verified"
+    echo "OK: Created directory structure"
 fi
 
 # Add to config
 add_brain "$BRAIN_NAME" "$LOCATION"
-echo "✓ Added '$BRAIN_NAME' to configuration"
+echo "OK: Registered '$BRAIN_NAME'"
 
-# Set as current if requested
-if $SET_CURRENT; then
+# Auto-switch if it's the first brain or requested
+CURRENT=$(get_current_brain)
+if [[ -z "$CURRENT" ]] || [[ "$BRAIN_NAME" == "default" ]]; then
     set_current_brain "$BRAIN_NAME"
-    echo "✓ Set as current brain"
-    echo "✓ Created symlink: ~/brain → $LOCATION"
+    echo "OK: Set as current brain"
+    echo "OK: Updated symlink $BRAIN_SYMLINK -> $LOCATION"
 fi
 
 echo ""
-echo "═══════════════════════════════════════════"
-echo "Brain '$BRAIN_NAME' initialized successfully!"
-echo ""
-echo "Location: $LOCATION"
-
-if $SET_CURRENT; then
-    echo "Status: Active (current)"
-else
-    echo "Status: Configured (not active)"
-    echo ""
-    echo "To activate: brain switch $BRAIN_NAME"
-fi
-
-echo ""
-echo "Next steps:"
-echo "  brain add \"Your first task\""
-echo "  brain project new my-project"
-echo "  brain todo"
+echo "Success! Brain '$BRAIN_NAME' is ready."

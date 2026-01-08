@@ -9,67 +9,67 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate and source library
 if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
-    # 1. Dev/Repo location (flat lib/)
-    source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
+  # 1. Dev/Repo location (flat lib/)
+  source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
 elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
-    # 2. System install (PREFIX/lib/brain/)
-    source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
+  # 2. System install (PREFIX/lib/brain/)
+  source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
 elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
-    # 3. User config location (Fallback)
-    source "$HOME/.config/brain/lib/brain-config.sh"
+  # 3. User config location (Fallback)
+  source "$HOME/.config/brain/lib/brain-config.sh"
 else
-    echo "Error: brain-config.sh library not found." >&2
-    exit 1
+  echo "Error: brain-config.sh library not found." >&2
+  exit 1
 fi
 
 BRAIN_PATH=$(get_current_brain_path)
 
 show_help() {
-    cat << 'EOF'
+  cat << 'EOF'
 brain-path - Show path to brain
 
 Usage:
-  brain path [brain-name]
+ brain path [brain-name]
 
 Options:
-  --help, -h           Show this help
+ --help, -h      Show this help
 
 Examples:
-  brain path           # Show path to current brain
-  brain path work      # Show path to 'work' brain
-  brain path default   # Show path to 'default' brain
+ brain path      # Show path to current brain
+ brain path work   # Show path to 'work' brain
+ brain path default  # Show path to 'default' brain
 
 Use in scripts:
-  cd $(brain path)
-  ls $(brain path work)
+ cd $(brain path)
+ ls $(brain path work)
 EOF
 }
 
 # Check for help
 if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
-    show_help
-    exit 0
+  show_help
+  exit 0
 fi
 
 # Get brain name (default to current)
 BRAIN_NAME="${1:-}"
 
 if [[ -z "$BRAIN_NAME" ]]; then
-    # Show current brain path
-    BRAIN_NAME=$(get_current_brain)
+  # Show current brain path
+  BRAIN_NAME=$(get_current_brain)
 
-    if [[ -z "$BRAIN_NAME" ]]; then
-        echo "Error: No brain currently active" >&2
-        exit 1
-    fi
+  if [[ -z "$BRAIN_NAME" ]]; then
+    echo "Error: No brain currently active" >&2
+    exit 1
+  fi
 fi
 
 # Get path
 path=$(get_brain_path "$BRAIN_NAME")
 
 if [[ -z "$path" ]]; then
-    echo "Error: Brain '$BRAIN_NAME' not found" >&2
-    exit 1
+  echo "Error: Brain '$BRAIN_NAME' not found" >&2
+  exit 1
 fi
 
 echo "$path"

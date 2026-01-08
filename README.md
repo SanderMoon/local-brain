@@ -1,24 +1,28 @@
-# Local Brain 🧠
+# Local Brain
 
 > A minimalist, local-first project management system for developers who live in the terminal.
 
-**Local Brain** is more than just a note-taking tool; it's a context manager for your workflow. It stitches together your notes, tasks, and code repositories into a cohesive, keyboard-driven environment.
+Local Brain is a context manager for your workflow. It stitches together your notes, tasks, and code repositories into a cohesive, keyboard-driven environment.
 
-## ✨ Features
+## Concepts
 
-- **One-Command Import**: `brain clone <url>` handles project creation, git linking, and cloning in one go.
-- **Project Context**: Seamlessly link Git repositories to your project notes.
-- **Dev Mode Automation**: `brain go` launches a full development environment:
-    - Auto-detects `tmux` and creates a named session for the project.
-    - **Window 1 (Code)**: Opens repo, activates `venv`, and launches your editor.
-    - **Window 2 (Brain)**: Opens project notes and todos.
+Before getting started, it is helpful to understand the hierarchy of Local Brain:
+
+- **Brains**: These are your high-level workspaces (e.g., "Work", "Personal", "Research"). Each brain is a completely separate directory tree. Only one brain is active at a time, which is symlinked to your home directory for easy access.
+- **Projects**: These are specific areas of focus within a Brain. Every project automatically gets its own directory with `notes.md`, `todo.md`, and optional links to external code repositories.
+
+## Features
+
+- **Context Management**: Keep your notes, tasks, and related code in one place.
 - **Local-First**: Plain text Markdown, grep-able, and version-controllable.
+- **Centralized Storage**: All data lives in `~/brains/`, easily syncable via Syncthing/Dropbox.
 - **Zero-Friction Capture**: Rapidly add tasks to your inbox without context switching.
+- **Dev Mode Automation**: `brain go` launches a full development environment (Tmux + Venv).
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Install
-Installs dependencies (`fzf`, `rg`, `jq`, `syncthing`, `make`), configures your shell, and sets up your first brain.
+Installs dependencies (`fzf`, `rg`, `jq`, `make`), configures your shell, and sets up your first brain.
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/local-brain.git
@@ -26,73 +30,90 @@ cd local-brain
 ./install-brain.sh
 ```
 
-### 2. Import Your First Project
-The fastest way to get started is to import an existing Git repository.
+### 2. Create a Project
+Start by creating a workspace for your current focus.
 
 ```bash
-brain clone https://github.com/yourname/your-project.git
+brain project new my-idea
 ```
 
 ### 3. Start Working
+Jump into your project context.
+
 ```bash
 brain go
 ```
-This will open your dev environment (Tmux + Editor + Venv) for that project.
+*Opens a new shell in the project directory (or a Tmux session if code is linked).*
 
-##  Workflow
+## Daily Workflow
 
 ### Capture Everything
-Don't break your flow. Quickly dump thoughts into your inbox.
+Don't break your flow. Quickly dump thoughts into your inbox from anywhere.
 ```bash
-brain add "Review PR #42 for the api-service"
+brain add "Schedule dentist appointment"
+brain add "Review architecture for my-idea"
 ```
 
-### Navigation
-We install a smart shell function `pg` ("Project Go") for rapid directory switching.
+### Process & Refile
+Later, review your inbox and move tasks to specific projects.
 ```bash
-pg  # Fuzzy find and cd into any active project
+brain refile
 ```
 
-### Remote Management
-Manage your projects from anywhere in your terminal without leaving your home folder.
+### Pro Tip: `brain project clone`
+If you starting a project from a single existing repo, use this shortcut:
 ```bash
-brain project list              # See all active projects
-brain project select my-app     # Focus on a project
-brain project link <url>        # Links to the focused project
-brain project pull              # Clones/Updates focused project repos
+# Creates project, links repo, and clones code in one command
+brain project clone https://github.com/me/new-tool.git
 ```
 
-## 🛠 Command Reference
+## Command Reference
 
 | Command | Description |
 |---------|-------------|
-| `brain clone <url>` | **[New]** One-command project import. |
+| `brain project new <name>`| Create a new project. |
+| `brain project list` | List all active projects (Alias: `brain projects`). |
 | `brain add "text"` | Quick capture to inbox. |
-| `brain todo` | Fuzzy search all unchecked tasks across projects. |
-| `brain go` | Enter project context (Shell or Tmux + Venv). |
-| `brain refile` | Interactive inbox processing (GTD style). |
-| `brain project list`| List active projects. |
-| `brain project select`| Focus on a project for remote commands. |
-| `brain switch` | Switch between different brains (work/personal). |
+| `brain todo` | Fuzzy search open tasks. |
+| `brain go` | Enter project context (Shell or Tmux). |
+| `brain init [name]` | Create a new brain in `~/brains/<name>`. |
+| `brain import [path]` | Scan folder and register existing brains. |
+| `brain switch [name]` | Switch active brain. |
+| `brain rename <old> <new>`| Rename a brain folder and config. |
+| `brain delete [name]` | Permanently delete a brain. |
+| `brain project link <url>`| Link a git repository to the current project. |
+| `brain project pull`| Clone/Update linked repositories. |
+| `brain project clone <url>` | Import a git repo as a new project. |
 
-## 📦 Directory Structure
+## Customization
 
-Each brain follows a modified PARA method:
+You can customize the storage and symlink locations by setting environment variables in your `.zshrc` or `.bashrc`:
+
+```bash
+# Root directory for all brains (default: ~/brains)
+export BRAIN_ROOT="$HOME/Dropbox/Brains"
+
+# Location of the active brain symlink (default: ~/brain)
+export BRAIN_SYMLINK="$HOME/Desktop/ActiveBrain"
+```
+
+## Directory Structure
+
+Data is centralized in `~/brains/` (or your `$BRAIN_ROOT`). The active brain is symlinked to `~/brain` (or your `$BRAIN_SYMLINK`) for easy access.
 
 ```
-~/brain/
-├── 00_inbox.md          # Quick captures
-├── 01_active/           # Active projects
-│   └── project-name/
-│       ├── notes.md     # Documentation
-│       ├── todo.md      # Tasks
-│       └── .repos       # Linked git URLs
-├── 02_areas/            # Ongoing responsibilities
-├── 03_resources/        # Reference material
-└── 99_archive/          # Completed projects
+~/brains/
+└── default/             # Your default brain
+    ├── 00_inbox.md
+    ├── 01_active/
+    │   └── project-name/
+    │       ├── notes.md
+    │       ├── todo.md
+    │       └── .repos
+    └── 99_archive/
 ```
 
-## 🔧 Configuration
+## Configuration
 
 Stored in `~/.config/brain/config.json`.
 

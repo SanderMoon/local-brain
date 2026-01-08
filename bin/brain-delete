@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+# brain-delete: Permanently delete a brain
+# Usage: brain delete <name>
+
+set -euo pipefail
+
+# Source config library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Locate and source library
+if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
+    source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
+elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
+    source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
+elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
+    source "$HOME/.config/brain/lib/brain-config.sh"
+else
+    echo "Error: brain-config.sh library not found." >&2
+    exit 1
+fi
+
+BRAIN_SYMLINK="${BRAIN_SYMLINK:-$HOME/brain}"
+
+show_help() {
+    cat << 'EOF'
+brain-delete - Permanently delete a brain
+
+Usage:
+  brain delete <name>
+
+Examples:
+  brain delete work
+  brain delete default
+
+WARNING: This will permanently delete the brain directory and all its contents.
+EOF
+}
+
+# Check args
+if [[ $# -lt 1 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+BRAIN_NAME="$1"
+
+# Validate existence
+if ! brain_exists "$BRAIN_NAME"; then
+    echo "Error: Brain '$BRAIN_NAME' does not exist."
+    exit 1
+fi
+
+BRAIN_PATH=$(get_brain_path "$BRAIN_NAME")
+
+echo "WARNING: You are about to PERMANENTLY DELETE the brain '$BRAIN_NAME'."
+echo "Location: $BRAIN_PATH"
+echo "This includes all projects, notes, and tasks within it."
+echo ""
+read -p "Are you sure? This cannot be undone. [y/N]: " confirm
+
+if [[ ! "$confirm" =~ ^[Yy] ]]; then
+    echo "Aborted."
+    exit 0
+fi
+
+echo ""
+echo "Deleting '$BRAIN_NAME'..."
+
+# 1. Update Config (remove entry)
+# We need a helper for this or do it inline
+# Let's do it inline with jq
+CONFIG_TMP=$(mktemp)
+# If deleted brain is current, set current to null
+jq --arg name "$BRAIN_NAME" '
+    if .current == $name then .current = null else . end |
+    del(.brains[$name])
+' "$CONFIG_FILE" > "$CONFIG_TMP" && mv "$CONFIG_TMP" "$CONFIG_FILE"
+
+echo "OK: Removed from configuration"
+
+# 2. Check and remove Symlink if it points to this brain
+# If we just set current to null, we should remove the symlink
+# But we can also check if the symlink target matches the path we are about to delete
+if [[ -L "$BRAIN_SYMLINK" ]]; then
+    TARGET=$(readlink "$BRAIN_SYMLINK")
+    if [[ "$TARGET" == "$BRAIN_PATH" ]]; then
+        rm "$BRAIN_SYMLINK"
+        echo "OK: Removed active symlink"
+    fi
+fi
+
+# 3. Delete Directory
+if [[ -d "$BRAIN_PATH" ]]; then
+    rm -rf "$BRAIN_PATH"
+    echo "OK: Deleted directory"
+else
+    echo "Warning: Directory was already missing."
+fi
+
+echo ""
+echo "Brain '$BRAIN_NAME' deleted successfully."

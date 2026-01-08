@@ -13,15 +13,15 @@ install:
 	@cp lib/* $(DESTDIR)$(LIBDIR)/
 	@chmod 755 $(DESTDIR)$(BINDIR)/brain*
 	@chmod 644 $(DESTDIR)$(LIBDIR)/*
-	@echo "✓ Installation complete."
-	@echo "  Executables: $(DESTDIR)$(BINDIR)"
-	@echo "  Libraries:   $(DESTDIR)$(LIBDIR)"
+	@echo "OK: Installation complete."
+	@echo " Executables: $(DESTDIR)$(BINDIR)"
+	@echo " Libraries:  $(DESTDIR)$(LIBDIR)"
 
 uninstall:
 	@echo "Uninstalling Local Brain..."
 	@rm -f $(DESTDIR)$(BINDIR)/brain*
 	@rm -rf $(DESTDIR)$(LIBDIR)
-	@echo "✓ Uninstalled."
+	@echo "OK: Uninstalled."
 
 test:
 	@echo "Running tests..."

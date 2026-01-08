@@ -10,17 +10,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate and source library
 if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
-    # 1. Dev/Repo location (flat lib/)
-    source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
+  # 1. Dev/Repo location (flat lib/)
+  source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
 elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
-    # 2. System install (PREFIX/lib/brain/)
-    source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
+  # 2. System install (PREFIX/lib/brain/)
+  source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
 elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
-    # 3. User config location (Fallback)
-    source "$HOME/.config/brain/lib/brain-config.sh"
+  # 3. User config location (Fallback)
+  source "$HOME/.config/brain/lib/brain-config.sh"
 else
-    echo "Error: brain-config.sh library not found." >&2
-    exit 1
+  echo "Error: brain-config.sh library not found." >&2
+  exit 1
 fi
 
 BRAIN_PATH=$(get_current_brain_path)
@@ -29,93 +29,93 @@ BRAIN_DIR="$BRAIN_PATH"
 ACTIVE_DIR="$BRAIN_DIR/01_active"
 
 show_help() {
-    cat << 'EOF'
+  cat << 'EOF'
 brain-todo - View all open tasks
 
 Usage:
-  brain todo          Show all unchecked tasks across all active projects
+ brain todo     Show all unchecked tasks across all active projects
 
 Features:
-  - Fuzzy search through all open tasks
-  - Preview task context with syntax highlighting
-  - Press Enter to open task in Neovim at exact line
-  - Press Esc to exit
+ - Fuzzy search through all open tasks
+ - Preview task context with syntax highlighting
+ - Press Enter to open task in Neovim at exact line
+ - Press Esc to exit
 
 Tasks are found by searching for: - [ ]
 
 Examples:
-  brain todo          # Browse and select from all open tasks
+ brain todo     # Browse and select from all open tasks
 EOF
 }
 
 # Check for help flag
 if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
-    show_help
-    exit 0
+  show_help
+  exit 0
 fi
 
 # Check if active directory exists
 if [[ ! -d "$ACTIVE_DIR" ]]; then
-    echo "Error: Active projects directory not found: $ACTIVE_DIR"
-    echo "Run install.sh first or create the directory manually"
-    exit 1
+  echo "Error: Active projects directory not found: $ACTIVE_DIR"
+  echo "Run install.sh first or create the directory manually"
+  exit 1
 fi
 
 # Check for required commands
 if ! command -v rg &> /dev/null; then
-    echo "Error: ripgrep (rg) not found"
-    echo "Install with: brew install ripgrep (macOS) or apt install ripgrep (Linux)"
-    exit 1
+  echo "Error: ripgrep (rg) not found"
+  echo "Install with: brew install ripgrep (macOS) or apt install ripgrep (Linux)"
+  exit 1
 fi
 
 if ! command -v fzf &> /dev/null; then
-    echo "Error: fzf not found"
-    echo "Install with: brew install fzf (macOS) or apt install fzf (Linux)"
-    exit 1
+  echo "Error: fzf not found"
+  echo "Install with: brew install fzf (macOS) or apt install fzf (Linux)"
+  exit 1
 fi
 
 # Search for unchecked tasks
 TASKS=$(rg '^\s*- \[ \]' "$ACTIVE_DIR" --line-number --no-heading 2>/dev/null || true)
 
 if [[ -z "$TASKS" ]]; then
-    echo "No open tasks found in $ACTIVE_DIR"
-    echo ""
-    echo "Add tasks to project todo.md files with:"
-    echo "  - [ ] Task description"
-    exit 0
+  echo "No open tasks found in $ACTIVE_DIR"
+  echo ""
+  echo "Add tasks to project todo.md files with:"
+  echo " - [ ] Task description"
+  exit 0
 fi
 
 # Prepare preview command
 # If bat is available, use it for syntax highlighting
 if command -v bat &> /dev/null; then
-    PREVIEW_CMD='bat --color=always --style=numbers --highlight-line {2} {1}'
+  PREVIEW_CMD='bat --color=always --style=numbers --highlight-line {2} {1}'
 else
-    # Fallback to cat with line numbers
-    PREVIEW_CMD='cat -n {1}'
+  # Fallback to cat with line numbers
+  PREVIEW_CMD='cat -n {1}'
 fi
 
 # Use fzf to select a task
 # Format: filename:line_number:content
 SELECTED=$(echo "$TASKS" | fzf \
-    --delimiter ':' \
-    --preview "$PREVIEW_CMD" \
-    --preview-window 'right:60%:+{2}-5' \
-    --bind 'enter:accept' \
-    --header 'Select a task to open in editor (Esc to cancel)' \
-    --ansi \
-    || true)
+  --delimiter ':' \
+  --preview "$PREVIEW_CMD" \
+  --preview-window 'right:60%:+{2}-5' \
+  --bind 'enter:accept' \
+  --header 'Select a task to open in editor (Esc to cancel)' \
+  --ansi \
+  || true)
 
 # If user selected a task, open it in editor
 if [[ -n "$SELECTED" ]]; then
-    FILE=$(echo "$SELECTED" | cut -d: -f1)
-    LINE=$(echo "$SELECTED" | cut -d: -f2)
+  FILE=$(echo "$SELECTED" | cut -d: -f1)
+  LINE=$(echo "$SELECTED" | cut -d: -f2)
 
-    if command -v nvim &> /dev/null; then
-        nvim "+$LINE" "$FILE"
-    elif command -v vim &> /dev/null; then
-        vim "+$LINE" "$FILE"
-    else
-        echo "Error: Neither nvim nor vim found"
-        exit 1
-    fi
+  if command -v nvim &> /dev/null; then
+    nvim "+$LINE" "$FILE"
+  elif command -v vim &> /dev/null; then
+    vim "+$LINE" "$FILE"
+  else
+    echo "Error: Neither nvim nor vim found"
+    exit 1
+  fi
 fi

@@ -10,17 +10,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate and source library
 if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
-    # 1. Dev/Repo location (flat lib/)
-    source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
+  # 1. Dev/Repo location (flat lib/)
+  source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
 elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
-    # 2. System install (PREFIX/lib/brain/)
-    source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
+  # 2. System install (PREFIX/lib/brain/)
+  source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
 elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
-    # 3. User config location (Fallback)
-    source "$HOME/.config/brain/lib/brain-config.sh"
+  # 3. User config location (Fallback)
+  source "$HOME/.config/brain/lib/brain-config.sh"
 else
-    echo "Error: brain-config.sh library not found." >&2
-    exit 1
+  echo "Error: brain-config.sh library not found." >&2
+  exit 1
 fi
 
 BRAIN_PATH=$(get_current_brain_path)
@@ -32,66 +32,66 @@ TEMP_INBOX=$(mktemp)
 
 # Cleanup temp files on exit
 cleanup() {
-    rm -f "$TEMP_PROCESSED" "$TEMP_INBOX"
+  rm -f "$TEMP_PROCESSED" "$TEMP_INBOX"
 }
 trap cleanup EXIT
 
 show_help() {
-    cat << 'EOF'
+  cat << 'EOF'
 brain-refile - Process inbox items
 
 Usage:
-  brain refile        Process inbox items one by one
+ brain refile    Process inbox items one by one
 
 Workflow:
-  1. Shows each inbox item
-  2. Select destination project with fuzzy finder
-  3. Item is moved to project's todo.md
-  4. Repeat until inbox is empty or cancelled
+ 1. Shows each inbox item
+ 2. Select destination project with fuzzy finder
+ 3. Item is moved to project's todo.md
+ 4. Repeat until inbox is empty or cancelled
 
 Tips:
-  - Press Enter to select a project
-  - Press Esc to skip an item
-  - Items that are skipped remain in inbox
+ - Press Enter to select a project
+ - Press Esc to skip an item
+ - Items that are skipped remain in inbox
 
 Example:
-  brain refile        # Start processing inbox
+ brain refile    # Start processing inbox
 EOF
 }
 
 # Check for help flag
 if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
-    show_help
-    exit 0
+  show_help
+  exit 0
 fi
 
 # Check if inbox exists
 if [[ ! -f "$INBOX" ]]; then
-    echo "Error: Inbox not found at $INBOX"
-    exit 1
+  echo "Error: Inbox not found at $INBOX"
+  exit 1
 fi
 
 # Check if active directory exists
 if [[ ! -d "$ACTIVE_DIR" ]]; then
-    echo "Error: Active projects directory not found: $ACTIVE_DIR"
-    exit 1
+  echo "Error: Active projects directory not found: $ACTIVE_DIR"
+  exit 1
 fi
 
 # Check for required commands
 if ! command -v fzf &> /dev/null; then
-    echo "Error: fzf not found"
-    echo "Install with: brew install fzf (macOS) or apt install fzf (Linux)"
-    exit 1
+  echo "Error: fzf not found"
+  echo "Install with: brew install fzf (macOS) or apt install fzf (Linux)"
+  exit 1
 fi
 
 # Check if there are any projects
 PROJECT_COUNT=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
 if [[ $PROJECT_COUNT -eq 0 ]]; then
-    echo "No projects found in $ACTIVE_DIR"
-    echo ""
-    echo "Create a project first with:"
-    echo "  brain project new <project-name>"
-    exit 1
+  echo "No projects found in $ACTIVE_DIR"
+  echo ""
+  echo "Create a project first with:"
+  echo " brain project new <project-name>"
+  exit 1
 fi
 
 # Read inbox and filter out header and empty lines
@@ -101,19 +101,19 @@ LINE_NUMS=()
 LINE_NUM=0
 
 while IFS= read -r line; do
-    LINE_NUM=$((LINE_NUM + 1))
-    # Skip empty lines and markdown headers
-    if [[ -n "${line// /}" ]] && [[ ! "$line" =~ ^#+ ]]; then
-        ITEMS+=("$line")
-        LINE_NUMS+=("$LINE_NUM")
-    fi
+  LINE_NUM=$((LINE_NUM + 1))
+  # Skip empty lines and markdown headers
+  if [[ -n "${line// /}" ]] && [[ ! "$line" =~ ^#+ ]]; then
+    ITEMS+=("$line")
+    LINE_NUMS+=("$LINE_NUM")
+  fi
 done < "$INBOX"
 
 # Check if there are items to process
 ITEM_COUNT=${#ITEMS[@]}
 if [[ $ITEM_COUNT -eq 0 ]]; then
-    echo "Inbox is empty! Nothing to refile."
-    exit 0
+  echo "Inbox is empty! Nothing to refile."
+  exit 0
 fi
 
 echo "Found $ITEM_COUNT item(s) to process"
@@ -124,91 +124,91 @@ PROCESSED_COUNT=0
 SKIPPED_COUNT=0
 
 for i in "${!ITEMS[@]}"; do
-    ITEM="${ITEMS[$i]}"
-    ITEM_NUM=$((i + 1))
+  ITEM="${ITEMS[$i]}"
+  ITEM_NUM=$((i + 1))
 
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "[$ITEM_NUM/$ITEM_COUNT] Refiling:"
-    echo "  $ITEM"
-    echo ""
+  echo "----------------------------------------"
+  echo "[$ITEM_NUM/$ITEM_COUNT] Refiling:"
+  echo " $ITEM"
+  echo ""
 
-    # Show projects and let user select
-    SELECTED_PROJECT=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | \
-        sort | \
-        fzf --height=50% \
-            --header="Select destination project (Esc to skip)" \
-            --prompt="Project> " \
-            --preview "echo '--- Notes ---'; cat '$ACTIVE_DIR'/{}/notes.md 2>/dev/null || echo 'No notes yet'; echo ''; echo '--- Tasks ---'; cat '$ACTIVE_DIR'/{}/todo.md 2>/dev/null || echo 'No tasks yet'" \
-            --preview-window=right:60% \
-            || true)
+  # Show projects and let user select
+  SELECTED_PROJECT=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | \
+    sort | \
+    fzf --height=50% \
+      --header="Select destination project (Esc to skip)" \
+      --prompt="Project> " \
+      --preview "echo '--- Notes ---'; cat '$ACTIVE_DIR'/{}/notes.md 2>/dev/null || echo 'No notes yet'; echo ''; echo '--- Tasks ---'; cat '$ACTIVE_DIR'/{}/todo.md 2>/dev/null || echo 'No tasks yet'" \
+      --preview-window=right:60% \
+      || true)
 
-    if [[ -n "$SELECTED_PROJECT" ]]; then
-        PROJECT_DIR="$ACTIVE_DIR/$SELECTED_PROJECT"
-        TODO_FILE="$PROJECT_DIR/todo.md"
+  if [[ -n "$SELECTED_PROJECT" ]]; then
+    PROJECT_DIR="$ACTIVE_DIR/$SELECTED_PROJECT"
+    TODO_FILE="$PROJECT_DIR/todo.md"
 
-        # Ensure todo.md exists
-        if [[ ! -f "$TODO_FILE" ]]; then
-            echo "# Tasks" > "$TODO_FILE"
-            echo "" >> "$TODO_FILE"
-        fi
-
-        # Append item to project's todo.md
-        echo "$ITEM" >> "$TODO_FILE"
-        echo "✓ Moved to: $SELECTED_PROJECT"
-
-        # Mark this line number as processed
-        echo "${LINE_NUMS[$i]}" >> "$TEMP_PROCESSED"
-        PROCESSED_COUNT=$((PROCESSED_COUNT + 1))
-    else
-        echo "⊘ Skipped"
-        SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+    # Ensure todo.md exists
+    if [[ ! -f "$TODO_FILE" ]]; then
+      echo "# Tasks" > "$TODO_FILE"
+      echo "" >> "$TODO_FILE"
     fi
 
-    echo ""
+    # Append item to project's todo.md
+    echo "$ITEM" >> "$TODO_FILE"
+    echo "OK: Moved to: $SELECTED_PROJECT"
+
+    # Mark this line number as processed
+    echo "${LINE_NUMS[$i]}" >> "$TEMP_PROCESSED"
+    PROCESSED_COUNT=$((PROCESSED_COUNT + 1))
+  else
+    echo "⊘ Skipped"
+    SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+  fi
+
+  echo ""
 done
 
 # Remove processed items from inbox
 if [[ $PROCESSED_COUNT -gt 0 ]]; then
-    echo "Updating inbox..."
+  echo "Updating inbox..."
 
-    # Read processed line numbers into array
-    readarray -t PROCESSED_LINES < "$TEMP_PROCESSED"
+  # Read processed line numbers into array
+  readarray -t PROCESSED_LINES < "$TEMP_PROCESSED"
 
-    # Sort in reverse order so we delete from bottom to top
-    # IFS=$'\n' PROCESSED_LINES=($(sort -rn <<<"${PROCESSED_LINES[*]}"))
+  # Sort in reverse order so we delete from bottom to top
+  # IFS=$'\n' PROCESSED_LINES=($(sort -rn <<<"${PROCESSED_LINES[*]}"))
 
-    # Create a mapping of lines to delete
-    declare -A DELETE_MAP
-    for line in "${PROCESSED_LINES[@]}"; do
-        DELETE_MAP["$line"]=1
-    done
+  # Create a mapping of lines to delete
+  declare -A DELETE_MAP
+  for line in "${PROCESSED_LINES[@]}"; do
+    DELETE_MAP["$line"]=1
+  done
 
-    # Filter inbox to keep only unprocessed lines
-    local current_line=0
-    while IFS= read -r line; do
-        current_line=$((current_line + 1))
-        if [[ -z "${DELETE_MAP[$current_line]:-}" ]]; then
-            echo "$line" >> "$TEMP_INBOX"
-        fi
-    done < "$INBOX"
+  # Filter inbox to keep only unprocessed lines
+  local current_line=0
+  while IFS= read -r line; do
+    current_line=$((current_line + 1))
+    if [[ -z "${DELETE_MAP[$current_line]:-}" ]]; then
+      echo "$line" >> "$TEMP_INBOX"
+    fi
+  done < "$INBOX"
 
-    # Replace original inbox
-    mv "$TEMP_INBOX" "$INBOX"
+  # Replace original inbox
+  mv "$TEMP_INBOX" "$INBOX"
 fi
 
 # Summary
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "----------------------------------------"
 echo "Summary:"
-echo "  ✓ Processed: $PROCESSED_COUNT"
+echo " OK: Processed: $PROCESSED_COUNT"
 if [[ $SKIPPED_COUNT -gt 0 ]]; then
-    echo "  ⊘ Skipped: $SKIPPED_COUNT"
+  echo " ⊘ Skipped: $SKIPPED_COUNT"
 fi
 echo ""
 
 if [[ $PROCESSED_COUNT -gt 0 ]]; then
-    echo "Items moved to project todo.md files"
+  echo "Items moved to project todo.md files"
 fi
 
 if [[ $SKIPPED_COUNT -gt 0 ]]; then
-    echo "Skipped items remain in inbox"
+  echo "Skipped items remain in inbox"
 fi
