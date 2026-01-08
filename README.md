@@ -6,20 +6,19 @@
 
 ## ✨ Features
 
-- **Project Context**: seamlessly link Git repositories to your project notes.
+- **One-Command Import**: `brain clone <url>` handles project creation, git linking, and cloning in one go.
+- **Project Context**: Seamlessly link Git repositories to your project notes.
 - **Dev Mode Automation**: `brain go` launches a full development environment:
     - Auto-detects `tmux` and creates a named session for the project.
     - **Window 1 (Code)**: Opens repo, activates `venv`, and launches your editor.
     - **Window 2 (Brain)**: Opens project notes and todos.
 - **Local-First**: Plain text Markdown, grep-able, and version-controllable.
-- **Cloud-Free Sync**: Built-in support for Syncthing (or use iCloud/Dropbox).
 - **Zero-Friction Capture**: Rapidly add tasks to your inbox without context switching.
 
 ## 🚀 Quick Start
 
-### Option 1: The "Easy" Way (Interactive)
-
-Installs dependencies, configures your shell, and sets up your first brain.
+### 1. Install
+Installs dependencies (`fzf`, `rg`, `jq`, `syncthing`, `make`), configures your shell, and sets up your first brain.
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/local-brain.git
@@ -27,60 +26,53 @@ cd local-brain
 ./install-brain.sh
 ```
 
-### Option 2: The "Pro" Way (Make)
-
-For package maintainers or system-wide installation.
+### 2. Import Your First Project
+The fastest way to get started is to import an existing Git repository.
 
 ```bash
-sudo make install
-# Then initialize manually:
-brain init ~/brain
+brain clone https://github.com/yourname/your-project.git
 ```
 
-##  workflow
+### 3. Start Working
+```bash
+brain go
+```
+This will open your dev environment (Tmux + Editor + Venv) for that project.
 
-### 1. Capture Everything
+##  Workflow
+
+### Capture Everything
 Don't break your flow. Quickly dump thoughts into your inbox.
-
 ```bash
 brain add "Review PR #42 for the api-service"
 ```
 
-### 2. Manage Projects
-Create a project and link your code.
-
-```bash
-# Create a new workspace
-brain project new api-service
-
-# Link the git repository (clones to ~/dev/api-service)
-brain project link https://github.com/company/api-service.git
-```
-
-### 3. Enter "Dev Mode" ⚡️
-This is where the magic happens. Run `brain go` and select a project.
-
-- **If you have Tmux**: It detects linked repos, creates a session, activates your Python `venv`, and opens Neovim in the code *and* notes directories simultaneously.
-- **If you don't**: It simply jumps you to the project directory in a new shell.
-
-### 4. Navigation
+### Navigation
 We install a smart shell function `pg` ("Project Go") for rapid directory switching.
-
 ```bash
 pg  # Fuzzy find and cd into any active project
+```
+
+### Remote Management
+Manage your projects from anywhere in your terminal without leaving your home folder.
+```bash
+brain project list              # See all active projects
+brain project select my-app     # Focus on a project
+brain project link <url>        # Links to the focused project
+brain project pull              # Clones/Updates focused project repos
 ```
 
 ## 🛠 Command Reference
 
 | Command | Description |
 |---------|-------------|
+| `brain clone <url>` | **[New]** One-command project import. |
 | `brain add "text"` | Quick capture to inbox. |
 | `brain todo` | Fuzzy search all unchecked tasks across projects. |
 | `brain go` | Enter project context (Shell or Tmux + Venv). |
 | `brain refile` | Interactive inbox processing (GTD style). |
-| `brain project new`| Create a new project structure. |
-| `brain project link`| Link a Git URL to the current project. |
-| `brain project pull`| Update/Clone all linked repositories. |
+| `brain project list`| List active projects. |
+| `brain project select`| Focus on a project for remote commands. |
 | `brain switch` | Switch between different brains (work/personal). |
 
 ## 📦 Directory Structure
@@ -91,7 +83,7 @@ Each brain follows a modified PARA method:
 ~/brain/
 ├── 00_inbox.md          # Quick captures
 ├── 01_active/           # Active projects
-│   └── api-service/
+│   └── project-name/
 │       ├── notes.md     # Documentation
 │       ├── todo.md      # Tasks
 │       └── .repos       # Linked git URLs
@@ -100,26 +92,12 @@ Each brain follows a modified PARA method:
 └── 99_archive/          # Completed projects
 ```
 
- Linked repositories are cloned to `~/dev/` by default.
-
 ## 🔧 Configuration
 
 Stored in `~/.config/brain/config.json`.
 
-**Dependencies (Installed automatically by script):**
-- `fzf` (Fuzzy finding)
-- `ripgrep` (Fast searching)
-- `jq` (JSON processing)
-- `tmux` (Optional, for Dev Mode)
-- `neovim` / `vim`
-
-## 🤝 Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b feature/cool-feature`)
-3. Commit your changes (`git commit -am 'Add cool feature'`)
-4. Push to the branch (`git push origin feature/cool-feature`)
-5. Create a Pull Request
+**Dependencies:**
+`fzf`, `ripgrep`, `jq`, `make`. (Optional: `tmux` for Dev Mode).
 
 ## License
 

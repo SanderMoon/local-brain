@@ -10,13 +10,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate and source library
 if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
-    # 1. Dev/Repo location
+    # 1. Dev/Repo location (flat lib/)
     source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
-elif [[ -f "$(dirname "$SCRIPT_DIR")/../lib/brain/brain-config.sh" ]]; then
-    # 2. System install (via Makefile)
-    source "$(dirname "$SCRIPT_DIR")/../lib/brain/brain-config.sh"
+elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
+    # 2. System install (PREFIX/lib/brain/)
+    source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
 elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
-    # 3. User config location
+    # 3. User config location (Fallback)
     source "$HOME/.config/brain/lib/brain-config.sh"
 else
     echo "Error: brain-config.sh library not found." >&2
@@ -162,29 +162,39 @@ if brain_exists "$BRAIN_NAME"; then
 fi
 
 # Check if location already exists and is not empty
+ADOPTING=false
 if [[ -d "$LOCATION" ]] && [[ -n "$(ls -A "$LOCATION" 2>/dev/null)" ]]; then
-    echo "Warning: Directory '$LOCATION' already exists and is not empty"
-    read -p "Continue anyway? [y/N]: " continue_input
-    if [[ ! "$continue_input" =~ ^[Yy] ]]; then
-        echo "Aborted"
-        exit 1
+    # Check for brain structure
+    if [[ -d "$LOCATION/01_active" ]] && [[ -f "$LOCATION/00_inbox.md" ]]; then
+        echo "→ Found existing brain structure at '$LOCATION'. Adopting into configuration..."
+        ADOPTING=true
+    else
+        echo "Warning: Directory '$LOCATION' already exists and is not empty"
+        read -p "Continue anyway? [y/N]: " continue_input
+        if [[ ! "$continue_input" =~ ^[Yy] ]]; then
+            echo "Aborted"
+            exit 1
+        fi
     fi
 fi
 
 # Create directory structure
-echo ""
-echo "Creating brain at: $LOCATION"
-mkdir -p "$LOCATION"/{01_active,02_areas,03_resources,99_archive}
+if ! $ADOPTING; then
+    echo ""
+    echo "Creating brain at: $LOCATION"
+    mkdir -p "$LOCATION"/{01_active,02_areas,03_resources,99_archive}
 
-# Create inbox
-cat > "$LOCATION/00_inbox.md" << 'EOF'
+    # Create inbox
+    cat > "$LOCATION/00_inbox.md" << 'EOF'
 # Inbox
 
 Quick capture landing zone. Process with `brain refile`.
 
 EOF
-
-echo "✓ Created directory structure"
+    echo "✓ Created directory structure"
+else
+    echo "✓ Brain structure verified"
+fi
 
 # Add to config
 add_brain "$BRAIN_NAME" "$LOCATION"

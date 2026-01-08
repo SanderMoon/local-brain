@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+# brain-clone: Create project from git URL
+# Short-circuit command for: new + link + pull
+
+set -euo pipefail
+
+# Source config library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Locate and source library
+if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
+    # 1. Dev/Repo location (flat lib/)
+    source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
+elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
+    # 2. System install (PREFIX/lib/brain/)
+    source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
+elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
+    # 3. User config location (Fallback)
+    source "$HOME/.config/brain/lib/brain-config.sh"
+else
+    echo "Error: brain-config.sh library not found." >&2
+    exit 1
+fi
+
+BRAIN_PATH=$(get_current_brain_path)
+
+show_help() {
+    cat << 'EOF'
+brain-clone - Import a git repository as a project
+
+Usage:
+  brain clone <git-url> [project-name]
+
+Examples:
+  brain clone https://github.com/user/my-app
+  brain clone git@github.com:user/my-app.git custom-name
+
+What it does:
+  1. Creates a new project in your active brain
+  2. Links the repository
+  3. Clones the repository to ~/dev/
+  4. Focuses the new project context
+EOF
+}
+
+# Check for help
+if [[ $# -eq 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+GIT_URL="$1"
+# Extract repo name if project name not provided
+if [[ -n "${2:-}" ]]; then
+    PROJECT_NAME="$2"
+else
+    # Improved regex to handle trailing slashes and .git
+    URL_CLEAN="${GIT_URL%/}"
+    URL_CLEAN="${URL_CLEAN%.git}"
+    PROJECT_NAME=$(basename "$URL_CLEAN")
+    
+    if [[ -z "$PROJECT_NAME" ]]; then
+        echo "Error: Could not determine project name from URL. Please specify: brain clone <url> <name>"
+        exit 1
+    fi
+fi
+
+echo "🚀 Importing '$PROJECT_NAME'..."
+
+# 1. New project
+# Use 'brain project' via dispatcher to ensure consistency
+brain project new "$PROJECT_NAME"
+
+# 2. Link
+brain project link "$GIT_URL"
+
+# 3. Pull
+brain project pull
+
+echo ""
+echo "✨ Import complete!"
+echo "Active brain: $(get_current_brain)"
+echo "Current project focused: $PROJECT_NAME"
+echo ""
+echo "Next steps:"
+echo "  brain go           # Open dev environment"
+echo "  brain todo         # See initial tasks"

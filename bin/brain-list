@@ -9,13 +9,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate and source library
 if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
-    # 1. Dev/Repo location
+    # 1. Dev/Repo location (flat lib/)
     source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
-elif [[ -f "$(dirname "$SCRIPT_DIR")/../lib/brain/brain-config.sh" ]]; then
-    # 2. System install (via Makefile)
-    source "$(dirname "$SCRIPT_DIR")/../lib/brain/brain-config.sh"
+elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
+    # 2. System install (PREFIX/lib/brain/)
+    source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
 elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
-    # 3. User config location
+    # 3. User config location (Fallback)
     source "$HOME/.config/brain/lib/brain-config.sh"
 else
     echo "Error: brain-config.sh library not found." >&2
@@ -68,10 +68,16 @@ done
 BRAINS=($(list_brains))
 
 if [[ ${#BRAINS[@]} -eq 0 ]]; then
-    echo "No brains configured"
-    echo ""
-    echo "Initialize your first brain:"
-    echo "  brain init"
+    if [[ -d "$HOME/brain" ]]; then
+        echo "No configured brains."
+        echo "Using default shadow brain at ~/brain"
+        echo "(Run 'brain init ~/brain' to formalize)"
+    else
+        echo "No brains configured"
+        echo ""
+        echo "Initialize your first brain:"
+        echo "  brain init"
+    fi
     exit 0
 fi
 

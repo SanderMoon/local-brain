@@ -5,6 +5,9 @@
 
 set -euo pipefail
 
+# Resolve script directory to find sibling commands (robust for local usage)
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 show_help() {
     cat << 'EOF'
 Local Brain - CLI-based Project Management
@@ -20,6 +23,8 @@ Brain Management:
 
 Commands:
   add [text]       Capture note to inbox (quick or interactive)
+  clone [url]     Clone a git repo and create a brain project
+  projects         Alias for 'project list'
   todo             View all open tasks across projects
   refile           Process inbox items to projects
   go               Jump to a project directory
@@ -29,13 +34,9 @@ Commands:
 
 Examples:
   brain init                       # Initialize new brain (interactive)
-  brain init ~/work-brain          # Initialize work brain
+  brain clone <url>                # Import a project from git
+  brain projects                   # List all active projects
   brain switch work                # Switch to work brain
-  brain list                       # List all brains
-
-  brain add "Fix API bug"          # Quick capture to inbox
-  brain todo                       # Browse all open tasks
-  brain project new my-project     # Create new project
 
 For more information on each command, run: brain <command> --help
 
@@ -52,11 +53,25 @@ if [[ -z "$CMD" ]] || [[ "$CMD" == "help" ]] || [[ "$CMD" == "--help" ]] || [[ "
     exit 0
 fi
 
+# Special alias handling
+if [[ "$CMD" == "projects" ]]; then
+    if [[ -x "$SELF_DIR/brain-project" ]]; then
+        exec "$SELF_DIR/brain-project" list
+    else
+        exec brain-project list
+    fi
+fi
+
 # Build full command name
 FULL_CMD="brain-$CMD"
 
-# Check if command exists
-if command -v "$FULL_CMD" &> /dev/null; then
+# Check if command exists adjacent to this script
+if [[ -x "$SELF_DIR/$FULL_CMD" ]]; then
+    # Shift off the command name and pass remaining args
+    shift
+    exec "$SELF_DIR/$FULL_CMD" "$@"
+# Check if command exists in PATH
+elif command -v "$FULL_CMD" &> /dev/null; then
     # Shift off the command name and pass remaining args
     shift
     exec "$FULL_CMD" "$@"
@@ -64,7 +79,7 @@ else
     echo "Error: Unknown command '$CMD'"
     echo ""
     echo "Brain management: init, switch, list, current, path"
-    echo "Available commands: add, todo, refile, go, project, review, sync"
+    echo "Available commands: add, clone, projects, todo, refile, go, project, review, sync"
     echo ""
     echo "Run 'brain help' for usage information"
     exit 1
