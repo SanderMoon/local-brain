@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+
+# brain-add: Capture notes to inbox
+# Usage:
+#   brain add "text"  - Quick capture with timestamp
+#   brain add         - Open inbox in editor
+
+set -euo pipefail
+
+# Source config library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Locate and source library
+if [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh" ]]; then
+    # 1. Dev/Repo location
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh"
+elif [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh" ]]; then
+    # 2. System install (via Makefile)
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh"
+elif [[ -f "/.config/brain/lib/brain-config.sh" ]]; then
+    # 3. User config location
+    source "/.config/brain/lib/brain-config.sh"
+    BRAIN_PATH=$(get_current_brain_path)
+else
+    # Fallback to default if library not found
+    BRAIN_PATH="$HOME/brain"
+fi
+
+INBOX="$BRAIN_PATH/00_inbox.md"
+
+show_help() {
+    cat << 'EOF'
+brain-add - Capture notes to inbox
+
+Usage:
+  brain add "text"    Quick capture: append text to inbox with timestamp
+  brain add           Deep capture: open inbox in Neovim for editing
+
+Examples:
+  brain add "Fix API authentication bug"
+  brain add "Read paper on transformers"
+  brain add           # Opens editor for longer notes
+
+The inbox is located at: ~/brain/00_inbox.md
+Process inbox items with: brain refile
+EOF
+}
+
+# Check for help flag
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+# Ensure inbox exists
+if [[ ! -f "$INBOX" ]]; then
+    echo "Error: Inbox not found at $INBOX"
+    echo "Run install.sh first or create the file manually"
+    exit 1
+fi
+
+# Check if text provided (quick capture mode)
+if [[ $# -gt 0 ]]; then
+    # Quick capture mode: append with timestamp
+    TIMESTAMP=$(date +"%Y-%m-%d")
+    
+    # Simple lock mechanism
+    LOCK_DIR="$BRAIN_PATH/.inbox.lock"
+    MAX_RETRIES=5
+    RETRY_DELAY=1
+    
+    for ((i=0; i<MAX_RETRIES; i++)); do
+        if mkdir "$LOCK_DIR" 2>/dev/null; then
+            # Lock acquired
+            echo "- [ ] $* #captured:$TIMESTAMP" >> "$INBOX"
+            echo "✓ Added to inbox: $*"
+            
+            # Release lock
+            rmdir "$LOCK_DIR"
+            exit 0
+        else
+            # Wait and retry
+            sleep "$RETRY_DELAY"
+        fi
+    done
+    
+    echo "Error: Could not acquire lock for inbox (is another process writing?)"
+    echo "Lock file: $LOCK_DIR"
+    exit 1
+else
+    # Deep capture mode: open in editor
+    if command -v nvim &> /dev/null; then
+        # Open Neovim at the end of file (+ means last line)
+        nvim + "$INBOX"
+    elif command -v vim &> /dev/null; then
+        # Fallback to vim
+        vim + "$INBOX"
+    else
+        echo "Error: Neither nvim nor vim found"
+        echo "Please install Neovim: brew install neovim (macOS) or apt install neovim (Linux)"
+        exit 1
+    fi
+fi

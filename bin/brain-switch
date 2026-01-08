@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+
+# brain-switch: Switch between configured brains
+
+set -euo pipefail
+
+# Source config library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Locate and source library
+if [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh" ]]; then
+    # 1. Dev/Repo location
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh"
+elif [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh" ]]; then
+    # 2. System install (via Makefile)
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh"
+elif [[ -f "/.config/brain/lib/brain-config.sh" ]]; then
+    # 3. User config location
+    source "/.config/brain/lib/brain-config.sh"
+else
+    echo "Error: Cannot find brain-config.sh library"
+    exit 1
+fi
+
+show_help() {
+    cat << 'EOF'
+brain-switch - Switch to a different brain
+
+Usage:
+  brain switch [brain-name]
+
+Options:
+  --help, -h           Show this help
+
+Interactive Mode:
+  If no brain name provided, shows list and prompts for selection
+
+Examples:
+  brain switch work        # Switch to 'work' brain
+  brain switch             # Interactive selection
+  brain switch default     # Switch back to default
+
+After switching:
+  - All brain commands operate on the new brain
+  - ~/brain symlink points to new location
+  - Shell prompt updates (if configured)
+EOF
+}
+
+# Check for help
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+# Get available brains
+BRAINS=($(list_brains))
+
+if [[ ${#BRAINS[@]} -eq 0 ]]; then
+    echo "No brains configured"
+    echo ""
+    echo "Initialize a brain first:"
+    echo "  brain init"
+    exit 1
+fi
+
+# Get target brain
+TARGET_BRAIN="${1:-}"
+
+# Interactive mode if no brain specified
+if [[ -z "$TARGET_BRAIN" ]]; then
+    echo "Available brains:"
+    echo ""
+
+    current=$(get_current_brain)
+    i=1
+    for brain in "${BRAINS[@]}"; do
+        path=$(get_brain_path "$brain")
+        if [[ "$brain" == "$current" ]]; then
+            echo "  $i) $brain → $path (current)"
+        else
+            echo "  $i) $brain → $path"
+        fi
+        ((i++))
+    done
+
+    echo ""
+    read -p "Select brain [1-${#BRAINS[@]}] or name: " selection
+
+    # Check if number or name
+    if [[ "$selection" =~ ^[0-9]+$ ]]; then
+        idx=$((selection - 1))
+        if [[ $idx -ge 0 ]] && [[ $idx -lt ${#BRAINS[@]} ]]; then
+            TARGET_BRAIN="${BRAINS[$idx]}"
+        else
+            echo "Error: Invalid selection"
+            exit 1
+        fi
+    else
+        TARGET_BRAIN="$selection"
+    fi
+fi
+
+# Validate brain exists
+if ! brain_exists "$TARGET_BRAIN"; then
+    echo "Error: Brain '$TARGET_BRAIN' not found"
+    echo ""
+    echo "Available brains:"
+    for brain in "${BRAINS[@]}"; do
+        echo "  - $brain"
+    done
+    echo ""
+    echo "To create new brain: brain init"
+    exit 1
+fi
+
+# Check if already current
+current=$(get_current_brain)
+if [[ "$TARGET_BRAIN" == "$current" ]]; then
+    path=$(get_brain_path "$TARGET_BRAIN")
+    echo "Already using '$TARGET_BRAIN'"
+    echo "Location: $path"
+    exit 0
+fi
+
+# Switch to new brain
+if set_current_brain "$TARGET_BRAIN"; then
+    path=$(get_brain_path "$TARGET_BRAIN")
+    echo "✓ Switched to '$TARGET_BRAIN'"
+    echo "  Location: $path"
+    echo "  Symlink: ~/brain → $path"
+    echo ""
+    echo "Note: Restart your shell or run 'exec $SHELL' to update prompt"
+else
+    echo "Error: Failed to switch brain"
+    exit 1
+fi

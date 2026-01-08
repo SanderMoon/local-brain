@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Temporary files & Logs
+*.swp
+*.swo
+*~
+*.log
+.tmp/
+tmp/
+
+# Project specific
+test_env/
+.inbox.lock
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-*
+
+# Build artifacts
+*.tar.gz

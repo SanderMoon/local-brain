@@ -1,0 +1,349 @@
+#!/usr/bin/env bash
+
+# brain-project: Project management commands
+# Subcommands: new, link, pull, archive
+
+set -euo pipefail
+
+# Source config library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Locate and source library
+if [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh" ]]; then
+    # 1. Dev/Repo location
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh"
+elif [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh" ]]; then
+    # 2. System install (via Makefile)
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh"
+elif [[ -f "/.config/brain/lib/brain-config.sh" ]]; then
+    # 3. User config location
+    source "/.config/brain/lib/brain-config.sh"
+    BRAIN_PATH=$(get_current_brain_path)
+else
+    # Fallback to default if library not found
+    BRAIN_PATH="$BRAIN_PATH"
+fi
+
+
+BRAIN_DIR="$BRAIN_PATH"
+ACTIVE_DIR="$BRAIN_DIR/01_active"
+ARCHIVE_DIR="$BRAIN_DIR/99_archive"
+DEV_DIR="$HOME/dev"
+
+show_help() {
+    cat << 'EOF'
+brain-project - Project management
+
+Usage:
+  brain project new <name>              Create a new project
+  brain project link <git-url>          Link a git repository to current/selected project
+  brain project pull                    Clone/update all linked repositories
+  brain project archive <name>          Archive a project (move to 99_archive)
+
+Examples:
+  brain project new my-awesome-app
+  brain project link https://github.com/user/repo.git
+  brain project pull
+  brain project archive old-project
+
+Structure created for new projects:
+  $BRAIN_PATH/01_active/<name>/
+  ├── notes.md       # Project notes and documentation
+  ├── todo.md        # Project tasks
+  └── .repos         # Git repository URLs (one per line)
+
+Linked repositories are cloned to: ~/dev/<repo-name>
+EOF
+}
+
+# Create a new project
+cmd_new() {
+    local project_name="$1"
+
+    if [[ -z "$project_name" ]]; then
+        echo "Error: Project name required"
+        echo "Usage: brain project new <name>"
+        exit 1
+    fi
+
+    # Validate project name (no special chars, spaces)
+    if [[ ! "$project_name" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "Error: Project name can only contain letters, numbers, hyphens, and underscores"
+        exit 1
+    fi
+
+    local project_dir="$ACTIVE_DIR/$project_name"
+
+    if [[ -d "$project_dir" ]]; then
+        echo "Error: Project '$project_name' already exists"
+        exit 1
+    fi
+
+    # Create project directory
+    mkdir -p "$project_dir"
+
+    # Create notes.md
+    cat > "$project_dir/notes.md" << EOF
+# $project_name
+
+Created: $(date +"%Y-%m-%d")
+
+## Overview
+
+[Description of the project]
+
+## Notes
+
+EOF
+
+    # Create todo.md
+    cat > "$project_dir/todo.md" << EOF
+# Tasks
+
+## Active
+
+- [ ] Define project goals
+- [ ] Set up development environment
+
+## Completed
+
+EOF
+
+    # Create empty .repos file
+    touch "$project_dir/.repos"
+
+    echo "✓ Created project: $project_name"
+    echo "  Location: $project_dir"
+    echo ""
+    echo "Next steps:"
+    echo "  brain go                              # Jump to project"
+    echo "  brain project link <git-url>          # Link a repository"
+    echo "  brain add \"Task for $project_name\"    # Add tasks to inbox"
+    echo "  brain refile                          # Move tasks to project"
+}
+
+# Link a git repository
+cmd_link() {
+    local git_url="$1"
+
+    if [[ -z "$git_url" ]]; then
+        echo "Error: Git URL required"
+        echo "Usage: brain project link <git-url>"
+        exit 1
+    fi
+
+    # Basic URL validation
+    if [[ ! "$git_url" =~ ^(https?://|git@) ]]; then
+        echo "Error: Invalid git URL format"
+        echo "Expected: https://... or git@..."
+        exit 1
+    fi
+
+    # Validate remote repository exists
+    echo "Verifying repository..."
+    if ! git ls-remote "$git_url" HEAD &> /dev/null; then
+        echo "Warning: Could not verify repository at '$git_url'"
+        echo "This might be because:"
+        echo "  - The URL is incorrect"
+        echo "  - You don't have access rights"
+        echo "  - You are offline"
+        echo ""
+        read -p "Link anyway? [y/N]: " link_anyway
+        if [[ ! "$link_anyway" =~ ^[Yy] ]]; then
+            echo "Aborted"
+            exit 1
+        fi
+    fi
+
+    # Check if we're in a project directory
+    local current_dir="$(pwd)"
+    local repos_file=""
+
+    if [[ "$current_dir" == "$ACTIVE_DIR"/* ]]; then
+        # We're in a project directory
+        repos_file="$current_dir/.repos"
+    else
+        # Let user select a project
+        echo "Not in a project directory. Select a project:"
+
+        if ! command -v fzf &> /dev/null; then
+            echo "Error: fzf required for project selection"
+            exit 1
+        fi
+
+        local project=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | \
+            fzf --header="Select project to link repository" || true)
+
+        if [[ -z "$project" ]]; then
+            echo "No project selected"
+            exit 1
+        fi
+
+        repos_file="$ACTIVE_DIR/$project/.repos"
+    fi
+
+    # Check if URL already exists
+    if [[ -f "$repos_file" ]] && grep -Fxq "$git_url" "$repos_file"; then
+        echo "Repository already linked"
+        exit 0
+    fi
+
+    # Append URL to .repos
+    echo "$git_url" >> "$repos_file"
+    echo "✓ Linked repository: $git_url"
+    echo "  To: $(dirname "$repos_file")"
+    echo ""
+    echo "Run 'brain project pull' to clone/update repositories"
+}
+
+# Pull all linked repositories
+cmd_pull() {
+    # Check if we're in a project directory or use current location
+    local current_dir="$(pwd)"
+    local repos_file=""
+
+    if [[ "$current_dir" == "$ACTIVE_DIR"/* ]] && [[ -f "$current_dir/.repos" ]]; then
+        # We're in a project directory
+        repos_file="$current_dir/.repos"
+    elif [[ -f ".repos" ]]; then
+        # .repos file in current directory
+        repos_file=".repos"
+    else
+        echo "Error: No .repos file found"
+        echo "Run from a project directory or ensure .repos exists"
+        exit 1
+    fi
+
+    # Ensure dev directory exists
+    mkdir -p "$DEV_DIR"
+
+    # Read repositories
+    if [[ ! -s "$repos_file" ]]; then
+        echo "No repositories linked in .repos file"
+        exit 0
+    fi
+
+    echo "Processing repositories from: $repos_file"
+    echo ""
+
+    while IFS= read -r git_url; do
+        # Skip empty lines and comments
+        [[ -z "$git_url" ]] && continue
+        [[ "$git_url" =~ ^# ]] && continue
+
+        # Extract repo name from URL
+        # Handle both https://github.com/user/repo.git and git@github.com:user/repo.git
+        local repo_name
+        if [[ "$git_url" =~ /([^/]+)\.git$ ]]; then
+            repo_name="${BASH_REMATCH[1]}"
+        elif [[ "$git_url" =~ /([^/]+)$ ]]; then
+            repo_name="${BASH_REMATCH[1]}"
+        elif [[ "$git_url" =~ :([^/]+)\.git$ ]]; then
+            repo_name="${BASH_REMATCH[1]}"
+        else
+            echo "⚠ Skipping invalid URL: $git_url"
+            continue
+        fi
+
+        local repo_path="$DEV_DIR/$repo_name"
+
+        echo "━━━ $repo_name ━━━"
+
+        if [[ -d "$repo_path" ]]; then
+            # Repository exists, pull updates
+            echo "Updating existing repository..."
+            if git -C "$repo_path" pull; then
+                echo "✓ Updated: $repo_path"
+            else
+                echo "✗ Failed to update: $repo_path"
+            fi
+        else
+            # Clone new repository
+            echo "Cloning new repository..."
+            if git clone "$git_url" "$repo_path"; then
+                echo "✓ Cloned to: $repo_path"
+            else
+                echo "✗ Failed to clone: $git_url"
+            fi
+        fi
+
+        echo ""
+    done < "$repos_file"
+
+    echo "Done processing repositories"
+}
+
+# Archive a project
+cmd_archive() {
+    local project_name="$1"
+
+    if [[ -z "$project_name" ]]; then
+        echo "Error: Project name required"
+        echo "Usage: brain project archive <name>"
+        exit 1
+    fi
+
+    local project_dir="$ACTIVE_DIR/$project_name"
+
+    if [[ ! -d "$project_dir" ]]; then
+        echo "Error: Project '$project_name' not found in active projects"
+        exit 1
+    fi
+
+    # Ensure archive directory exists
+    mkdir -p "$ARCHIVE_DIR"
+
+    # Create timestamped archive name
+    local timestamp=$(date +"%Y%m%d")
+    local archive_name="${project_name}_${timestamp}"
+    local archive_path="$ARCHIVE_DIR/$archive_name"
+
+    # Handle duplicate archive names
+    local counter=1
+    while [[ -d "$archive_path" ]]; do
+        archive_name="${project_name}_${timestamp}_${counter}"
+        archive_path="$ARCHIVE_DIR/$archive_name"
+        counter=$((counter + 1))
+    done
+
+    # Move project to archive
+    mv "$project_dir" "$archive_path"
+
+    echo "✓ Archived project: $project_name"
+    echo "  To: $archive_path"
+}
+
+# Main command router
+main() {
+    if [[ $# -eq 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+        show_help
+        exit 0
+    fi
+
+    local subcommand="$1"
+    shift
+
+    case "$subcommand" in
+        new)
+            cmd_new "$@"
+            ;;
+        link)
+            cmd_link "$@"
+            ;;
+        pull)
+            cmd_pull
+            ;;
+        archive)
+            cmd_archive "$@"
+            ;;
+        *)
+            echo "Error: Unknown subcommand '$subcommand'"
+            echo ""
+            echo "Available subcommands: new, link, pull, archive"
+            echo "Run 'brain project --help' for usage information"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

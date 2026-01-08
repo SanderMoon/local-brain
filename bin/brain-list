@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+# brain-list: List all configured brains
+
+set -euo pipefail
+
+# Source config library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Locate and source library
+if [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh" ]]; then
+    # 1. Dev/Repo location
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh"
+elif [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh" ]]; then
+    # 2. System install (via Makefile)
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh"
+elif [[ -f "/.config/brain/lib/brain-config.sh" ]]; then
+    # 3. User config location
+    source "/.config/brain/lib/brain-config.sh"
+else
+    echo "Error: Cannot find brain-config.sh library"
+    exit 1
+fi
+
+show_help() {
+    cat << 'EOF'
+brain-list - List all configured brains
+
+Usage:
+  brain list [options]
+
+Options:
+  --paths              Show full paths
+  --help, -h           Show this help
+
+Output:
+  Lists all configured brains with current brain marked
+
+Examples:
+  brain list            # Simple list
+  brain list --paths    # Include full paths
+EOF
+}
+
+# Parse arguments
+SHOW_PATHS=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        --paths)
+            SHOW_PATHS=true
+            shift
+            ;;
+        *)
+            echo "Error: Unknown argument '$1'"
+            exit 1
+            ;;
+    esac
+done
+
+# Get available brains
+BRAINS=($(list_brains))
+
+if [[ ${#BRAINS[@]} -eq 0 ]]; then
+    echo "No brains configured"
+    echo ""
+    echo "Initialize your first brain:"
+    echo "  brain init"
+    exit 0
+fi
+
+# Get current brain
+current=$(get_current_brain)
+
+echo "Configured brains:"
+echo ""
+
+for brain in "${BRAINS[@]}"; do
+    path=$(get_brain_path "$brain")
+
+    if [[ "$brain" == "$current" ]]; then
+        marker="*"
+    else
+        marker=" "
+    fi
+
+    if $SHOW_PATHS; then
+        printf "  %s %-20s %s\n" "$marker" "$brain" "$path"
+    else
+        if [[ "$brain" == "$current" ]]; then
+            echo "  $marker $brain (current)"
+        else
+            echo "  $marker $brain"
+        fi
+    fi
+done
+
+if [[ -n "$current" ]]; then
+    echo ""
+    echo "* = current active brain"
+fi

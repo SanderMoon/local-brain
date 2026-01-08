@@ -1,0 +1,206 @@
+#!/usr/bin/env bash
+
+# brain-sync: Syncthing control wrapper
+# Provides convenient commands for syncing the brain directory
+
+set -euo pipefail
+
+# Source config library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Locate and source library
+if [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh" ]]; then
+    # 1. Dev/Repo location
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/lib/brain-config.sh"
+elif [[ -f "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh" ]]; then
+    # 2. System install (via Makefile)
+    source "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400 701dirname "")/../lib/brain/brain-config.sh"
+elif [[ -f "/.config/brain/lib/brain-config.sh" ]]; then
+    # 3. User config location
+    source "/.config/brain/lib/brain-config.sh"
+    BRAIN_PATH=$(get_current_brain_path)
+else
+    # Fallback to default if library not found
+    BRAIN_PATH="$BRAIN_PATH"
+fi
+
+
+BRAIN_DIR="$BRAIN_PATH"
+
+show_help() {
+    cat << 'EOF'
+brain-sync - Syncthing control
+
+Usage:
+  brain sync [status|scan|rescan]
+
+Commands:
+  status           Show Syncthing sync status
+  scan|rescan      Force rescan of brain folder (default)
+
+Examples:
+  brain sync          # Force rescan of brain directory
+  brain sync scan     # Same as above
+  brain sync status   # Show sync status
+
+Requirements:
+  - Syncthing installed and running
+  - Syncthing CLI available
+
+Note: Syncthing typically auto-syncs. This command is useful for:
+  - Forcing immediate sync after changes
+  - Checking sync status
+  - Troubleshooting sync issues
+
+Setup Syncthing:
+  1. Install: brew install syncthing (macOS) or apt install syncthing (Linux)
+  2. Start: syncthing (or set up as system service)
+  3. Configure: http://localhost:8384
+  4. Add ~/brain folder to sync
+  5. Set up hub-and-spoke with NAS as hub
+EOF
+}
+
+# Check if Syncthing is available
+check_syncthing() {
+    if ! command -v syncthing &> /dev/null; then
+        echo "Error: Syncthing not found"
+        echo ""
+        echo "Install Syncthing:"
+        echo "  macOS:  brew install syncthing"
+        echo "  Linux:  apt install syncthing (or dnf/pacman)"
+        echo ""
+        echo "After installation:"
+        echo "  1. Run: syncthing"
+        echo "  2. Visit: http://localhost:8384"
+        echo "  3. Add ~/brain to sync folders"
+        exit 1
+    fi
+}
+
+# Check if Syncthing is running
+check_running() {
+    if ! pgrep -x syncthing > /dev/null; then
+        echo "Warning: Syncthing doesn't appear to be running"
+        echo ""
+        echo "Start Syncthing:"
+        echo "  syncthing"
+        echo ""
+        echo "Or set up as system service for automatic startup"
+        return 1
+    fi
+    return 0
+}
+
+# Show status
+cmd_status() {
+    check_syncthing
+
+    if ! check_running; then
+        exit 1
+    fi
+
+    echo "Checking Syncthing status..."
+    echo ""
+
+    # Try to get status via CLI
+    if command -v curl &> /dev/null; then
+        # Use REST API (default port 8384)
+        local api_url="http://localhost:8384/rest/system/status"
+
+        if curl -s "$api_url" > /dev/null 2>&1; then
+            echo "✓ Syncthing is running"
+            echo ""
+            echo "Web interface: http://localhost:8384"
+            echo ""
+            echo "For detailed status, visit the web interface"
+            echo "or use: syncthing cli"
+        else
+            echo "⚠ Cannot connect to Syncthing API"
+            echo "Ensure Syncthing is running: syncthing"
+        fi
+    else
+        echo "✓ Syncthing process is running"
+        echo ""
+        echo "Web interface: http://localhost:8384"
+        echo ""
+        echo "Install curl for detailed status: brew install curl"
+    fi
+}
+
+# Force rescan
+cmd_scan() {
+    check_syncthing
+
+    if ! check_running; then
+        echo ""
+        echo "Start Syncthing first, then run: brain sync scan"
+        exit 1
+    fi
+
+    echo "Forcing rescan of brain directory..."
+    echo "Location: $BRAIN_DIR"
+    echo ""
+
+    # Try to trigger rescan via REST API
+    if command -v curl &> /dev/null; then
+        # Get folder ID (typically "brain" or auto-generated)
+        # This is a simplified approach - in production would query API for folder list
+
+        echo "Note: Triggering rescan via Syncthing REST API"
+        echo ""
+        echo "If this doesn't work, manually trigger rescan:"
+        echo "  1. Visit: http://localhost:8384"
+        echo "  2. Find brain folder"
+        echo "  3. Click 'Rescan' button"
+        echo ""
+
+        # Attempt generic rescan
+        # Note: This may require authentication in some Syncthing setups
+        local api_url="http://localhost:8384/rest/db/scan"
+
+        if curl -s -X POST "$api_url" > /dev/null 2>&1; then
+            echo "✓ Rescan triggered"
+        else
+            echo "⚠ Could not trigger automatic rescan"
+            echo "Manual rescan required via web interface"
+        fi
+    else
+        echo "Syncthing is running but automatic rescan requires curl"
+        echo ""
+        echo "Option 1: Install curl"
+        echo "  brew install curl (macOS)"
+        echo "  apt install curl (Linux)"
+        echo ""
+        echo "Option 2: Manual rescan"
+        echo "  Visit: http://localhost:8384"
+        echo "  Find brain folder and click 'Rescan'"
+    fi
+}
+
+# Main command router
+main() {
+    local cmd="${1:-scan}"
+
+    case "$cmd" in
+        --help|-h|help)
+            show_help
+            exit 0
+            ;;
+        status)
+            cmd_status
+            ;;
+        scan|rescan)
+            cmd_scan
+            ;;
+        *)
+            echo "Error: Unknown command '$cmd'"
+            echo ""
+            echo "Available commands: status, scan, rescan"
+            echo "Run 'brain sync --help' for usage information"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

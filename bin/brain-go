@@ -1,0 +1,208 @@
+#!/usr/bin/env bash
+
+# brain-go: Jump to a project directory
+# Opens a new shell or Tmux session in the selected project directory
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Locate and source library
+if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
+    # 1. Dev/Repo location
+    source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
+elif [[ -f "$(dirname "$SCRIPT_DIR")/../lib/brain/brain-config.sh" ]]; then
+    # 2. System install (via Makefile)
+    source "$(dirname "$SCRIPT_DIR")/../lib/brain/brain-config.sh"
+elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
+    # 3. User config location
+    source "$HOME/.config/brain/lib/brain-config.sh"
+else
+    echo "Error: brain-config.sh library not found." >&2
+    exit 1
+fi
+
+BRAIN_PATH=$(get_current_brain_path)
+ACTIVE_DIR="$BRAIN_PATH/01_active"
+
+show_help() {
+    cat << 'EOF'
+brain-go - Jump to a project directory
+
+Usage:
+  brain go            Select and jump to a project
+
+Features:
+  - Fuzzy search through all active projects
+  - Auto-detects linked repositories
+  - Intelligent Environment Setup:
+    - If Tmux is available and repos are linked:
+      - Creates/Attaches to session 'brain-<project>'
+      - Window 1 (Code): Repos dir, venv activated, editor opened
+      - Window 2 (Notes): Project notes, editor opened
+    - Fallback: Opens new shell in project directory
+
+Examples:
+  brain go            # Select and jump
+EOF
+}
+
+# Check for help flag
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+# Check requirements
+if [[ ! -d "$ACTIVE_DIR" ]]; then
+    echo "Error: Active projects directory not found: $ACTIVE_DIR"
+    exit 1
+fi
+
+if ! command -v fzf &> /dev/null; then
+    echo "Error: fzf not found"
+    exit 1
+fi
+
+# Find projects
+PROJECTS=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null || true)
+
+if [[ -z "$PROJECTS" ]]; then
+    echo "No projects found in $ACTIVE_DIR"
+    exit 0
+fi
+
+# Prepare preview command
+if command -v bat &> /dev/null; then
+    PREVIEW_CMD='echo "━━━ Notes ━━━"; bat --color=always --style=plain {}/notes.md 2>/dev/null || echo "No notes yet"; echo ""; echo "━━━ Tasks ━━━"; bat --color=always --style=plain {}/todo.md 2>/dev/null || echo "No tasks yet"'
+else
+    PREVIEW_CMD='echo "━━━ Notes ━━━"; cat {}/notes.md 2>/dev/null || echo "No notes yet"; echo ""; echo "━━━ Tasks ━━━"; cat {}/todo.md 2>/dev/null || echo "No tasks yet"'
+fi
+
+# Select project
+SELECTED=$(echo "$PROJECTS" | fzf \
+    --preview "$PREVIEW_CMD" \
+    --preview-window 'right:60%' \
+    --header 'Select a project to jump to (Esc to cancel)' \
+    --prompt 'Project> ' \
+    || true)
+
+if [[ -z "$SELECTED" ]]; then
+    echo "No project selected"
+    exit 0
+fi
+
+PROJECT_NAME=$(basename "$SELECTED")
+PROJECT_DIR="$SELECTED"
+REPOS=($(get_linked_repos "$PROJECT_NAME"))
+
+# Decision Logic: Simple Shell vs Tmux Dev Environment
+USE_TMUX=false
+
+if command -v tmux &> /dev/null && [[ ${#REPOS[@]} -gt 0 ]]; then
+    USE_TMUX=true
+fi
+
+# ------------------------------------------------------------------
+# Standard Shell Mode (No Tmux or No Repos)
+# ------------------------------------------------------------------
+if [[ "$USE_TMUX" == "false" ]]; then
+    echo "Entering project: $PROJECT_NAME"
+    echo "Location: $PROJECT_DIR"
+    
+    if [[ ${#REPOS[@]} -gt 0 ]]; then
+        echo "Linked Repositories:"
+        for repo in "${REPOS[@]}"; do
+            echo "  - $repo"
+        done
+        echo "Tip: Install tmux to enable auto-environment setup"
+    fi
+    
+    echo ""
+    echo "Type 'exit' or press Ctrl+D to return"
+    
+    cd "$PROJECT_DIR" && exec "$SHELL"
+fi
+
+# ------------------------------------------------------------------
+# Tmux Dev Environment Mode
+# ------------------------------------------------------------------
+
+# Resolve Primary Repo
+PRIMARY_REPO=""
+if [[ ${#REPOS[@]} -eq 1 ]]; then
+    PRIMARY_REPO="${REPOS[0]}"
+else
+    # Multiple repos: ask user
+    PRIMARY_REPO=$(printf "%s\n" "${REPOS[@]}" | fzf \
+        --header "Select primary repository for this session" \
+        --prompt "Repo> ")
+    
+    if [[ -z "$PRIMARY_REPO" ]]; then
+        # Cancelled repo selection, fall back to notes
+        cd "$PROJECT_DIR" && exec "$SHELL"
+    fi
+fi
+
+# Ensure repo exists
+if [[ ! -d "$PRIMARY_REPO" ]]; then
+    echo "Warning: Repository directory not found at $PRIMARY_REPO"
+    echo "Run 'brain project pull' to clone it first."
+    read -p "Press Enter to continue to notes only..."
+    cd "$PROJECT_DIR" && exec "$SHELL"
+fi
+
+SESSION_NAME="brain-${PROJECT_NAME//./_}"
+EDITOR_CMD="${EDITOR:-vim}"
+if command -v nvim &> /dev/null; then EDITOR_CMD="nvim"; fi
+
+# Check if session exists
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    echo "Attaching to existing session: $SESSION_NAME"
+    if [[ -n "${TMUX:-}" ]]; then
+        tmux switch-client -t "$SESSION_NAME"
+    else
+        tmux attach -t "$SESSION_NAME"
+    fi
+    exit 0
+fi
+
+echo "Setting up dev environment for $PROJECT_NAME..."
+
+# Create Session (starts in Code directory)
+# -d: Detached (we attach at end)
+# -s: Session name
+# -c: Start directory (Primary Repo)
+tmux new-session -d -s "$SESSION_NAME" -c "$PRIMARY_REPO" -n "code"
+
+# 1. Setup Code Window
+# Check/Create venv
+# We use a subshell to check without changing current dir, though tmux starts in repo	mux send-keys -t "$SESSION_NAME:code" "
+if [[ ! -d .venv ]] && [[ ! -d venv ]]; then
+    echo 'Creating virtual environment...'
+    python3 -m venv .venv 2>/dev/null || true
+fi
+
+if [[ -f .venv/bin/activate ]]; then
+    source .venv/bin/activate
+elif [[ -f venv/bin/activate ]]; then
+    source venv/bin/activate
+fi
+
+clear
+$EDITOR_CMD .
+" C-m
+
+# 2. Setup Notes Window
+tmux new-window -t "$SESSION_NAME" -n "notes" -c "$PROJECT_DIR"
+tmux send-keys -t "$SESSION_NAME:notes" "$EDITOR_CMD notes.md todo.md" C-m
+
+# Select Code window as default
+tmux select-window -t "$SESSION_NAME:code"
+
+# Attach
+if [[ -n "${TMUX:-}" ]]; then
+    tmux switch-client -t "$SESSION_NAME"
+else
+    tmux attach -t "$SESSION_NAME"
+fi

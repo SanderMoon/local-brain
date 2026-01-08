@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+# Main dispatcher for Local Brain CLI
+# Routes 'brain <command>' to 'brain-<command>'
+
+set -euo pipefail
+
+show_help() {
+    cat << 'EOF'
+Local Brain - CLI-based Project Management
+
+Usage: brain <command> [options]
+
+Brain Management:
+  init             Initialize a new brain location
+  switch           Switch between configured brains
+  list             List all configured brains
+  current          Show current active brain
+  path             Show path to current or specified brain
+
+Commands:
+  add [text]       Capture note to inbox (quick or interactive)
+  todo             View all open tasks across projects
+  refile           Process inbox items to projects
+  go               Jump to a project directory
+  project          Manage projects (new, link, pull, archive)
+  review           AI-powered project analysis (stub)
+  sync             Control Syncthing sync operations
+
+Examples:
+  brain init                       # Initialize new brain (interactive)
+  brain init ~/work-brain          # Initialize work brain
+  brain switch work                # Switch to work brain
+  brain list                       # List all brains
+
+  brain add "Fix API bug"          # Quick capture to inbox
+  brain todo                       # Browse all open tasks
+  brain project new my-project     # Create new project
+
+For more information on each command, run: brain <command> --help
+
+Documentation: See ~/brain structure
+EOF
+}
+
+# Get the command (first argument)
+CMD="${1:-}"
+
+# If no command or help flag, show help
+if [[ -z "$CMD" ]] || [[ "$CMD" == "help" ]] || [[ "$CMD" == "--help" ]] || [[ "$CMD" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+# Build full command name
+FULL_CMD="brain-$CMD"
+
+# Check if command exists
+if command -v "$FULL_CMD" &> /dev/null; then
+    # Shift off the command name and pass remaining args
+    shift
+    exec "$FULL_CMD" "$@"
+else
+    echo "Error: Unknown command '$CMD'"
+    echo ""
+    echo "Brain management: init, switch, list, current, path"
+    echo "Available commands: add, todo, refile, go, project, review, sync"
+    echo ""
+    echo "Run 'brain help' for usage information"
+    exit 1
+fi
