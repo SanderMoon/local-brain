@@ -33,13 +33,14 @@ show_help() {
 brain-add - Capture notes to dump
 
 Usage:
-  brain add "text"    Quick capture: append text to dump with timestamp
-  brain add           Deep capture: open dump in Neovim for editing
+  brain add "text"        Quick capture: append task to dump with timestamp
+  brain add -n "text"     Quick capture: append note to dump with timestamp
+  brain add               Deep capture: open dump in Neovim for editing
 
 Examples:
-  brain add "Fix API authentication bug"
-  brain add "Read paper on transformers"
-  brain add           # Opens editor for longer notes
+  brain add "Fix API authentication bug"        # Creates a task
+  brain add -n "Meeting notes from standup"     # Creates a note
+  brain add                                     # Opens editor for longer notes
 
 The dump is located at: ~/brain/00_dump.md
 Process dump items with: brain refile
@@ -59,22 +60,35 @@ if [[ ! -f "$INBOX" ]]; then
     exit 1
 fi
 
+# Parse -n flag for note capture
+IS_NOTE=false
+if [[ "${1:-}" == "-n" ]]; then
+    IS_NOTE=true
+    shift
+fi
+
 # Check if text provided (quick capture mode)
 if [[ $# -gt 0 ]]; then
     # Quick capture mode: append with timestamp
     TIMESTAMP=$(date +"%Y-%m-%d")
-    
+
     # Simple lock mechanism
     LOCK_DIR="$BRAIN_PATH/.inbox.lock"
     MAX_RETRIES=5
     RETRY_DELAY=1
-    
+
     for ((i=0; i<MAX_RETRIES; i++)); do
         if mkdir "$LOCK_DIR" 2>/dev/null; then
             # Lock acquired
-            echo "- [ ] $* #captured:$TIMESTAMP" >> "$INBOX"
-            echo "OK: Added to dump: $*"
-            
+            # Conditional append based on type
+            if [[ "$IS_NOTE" == "true" ]]; then
+                echo "[Note] $* #captured:$TIMESTAMP" >> "$INBOX"
+                echo "OK: Added note to dump: $*"
+            else
+                echo "- [ ] $* #captured:$TIMESTAMP" >> "$INBOX"
+                echo "OK: Added task to dump: $*"
+            fi
+
             # Release lock
             rmdir "$LOCK_DIR"
             exit 0
@@ -83,7 +97,7 @@ if [[ $# -gt 0 ]]; then
             sleep "$RETRY_DELAY"
         fi
     done
-    
+
     echo "Error: Could not acquire lock for dump (is another process writing?)"
     echo "Lock file: $LOCK_DIR"
     exit 1

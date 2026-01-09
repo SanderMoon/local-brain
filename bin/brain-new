@@ -22,21 +22,21 @@ fi
 
 show_help() {
     cat << 'EOF'
-brain-init - Initialize a new brain
+brain-new - Create a new brain
 
 Usage:
-  brain init [name]
+  brain new [name]
 
   If no name provided, defaults to 'default'.
   Brains are always created in ~/brains/<name>.
 
 Examples:
-  brain init              # Creates ~/brains/default
-  brain init work         # Creates ~/brains/work
+  brain new              # Creates ~/brains/default
+  brain new work         # Creates ~/brains/work
 
 Structure created:
   ~/brains/<name>/
-  ├── 00_inbox.md
+  ├── 00_dump.md
   ├── 01_active/
   ├── 02_areas/
   ├── 03_resources/

@@ -47,12 +47,12 @@ Workflow:
  1. Shows each dump item
  2. Select destination project with fuzzy finder
  3. Item is moved to project's todo.md
- 4. Repeat until dump is empty or cancelled
+ 4. Repeat until dump is empty or quit
 
 Tips:
- - Press Enter to select a project
- - Press Esc to skip an item
- - Items that are skipped remain in dump
+ - Select [SKIP] to keep an item in dump
+ - Select [TRASH] to delete an item
+ - Press Esc or Ctrl-C to quit refiling
 
 Example:
  brain refile    # Start processing dump
@@ -63,6 +63,37 @@ EOF
 if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
   show_help
   exit 0
+fi
+
+# Source API library for non-interactive mode
+if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh" ]]; then
+  source "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh"
+elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh" ]]; then
+  source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh"
+elif [[ -f "$HOME/.config/brain/lib/brain-api.sh" ]]; then
+  source "$HOME/.config/brain/lib/brain-api.sh"
+fi
+
+# Detect non-interactive mode: brain refile <ID> <PROJECT> [--as TYPE]
+if [[ $# -ge 2 ]] && [[ "${1:-}" =~ ^[a-f0-9]{6}$ ]]; then
+  TARGET_ID="$1"
+  PROJECT_NAME="$2"
+  TYPE_OVERRIDE=""
+
+  # Parse --as flag
+  if [[ "${3:-}" == "--as" ]] && [[ -n "${4:-}" ]]; then
+    TYPE_OVERRIDE="$4"
+
+    # Validate type
+    if [[ "$TYPE_OVERRIDE" != "todo" ]] && [[ "$TYPE_OVERRIDE" != "note" ]]; then
+      echo "Error: Invalid type. Use 'todo' or 'note'" >&2
+      exit 2
+    fi
+  fi
+
+  # Execute non-interactive refiling
+  refile_by_id "$TARGET_ID" "$PROJECT_NAME" "$TYPE_OVERRIDE"
+  exit $?
 fi
 
 # Check if inbox exists
@@ -98,15 +129,25 @@ fi
 echo "Reading dump..."
 ITEMS=()
 LINE_NUMS=()
+ITEM_TYPES=()
 LINE_NUM=0
 
 while IFS= read -r line; do
-      LINE_NUM=$((LINE_NUM + 1))
-      # Skip empty lines, markdown headers, and non-list items
-      if [[ -n "${line// /}" ]] && [[ ! "$line" =~ ^#+ ]] && [[ "$line" =~ ^- ]]; then
-          ITEMS+=("$line")
-          LINE_NUMS+=("$LINE_NUM")
-      fi
+    LINE_NUM=$((LINE_NUM + 1))
+    # Skip empty lines and markdown headers
+    if [[ -n "${line// /}" ]] && [[ ! "$line" =~ ^#+ ]]; then
+        # Detect tasks (checkbox)
+        if [[ "$line" =~ ^-\ \[\ \] ]]; then
+            ITEMS+=("$line")
+            LINE_NUMS+=("$LINE_NUM")
+            ITEM_TYPES+=("task")
+        # Detect notes ([Note] prefix)
+        elif [[ "$line" =~ ^\[Note\] ]]; then
+            ITEMS+=("$line")
+            LINE_NUMS+=("$LINE_NUM")
+            ITEM_TYPES+=("note")
+        fi
+    fi
 done < "$INBOX"
 
 # Check if there are items to process
@@ -119,12 +160,38 @@ fi
 echo "Found $ITEM_COUNT item(s) to process"
 echo ""
 
+# Helper: Add both [Todo] and [Note] targets for a project
+add_project_targets() {
+    local proj="$1"
+    local item_type="$2"
+
+    # Color codes (requires fzf --ansi)
+    local GREEN='\033[0;32m'
+    local BLUE='\033[0;34m'
+    local NC='\033[0m'
+
+    # For tasks: [Todo] first (pre-selected)
+    # For notes: [Note] first (pre-selected)
+    if [[ "$item_type" == "task" ]]; then
+        NUM_LIST="${NUM_LIST}${idx}. ${GREEN}[Todo]${NC} ${proj}\n"
+        idx=$((idx + 1))
+        NUM_LIST="${NUM_LIST}${idx}. ${BLUE}[Note]${NC} ${proj}\n"
+        idx=$((idx + 1))
+    else
+        NUM_LIST="${NUM_LIST}${idx}. ${BLUE}[Note]${NC} ${proj}\n"
+        idx=$((idx + 1))
+        NUM_LIST="${NUM_LIST}${idx}. ${GREEN}[Todo]${NC} ${proj}\n"
+        idx=$((idx + 1))
+    fi
+}
+
 # Process each item
 PROCESSED_COUNT=0
 SKIPPED_COUNT=0
 
 for i in "${!ITEMS[@]}"; do
   ITEM="${ITEMS[$i]}"
+  ITEM_TYPE="${ITEM_TYPES[$i]}"
   ITEM_NUM=$((i + 1))
 
   echo "----------------------------------------"
@@ -132,70 +199,153 @@ for i in "${!ITEMS[@]}"; do
   echo " $ITEM"
   echo ""
 
-  # Show projects and let user select
-  SELECTED_PROJECT=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | \
-    sort | \
-    fzf --height=50% \
-      --header="Select destination project (Esc to skip)" \
-      --prompt="Project> " \
-      --preview "echo '--- Notes ---'; cat '$ACTIVE_DIR'/{}/notes.md 2>/dev/null || echo 'No notes yet'; echo ''; echo '--- Tasks ---'; cat '$ACTIVE_DIR'/{}/todo.md 2>/dev/null || echo 'No tasks yet'" \
-      --preview-window=right:60% \
-      || true)
+  # Build flattened list of options
+  FOCUSED=$(get_focused_project)
+  PROJECTS=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
 
-  if [[ -n "$SELECTED_PROJECT" ]]; then
-    PROJECT_DIR="$ACTIVE_DIR/$SELECTED_PROJECT"
-    TODO_FILE="$PROJECT_DIR/todo.md"
+  NUM_LIST=""
+  idx=1
 
-    # Ensure todo.md exists
-    if [[ ! -f "$TODO_FILE" ]]; then
-      echo "# Tasks" > "$TODO_FILE"
-      echo "" >> "$TODO_FILE"
-    fi
+  # 1. Focused project first (both targets)
+  if [[ -n "$FOCUSED" ]]; then
+      add_project_targets "$FOCUSED" "$ITEM_TYPE"
+  fi
 
-    # Append item to project's todo.md
-    echo "$ITEM" >> "$TODO_FILE"
-    echo "OK: Moved to: $SELECTED_PROJECT"
+  # 2. Other projects (both targets)
+  while read -r proj; do
+      [[ "$proj" == "$FOCUSED" ]] && continue
+      [[ -z "$proj" ]] && continue
+      add_project_targets "$proj" "$ITEM_TYPE"
+  done <<< "$PROJECTS"
 
-    # Mark this line number as processed
+  # 3. Skip and Trash
+  NUM_LIST="${NUM_LIST}${idx}. [SKIP]\n$((idx + 1)). [TRASH]"
+
+  # Use a temp file to capture fzf output to preserve exit code
+  FZF_OUT=$(mktemp)
+  
+  echo -e "$NUM_LIST" | \
+    fzf --height=50% --no-sort --ansi \
+      --header="Select # or type name (Esc/Ctrl-C to quit)" \
+      --prompt="Refile> " \
+      --preview "SELECTION=\$(echo {} | sed 's/\x1b\[[0-9;]*m//g'); P=\$(echo \$SELECTION | sed 's/^[0-9]*\. //' | sed 's/^\[[^]]*\] //'); if [[ \$SELECTION == *'[TRASH]'* ]]; then echo 'Delete this item'; elif [[ \$SELECTION == *'[SKIP]'* ]]; then echo 'Keep in dump'; elif [[ \$SELECTION == *'[Todo]'* ]]; then echo '--- Target: todo.md ---'; cat '$ACTIVE_DIR'/\$P/todo.md 2>/dev/null || echo 'No tasks yet'; elif [[ \$SELECTION == *'[Note]'* ]]; then echo '--- Target: notes.md ---'; cat '$ACTIVE_DIR'/\$P/notes.md 2>/dev/null || echo 'No notes yet'; fi" \
+      --preview-window=right:60% > "$FZF_OUT"
+      
+  FZF_EXIT=$?
+  # Strip the index "1. " from selection
+  SELECTED_RAW=$(cat "$FZF_OUT" | sed 's/^[0-9]*\. //')
+  rm -f "$FZF_OUT"
+
+  # Handle Exit/Abort
+  if [[ $FZF_EXIT -ne 0 ]]; then
+      echo "Refiling aborted."
+      break
+  fi
+
+  # Handle special targets
+  if [[ "$SELECTED_RAW" == "[TRASH]" ]]; then
+    echo "x Deleted item"
     echo "${LINE_NUMS[$i]}" >> "$TEMP_PROCESSED"
     PROCESSED_COUNT=$((PROCESSED_COUNT + 1))
-  else
+
+  elif [[ "$SELECTED_RAW" == "[SKIP]" ]]; then
     echo "⊘ Skipped"
     SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+
+  elif [[ -n "$SELECTED_RAW" ]]; then
+    # Parse: "[Todo] project-name" or "[Note] project-name"
+    # Strip ANSI codes first
+    SELECTED_CLEAN=$(echo "$SELECTED_RAW" | sed 's/\x1b\[[0-9;]*m//g')
+
+    if [[ "$SELECTED_CLEAN" =~ ^\[Todo\]\ (.+)$ ]]; then
+        TARGET_TYPE="todo"
+        PROJECT_NAME="${BASH_REMATCH[1]}"
+    elif [[ "$SELECTED_CLEAN" =~ ^\[Note\]\ (.+)$ ]]; then
+        TARGET_TYPE="note"
+        PROJECT_NAME="${BASH_REMATCH[1]}"
+    else
+        echo "Error: Invalid selection format"
+        SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+        continue
+    fi
+
+    PROJECT_DIR="$ACTIVE_DIR/$PROJECT_NAME"
+
+    # Route to file
+    if [[ "$TARGET_TYPE" == "todo" ]]; then
+        TARGET_FILE="$PROJECT_DIR/todo.md"
+
+        # Ensure file exists
+        if [[ ! -f "$TARGET_FILE" ]]; then
+            cat > "$TARGET_FILE" << EOF
+# Tasks
+## Active
+## Completed
+EOF
+        fi
+
+        # Normalize item (note→task conversion)
+        CLEAN_ITEM="$ITEM"
+        if [[ "$CLEAN_ITEM" =~ ^\[Note\]\ (.+)$ ]]; then
+            CLEAN_ITEM="- [ ] ${BASH_REMATCH[1]}"
+        fi
+
+        # Append to todo.md
+        echo "$CLEAN_ITEM" >> "$TARGET_FILE"
+        echo "OK: Moved to: $PROJECT_NAME/todo.md"
+
+    elif [[ "$TARGET_TYPE" == "note" ]]; then
+        TARGET_FILE="$PROJECT_DIR/notes.md"
+
+        # Ensure file exists (create from template)
+        if [[ ! -f "$TARGET_FILE" ]]; then
+            cat > "$TARGET_FILE" << EOF
+# $PROJECT_NAME
+Created: $(date +"%Y-%m-%d")
+## Overview
+[Description]
+## Notes
+EOF
+        fi
+
+        # Normalize item (task→note conversion)
+        CLEAN_ITEM="$ITEM"
+        if [[ "$CLEAN_ITEM" =~ ^-\ \[\ \]\ (.+)$ ]]; then
+            CLEAN_ITEM="${BASH_REMATCH[1]}"
+        elif [[ "$CLEAN_ITEM" =~ ^\[Note\]\ (.+)$ ]]; then
+            CLEAN_ITEM="${BASH_REMATCH[1]}"
+        fi
+
+        # Append with timestamp
+        echo "" >> "$TARGET_FILE"
+        echo "### $(date '+%Y-%m-%d %H:%M')" >> "$TARGET_FILE"
+        echo "$CLEAN_ITEM" >> "$TARGET_FILE"
+        echo "OK: Moved to: $PROJECT_NAME/notes.md"
+    fi
+
+    # Mark processed
+    echo "${LINE_NUMS[$i]}" >> "$TEMP_PROCESSED"
+    PROCESSED_COUNT=$((PROCESSED_COUNT + 1))
   fi
 
   echo ""
 done
 
-# Remove processed items from inbox
+# Remove processed items from dump
 if [[ $PROCESSED_COUNT -gt 0 ]]; then
-  echo "Updating inbox..."
+  echo "Updating dump..."
 
-  # Read processed line numbers into array
-  PROCESSED_LINES=()
-  while IFS= read -r line; do
-      PROCESSED_LINES+=("$line")
-  done < "$TEMP_PROCESSED"
-
-  # Sort in reverse order so we delete from bottom to top
-  # IFS=$'\n' PROCESSED_LINES=($(sort -rn <<<"${PROCESSED_LINES[*]}"))
-
-  # Create a mapping of lines to delete
-  declare -A DELETE_MAP
-  for line in "${PROCESSED_LINES[@]}"; do
-    DELETE_MAP["$line"]=1
-  done
-
-  # Filter inbox to keep only unprocessed lines
-  local current_line=0
+  # Portable deletion check for Bash 3.2 (macOS)
+  current_line=0
   while IFS= read -r line; do
     current_line=$((current_line + 1))
-    if [[ -z "${DELETE_MAP[$current_line]:-}" ]]; then
+    # If the current line number is NOT in the processed file, keep it
+    if ! grep -Fxq "$current_line" "$TEMP_PROCESSED" 2>/dev/null; then
       echo "$line" >> "$TEMP_INBOX"
     fi
   done < "$INBOX"
 
-  # Replace original inbox
+  # Replace original dump
   mv "$TEMP_INBOX" "$INBOX"
 fi
 
@@ -213,5 +363,5 @@ if [[ $PROCESSED_COUNT -gt 0 ]]; then
 fi
 
 if [[ $SKIPPED_COUNT -gt 0 ]]; then
-  echo "Skipped items remain in inbox"
+  echo "Skipped items remain in dump"
 fi

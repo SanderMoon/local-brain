@@ -9,40 +9,39 @@ set -euo pipefail
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 show_help() {
-  cat << 'EOF'
+    cat << 'EOF'
 Local Brain - CLI-based Project Management
 
 Usage: brain <command> [options]
 
 Brain Management:
-   init             Initialize a new brain location
-   import [path]    Scan and register existing brains
-   delete [name]    Permanently delete a brain
-   switch           Switch between configured brains
- list       List all configured brains
- current     Show current active brain
- path       Show path to current or specified brain
+  new [name]       Create a new brain (Alias: init)
+  switch           Switch between configured brains
+  ls, list         List all configured brains
+  current          Show current active brain
+  path             Show path to current or specified brain
+  rename           Rename a brain
+  delete           Permanently delete a brain
+  import           Import existing brains
 
 Commands:
-
-  add [text]       Capture note to inbox (quick or interactive)
-
-  projects         Alias for 'project list'
-
+  add [text]       Capture note to dump (quick or interactive)
+  dump             Inspect dump contents (ls, ls --json)
+  projects         List all active projects (Alias for 'project list')
   todo             View all open tasks across projects
- refile      Process inbox items to projects
- go        Jump to a project directory
-   project          Manage projects (new, link, pull, archive)
-   rename [old] [new] Rename a brain
-   review           AI-powered project analysis (stub)
- sync       Control Syncthing sync operations
+  refile           Process dump items to projects (interactive or by ID)
+  go               Jump to a project directory
+  project          Manage projects (new, link, pull, archive, move, clone)
+  sync             Control Syncthing sync operations
 
 Examples:
-
-  brain init                       # Initialize new brain (interactive)
-
+  brain new                        # Create a new brain
+  brain dump ls --json             # List dump items as JSON
+  brain refile a1b2c3 my-project   # Refile item by ID (non-interactive)
+  brain project clone <url>        # Import a project from git
   brain projects                   # List all active projects
- brain switch work        # Switch to work brain
+  brain projects ls --json         # List projects as JSON
+  brain switch work                # Switch to work brain
 
 For more information on each command, run: brain <command> --help
 
@@ -55,17 +54,37 @@ CMD="${1:-}"
 
 # If no command or help flag, show help
 if [[ -z "$CMD" ]] || [[ "$CMD" == "help" ]] || [[ "$CMD" == "--help" ]] || [[ "$CMD" == "-h" ]]; then
-  show_help
-  exit 0
+    show_help
+    exit 0
 fi
 
 # Special alias handling
 if [[ "$CMD" == "projects" ]]; then
-  if [[ -x "$SELF_DIR/brain-project" ]]; then
-    exec "$SELF_DIR/brain-project" list
-  else
-    exec brain-project list
-  fi
+    shift  # Remove 'projects' from arguments
+    if [[ -x "$SELF_DIR/brain-project" ]]; then
+        exec "$SELF_DIR/brain-project" list "$@"
+    else
+        exec brain-project list "$@"
+    fi
+fi
+
+# Alias 'init' to 'new'
+if [[ "$CMD" == "init" ]]; then
+    if [[ -x "$SELF_DIR/brain-new" ]]; then
+        exec "$SELF_DIR/brain-new" "$@"
+    else
+        exec brain-new "$@"
+    fi
+fi
+
+# Alias 'ls' to 'list'
+if [[ "$CMD" == "ls" ]]; then
+    shift
+    if [[ -x "$SELF_DIR/brain-list" ]]; then
+        exec "$SELF_DIR/brain-list" "$@"
+    else
+        exec brain-list "$@"
+    fi
 fi
 
 # Build full command name
@@ -84,8 +103,8 @@ elif command -v "$FULL_CMD" &> /dev/null; then
 else
   echo "Error: Unknown command '$CMD'"
   echo ""
-  echo "Brain management: init, switch, list, current, path"
-  echo "Available commands: add, clone, projects, todo, refile, go, project, review, sync"
+  echo "Available commands: new, switch, ls, list, current, path, rename, delete, import"
+  echo "                    add, projects, todo, refile, go, project, sync"
   echo ""
   echo "Run 'brain help' for usage information"
   exit 1

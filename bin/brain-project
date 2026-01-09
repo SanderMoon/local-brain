@@ -91,31 +91,51 @@ resolve_target_project() {
 
 # List projects
 cmd_list() {
+  # Check for --json flag
+  local json_mode=false
+  if [[ "${1:-}" == "--json" ]]; then
+    json_mode=true
+    # Source API library
+    if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh" ]]; then
+      source "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh"
+    elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh" ]]; then
+      source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh"
+    elif [[ -f "$HOME/.config/brain/lib/brain-api.sh" ]]; then
+      source "$HOME/.config/brain/lib/brain-api.sh"
+    fi
+  fi
+
+  if [[ "$json_mode" == "true" ]]; then
+    projects_to_json "$ACTIVE_DIR"
+    return 0
+  fi
+
+  # Existing human-readable output
   local focused=$(get_focused_project)
-  
+
   echo "Active Projects:"
   echo "----------------"
-  
+
   if [[ ! -d "$ACTIVE_DIR" ]] || [[ -z "$(ls -A "$ACTIVE_DIR")" ]]; then
     echo "(No active projects)"
     return 0
   fi
-  
+
   for proj_path in "$ACTIVE_DIR"/*; do
     if [[ -d "$proj_path" ]]; then
       local name=$(basename "$proj_path")
       local marker=" "
       local status=""
-      
+
       if [[ "$name" == "$focused" ]]; then
         marker="*"
         status="(selected)"
       fi
-      
+
       # Simple stats
       local repo_count=$(grep -vc "^#" "$proj_path/.repos" 2>/dev/null || echo "0")
       local task_count=$(grep -c "^\s*- \[ \]" "$proj_path/todo.md" 2>/dev/null || echo "0")
-      
+
       printf " %s %-20s %s\n" "$marker" "$name" "$status [Repos: $repo_count, Tasks: $task_count]"
     fi
   done
@@ -458,7 +478,7 @@ main() {
     archive) cmd_archive "$@" ;; 
     move) cmd_move "$@" ;; 
     delete) cmd_delete "$@" ;;
-    list|ls) cmd_list ;; 
+    list|ls) cmd_list "$@" ;; 
     select) cmd_select "$@" ;; 
     current) cmd_current ;; 
     *) 

@@ -18,6 +18,7 @@ Before getting started, it is helpful to understand the hierarchy of Local Brain
 - **Centralized Storage**: All data lives in `~/brains/`, easily syncable via Syncthing/Dropbox.
 - **Zero-Friction Capture**: Rapidly add tasks to your inbox without context switching.
 - **Dev Mode Automation**: `brain go` launches a full development environment (Tmux + Venv).
+- **Programmatic API**: JSON output and non-interactive commands for AI agents and scripts.
 
 ## Quick Start
 
@@ -67,16 +68,43 @@ If you starting a project from a single existing repo, use this shortcut:
 brain project clone https://github.com/me/new-tool.git
 ```
 
+## API Access (for AI Agents & Scripts)
+
+Brain supports programmatic access via JSON output and non-interactive commands:
+
+```bash
+# List dump items with stable IDs
+brain dump ls --json
+
+# Discover projects
+brain project list --json
+
+# Refile items by ID (non-interactive)
+brain refile <id> <project-name> [--as todo|note]
+```
+
+**Example workflow for AI agents:**
+```bash
+# Get item ID from dump
+ID=$(brain dump ls --json | jq -r '.[0].id')
+
+# Refile to focused project
+brain refile "$ID" my-project
+```
+
 ## Command Reference
 
 | Command | Description |
 |---------|-------------|
 | `brain project new <name>`| Create a new project. |
-| `brain project list` | List all active projects (Alias: `brain projects`). |
+| `brain project list [--json]` | List all active projects (Alias: `brain projects`). |
 | `brain add "text"` | Quick capture to dump. |
+| `brain add -n "text"` | Quick capture note (vs task) to dump. |
+| `brain dump ls [--json]` | List dump items with IDs. |
+| `brain refile [<id> <project>]` | Process dump items (interactive or by ID). |
 | `brain todo` | Fuzzy search open tasks. |
 | `brain go` | Enter project context (Shell or Tmux). |
-| `brain init [name]` | Create a new brain in `~/brains/<name>`. |
+| `brain new [name]` | Create a new brain in `~/brains/<name>`. |
 | `brain switch [name]` | Switch active brain. |
 | `brain rename <old> <new>`| Rename a brain folder and config. |
 | `brain delete [name]` | Permanently delete a brain. |
