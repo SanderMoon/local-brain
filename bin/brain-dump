@@ -90,13 +90,17 @@ cmd_ls() {
     printf "%s\n" "--------+------+----------"
 
     local count=0
-    parse_dump_items "$inbox" | while IFS='|' read -r line_num type raw id; do
-      # Strip metadata for display
-      local content="$raw"
+    parse_dump_items "$inbox" | while IFS='|' read -r start_line end_line type title id; do
+      # Strip captured tag for display
+      local content="$title"
       content=$(echo "$content" | sed -E 's/ #captured:[0-9-]+$//')
-      content=$(echo "$content" | sed 's/^- \[ \] //' | sed 's/^\[Note\] //')
 
-      printf "%-8s | %-6s | %s\n" "$id" "$type" "$content"
+      # Indicate multi-line notes
+      local lines=$((end_line - start_line + 1))
+      local suffix=""
+      [[ "$type" == "note" ]] && [[ $lines -gt 1 ]] && suffix=" (${lines} lines)"
+
+      printf "%-8s | %-6s | %s%s\n" "$id" "$type" "$content" "$suffix"
       count=$((count + 1))
     done
 

@@ -14,38 +14,47 @@ Local Brain - CLI-based Project Management
 
 Usage: brain <command> [options]
 
+Capture (to dump):
+  add "text"       Quick task capture to dump
+  add              Editor mode for notes (multi-line)
+
+Process & Organize:
+  dump ls          View dump contents
+  refile           Process dump items → projects
+
+Manage (in projects):
+  todo             Browse/edit tasks (fzf picker)
+  todo ls          List tasks across projects
+  todo done        Mark task complete
+  note             Browse/edit notes (fzf picker)
+  note ls          List notes in focused project
+
+Projects:
+  project new      Create new project
+  project focus    Set focused project
+  projects         List all active projects
+  go               Jump to project directory
+
 Brain Management:
-  new [name]       Create a new brain (Alias: init)
-  switch           Switch between configured brains
+  new [name]       Create a new brain
+  switch           Switch between brains
   ls, list         List all configured brains
   current          Show current active brain
-  path             Show path to current or specified brain
-  rename           Rename a brain
-  delete           Permanently delete a brain
-  import           Import existing brains
 
-Commands:
-  add [text]       Capture note to dump (quick or interactive)
-  dump             Inspect dump contents (ls, ls --json)
-  projects         List all active projects (Alias for 'project list')
-  todo             View all open tasks across projects
-  refile           Process dump items to projects (interactive or by ID)
-  go               Jump to a project directory
-  project          Manage projects (new, link, pull, archive, move, clone)
-  sync             Control Syncthing sync operations
+Workflow:
+  1. Capture:  brain add "task" / brain add (for notes)
+  2. Process:  brain refile
+  3. Work:     brain todo / brain note
+  4. Complete: brain todo done
 
 Examples:
-  brain new                        # Create a new brain
-  brain dump ls --json             # List dump items as JSON
-  brain refile a1b2c3 my-project   # Refile item by ID (non-interactive)
-  brain project clone <url>        # Import a project from git
-  brain projects                   # List all active projects
-  brain projects ls --json         # List projects as JSON
-  brain switch work                # Switch to work brain
+  brain add "Fix the login bug"      # Quick task to dump
+  brain add                          # Open editor for meeting notes
+  brain refile                       # Process dump → projects
+  brain todo ls                      # See all tasks
+  brain todo done abc123             # Complete a task
 
-For more information on each command, run: brain <command> --help
-
-Documentation: See ~/brain structure
+For more info: brain <command> --help
 EOF
 }
 
@@ -104,7 +113,7 @@ else
   echo "Error: Unknown command '$CMD'"
   echo ""
   echo "Available commands: new, switch, ls, list, current, path, rename, delete, import"
-  echo "                    add, projects, todo, refile, go, project, sync"
+  echo "                    add, projects, todo, note, refile, go, project, sync"
   echo ""
   echo "Run 'brain help' for usage information"
   exit 1

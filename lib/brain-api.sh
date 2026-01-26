@@ -27,8 +27,9 @@ generate_item_id() {
 }
 
 # Parse dump items to pipe-delimited format
+# Handles both one-liner tasks and multi-line indented notes
 # Args: inbox_path
-# Output format: LINE_NUM|TYPE|RAW_CONTENT|ID
+# Output format: START_LINE|END_LINE|TYPE|TITLE|ID
 parse_dump_items() {
   local inbox="$1"
 
@@ -37,72 +38,72 @@ parse_dump_items() {
   # Get file modification time (cross-platform)
   local mtime=$(stat -f %m "$inbox" 2>/dev/null || stat -c %Y "$inbox" 2>/dev/null)
   local line_num=0
+  local in_note=false
+  local note_start=0
+  local note_title=""
 
-  while IFS= read -r line; do
+  while IFS= read -r line || [[ -n "$line" ]]; do
     line_num=$((line_num + 1))
 
-    # Skip empty lines and headers
-    [[ -z "${line// /}" ]] && continue
-    [[ "$line" =~ ^#+ ]] && continue
-
-    local type=""
-
-    # Detect type
-    if [[ "$line" =~ ^-\ \[\ \] ]]; then
-      type="todo"
-    elif [[ "$line" =~ ^\[Note\] ]]; then
-      type="note"
-    else
+    # Check if line is indented (part of note content)
+    if [[ "$line" =~ ^[[:space:]]{4} ]] && [[ "$in_note" == "true" ]]; then
       continue
     fi
 
-    # Generate ID
-    local id=$(generate_item_id "$line_num" "$line" "$mtime")
+    # If we were in a note and hit non-indented line, close the note
+    if [[ "$in_note" == "true" ]]; then
+      local note_id=$(echo -n "${note_start}:${note_title}:${mtime}" | compute_md5 | cut -c1-6)
+      echo "${note_start}|$((line_num - 1))|note|${note_title}|${note_id}"
+      in_note=false
+    fi
 
-    # Output: LINE_NUM|TYPE|RAW|ID
-    echo "${line_num}|${type}|${line}|${id}"
+    # Skip empty lines and markdown headers
+    [[ -z "${line// /}" ]] && continue
+    [[ "$line" =~ ^#+ ]] && continue
+
+    # Detect task
+    if [[ "$line" =~ ^-\ \[\ \]\ (.+)$ ]]; then
+      local task_content="${BASH_REMATCH[1]}"
+      local task_id=$(echo -n "${line_num}:${line}:${mtime}" | compute_md5 | cut -c1-6)
+      echo "${line_num}|${line_num}|todo|${task_content}|${task_id}"
+
+    # Detect note header
+    elif [[ "$line" =~ ^\[Note\]\ (.+)$ ]]; then
+      in_note=true
+      note_start=$line_num
+      note_title="${BASH_REMATCH[1]}"
+    fi
   done < "$inbox"
+
+  # Close any remaining note at end of file
+  if [[ "$in_note" == "true" ]]; then
+    local note_id=$(echo -n "${note_start}:${note_title}:${mtime}" | compute_md5 | cut -c1-6)
+    echo "${note_start}|${line_num}|note|${note_title}|${note_id}"
+  fi
 }
 
-# Convert parsed items to JSON
+# Convert parsed dump items to JSON
 # Input: parse_dump_items output via stdin
-# Output: JSON array with id, content, raw, type, timestamp
+# Output: JSON array
 dump_to_json() {
-  echo "["
-  local first=true
-
-  while IFS='|' read -r line_num type raw id; do
-    # Extract content (remove prefixes)
-    local content="$raw"
-    content=$(echo "$content" | sed 's/^- \[ \] //')
-    content=$(echo "$content" | sed 's/^\[Note\] //')
-
-    # Extract timestamp
+  while IFS='|' read -r start_line end_line type title id; do
+    # Extract timestamp from title
+    local content="$title"
     local timestamp=""
-    local capture_pattern='#captured:([0-9-]+)'
-    if [[ "$content" =~ $capture_pattern ]]; then
+    if [[ "$content" =~ \#captured:([0-9-]+) ]]; then
       timestamp="${BASH_REMATCH[1]}"
       content=$(echo "$content" | sed -E 's/ #captured:[0-9-]+$//')
     fi
 
-    # Build JSON with jq (proper escaping)
-    local json=$(jq -n \
+    jq -n \
       --arg id "$id" \
       --arg content "$content" \
-      --arg raw "$raw" \
       --arg type "$type" \
       --arg ts "$timestamp" \
-      '{id: $id, content: $content, raw: $raw, type: $type, timestamp: $ts}')
-
-    # Comma separator
-    [[ "$first" == "false" ]] && echo ","
-    first=false
-
-    echo -n "  $json"
-  done
-
-  echo ""
-  echo "]"
+      --argjson start "$start_line" \
+      --argjson end "$end_line" \
+      '{id: $id, content: $content, type: $type, timestamp: $ts, start_line: $start, end_line: $end}'
+  done | jq -s '.'
 }
 
 # Match project name (exact/case-insensitive/fuzzy)
@@ -145,106 +146,6 @@ match_project() {
   return 4
 }
 
-# Refile item by ID (non-interactive)
-# Args: id, project_name, type_override (optional)
-# Exit codes: 0=success, 3=ID not found, 4=project not found
-refile_by_id() {
-  local target_id="$1"
-  local project_name="$2"
-  local type_override="${3:-}"
-
-  local brain_path=$(get_current_brain_path)
-  local inbox="$brain_path/00_dump.md"
-  local active_dir="$brain_path/01_active"
-
-  # Find item
-  local found_line=""
-  local found_type=""
-  local found_raw=""
-
-  while IFS='|' read -r line_num type raw id; do
-    if [[ "$id" == "$target_id" ]]; then
-      found_line="$line_num"
-      found_type="$type"
-      found_raw="$raw"
-      break
-    fi
-  done < <(parse_dump_items "$inbox")
-
-  if [[ -z "$found_line" ]]; then
-    echo "Error: Item not found: $target_id" >&2
-    return 3
-  fi
-
-  # Match project
-  local matched_project=$(match_project "$project_name" "$active_dir")
-  [[ $? -ne 0 ]] && return 4
-
-  local project_dir="$active_dir/$matched_project"
-  local target_type="${type_override:-$found_type}"
-
-  # Route to file
-  if [[ "$target_type" == "todo" ]]; then
-    local target_file="$project_dir/todo.md"
-
-    # Ensure exists
-    if [[ ! -f "$target_file" ]]; then
-      cat > "$target_file" << 'EOF'
-# Tasks
-## Active
-## Completed
-EOF
-    fi
-
-    # Normalize to task format
-    local clean_item="$found_raw"
-    if [[ "$clean_item" =~ ^\[Note\]\ (.+)$ ]]; then
-      clean_item="- [ ] ${BASH_REMATCH[1]}"
-    fi
-
-    echo "$clean_item" >> "$target_file"
-
-  elif [[ "$target_type" == "note" ]]; then
-    local target_file="$project_dir/notes.md"
-
-    # Ensure exists
-    if [[ ! -f "$target_file" ]]; then
-      cat > "$target_file" << EOF
-# $matched_project
-Created: $(date +"%Y-%m-%d")
-## Overview
-[Description]
-## Notes
-EOF
-    fi
-
-    # Normalize to note format
-    local clean_item="$found_raw"
-    if [[ "$clean_item" =~ ^-\ \[\ \]\ (.+)$ ]]; then
-      clean_item="${BASH_REMATCH[1]}"
-    elif [[ "$clean_item" =~ ^\[Note\]\ (.+)$ ]]; then
-      clean_item="${BASH_REMATCH[1]}"
-    fi
-
-    echo "" >> "$target_file"
-    echo "### $(date '+%Y-%m-%d %H:%M')" >> "$target_file"
-    echo "$clean_item" >> "$target_file"
-  fi
-
-  # Remove from dump (atomic)
-  local temp_inbox=$(mktemp)
-  local current_line=0
-
-  while IFS= read -r line; do
-    current_line=$((current_line + 1))
-    [[ "$current_line" -ne "$found_line" ]] && echo "$line" >> "$temp_inbox"
-  done < "$inbox"
-
-  mv "$temp_inbox" "$inbox"
-
-  echo "OK: Refiled $target_id to $matched_project/$target_type.md"
-  return 0
-}
 
 # Convert projects to JSON
 # Args: active_dir
@@ -296,11 +197,50 @@ projects_to_json() {
   echo "]"
 }
 
+# Convert notes directory to JSON
+# Args: notes_dir
+# Output: JSON array with name, title, path, created
+notes_to_json() {
+  local notes_dir="$1"
+
+  echo "["
+  local first=true
+
+  for f in "$notes_dir"/*.md; do
+    [[ ! -f "$f" ]] && continue
+
+    local name=$(basename "$f" .md)
+    local title=$(head -1 "$f" | sed 's/^# //')
+    local created=""
+
+    # Extract date from filename or Created: line
+    if [[ "$name" =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2})- ]]; then
+      created="${BASH_REMATCH[1]}"
+    else
+      created=$(grep -m1 "^Created:" "$f" | sed 's/Created: //' || true)
+    fi
+
+    local json=$(jq -n \
+      --arg name "$name" \
+      --arg title "$title" \
+      --arg path "$f" \
+      --arg created "$created" \
+      '{name: $name, title: $title, path: $path, created: $created}')
+
+    [[ "$first" == "false" ]] && echo ","
+    first=false
+    echo -n "  $json"
+  done
+
+  echo ""
+  echo "]"
+}
+
 # Export functions
 export -f compute_md5
 export -f generate_item_id
 export -f parse_dump_items
 export -f dump_to_json
 export -f match_project
-export -f refile_by_id
 export -f projects_to_json
+export -f notes_to_json

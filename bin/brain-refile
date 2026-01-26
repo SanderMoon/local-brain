@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# brain-refile: Process inbox items to projects
-# Interactive workflow to move items from inbox to project todo.md files
+# brain-refile: Process dump items to projects
+# Supports tasks (one-liners) and notes (indented blocks)
 
 set -euo pipefail
 
@@ -10,52 +10,51 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate and source library
 if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
-  # 1. Dev/Repo location (flat lib/)
   source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
 elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
-  # 2. System install (PREFIX/lib/brain/)
   source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
 elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
-  # 3. User config location (Fallback)
   source "$HOME/.config/brain/lib/brain-config.sh"
 else
   echo "Error: brain-config.sh library not found." >&2
   exit 1
 fi
 
+# Source API library
+if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh" ]]; then
+  source "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh"
+elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh" ]]; then
+  source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh"
+elif [[ -f "$HOME/.config/brain/lib/brain-api.sh" ]]; then
+  source "$HOME/.config/brain/lib/brain-api.sh"
+fi
+
 BRAIN_PATH=$(get_current_brain_path)
-
-INBOX="$BRAIN_PATH/00_dump.md"
+DUMP="$BRAIN_PATH/00_dump.md"
 ACTIVE_DIR="$BRAIN_PATH/01_active"
-TEMP_PROCESSED=$(mktemp)
-TEMP_INBOX=$(mktemp)
-
-# Cleanup temp files on exit
-cleanup() {
-  rm -f "$TEMP_PROCESSED" "$TEMP_INBOX"
-}
-trap cleanup EXIT
 
 show_help() {
   cat << 'EOF'
-brain-refile - Process dump items
+brain-refile - Process dump items to projects
 
 Usage:
- brain refile    Process dump items one by one
+  brain refile              Interactive mode: process items one by one
+  brain refile <ID> <proj>  Non-interactive: refile item by ID
 
 Workflow:
- 1. Shows each dump item
- 2. Select destination project with fuzzy finder
- 3. Item is moved to project's todo.md
- 4. Repeat until dump is empty or quit
+  1. Shows each dump item (task or note)
+  2. Select destination project with fuzzy finder
+  3. Tasks go to project's todo.md
+  4. Notes go to project's notes/ directory as separate files
+  5. Repeat until done
 
-Tips:
- - Select [SKIP] to keep an item in dump
- - Select [TRASH] to delete an item
- - Press Esc or Ctrl-C to quit refiling
+Special options during refile:
+  [SKIP]   Keep item in dump for later
+  [TRASH]  Delete item permanently
 
-Example:
- brain refile    # Start processing dump
+Examples:
+  brain refile              # Start interactive refiling
+  brain refile a1b2c3 work  # Refile item a1b2c3 to 'work' project
 EOF
 }
 
@@ -65,303 +64,392 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
   exit 0
 fi
 
-# Source API library for non-interactive mode
-if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh" ]]; then
-  source "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh"
-elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh" ]]; then
-  source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh"
-elif [[ -f "$HOME/.config/brain/lib/brain-api.sh" ]]; then
-  source "$HOME/.config/brain/lib/brain-api.sh"
-fi
+# Parse dump into items (tasks and notes with content)
+# Outputs to temp files: items_file contains parsed items
+# Format: START_LINE|END_LINE|TYPE|TITLE|ID
+parse_dump() {
+  local dump_file="$1"
+  local items_file="$2"
+  local content_dir="$3"
 
-# Detect non-interactive mode: brain refile <ID> <PROJECT> [--as TYPE]
-if [[ $# -ge 2 ]] && [[ "${1:-}" =~ ^[a-f0-9]{6}$ ]]; then
-  TARGET_ID="$1"
-  PROJECT_NAME="$2"
-  TYPE_OVERRIDE=""
+  [[ ! -f "$dump_file" ]] && return 1
 
-  # Parse --as flag
-  if [[ "${3:-}" == "--as" ]] && [[ -n "${4:-}" ]]; then
-    TYPE_OVERRIDE="$4"
+  local mtime=$(stat -f %m "$dump_file" 2>/dev/null || stat -c %Y "$dump_file" 2>/dev/null)
+  local line_num=0
+  local in_note=false
+  local note_start=0
+  local note_title=""
+  local note_content=""
 
-    # Validate type
-    if [[ "$TYPE_OVERRIDE" != "todo" ]] && [[ "$TYPE_OVERRIDE" != "note" ]]; then
-      echo "Error: Invalid type. Use 'todo' or 'note'" >&2
-      exit 2
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line_num=$((line_num + 1))
+
+    # Check if line is indented (part of note content)
+    if [[ "$line" =~ ^[[:space:]]{4} ]] && [[ "$in_note" == "true" ]]; then
+      # Append to note content (strip 4-space indent)
+      note_content+="${line:4}"$'\n'
+      continue
     fi
-  fi
 
-  # Execute non-interactive refiling
-  refile_by_id "$TARGET_ID" "$PROJECT_NAME" "$TYPE_OVERRIDE"
-  exit $?
-fi
+    # If we were in a note and hit non-indented line, close the note
+    if [[ "$in_note" == "true" ]]; then
+      local note_id=$(echo -n "${note_start}:${note_title}:${mtime}" | compute_md5 | cut -c1-6)
+      echo "${note_start}|$((line_num - 1))|note|${note_title}|${note_id}" >> "$items_file"
+      # Save note content to temp file
+      echo -n "$note_content" > "$content_dir/${note_id}.txt"
+      in_note=false
+      note_content=""
+    fi
 
-# Check if inbox exists
-if [[ ! -f "$INBOX" ]]; then
-  echo "Error: Inbox not found at $INBOX"
-  exit 1
-fi
-
-# Check if active directory exists
-if [[ ! -d "$ACTIVE_DIR" ]]; then
-  echo "Error: Active projects directory not found: $ACTIVE_DIR"
-  exit 1
-fi
-
-# Check for required commands
-if ! command -v fzf &> /dev/null; then
-  echo "Error: fzf not found"
-  echo "Install with: brew install fzf (macOS) or apt install fzf (Linux)"
-  exit 1
-fi
-
-# Check if there are any projects
-PROJECT_COUNT=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
-if [[ $PROJECT_COUNT -eq 0 ]]; then
-  echo "No projects found in $ACTIVE_DIR"
-  echo ""
-  echo "Create a project first with:"
-  echo " brain project new <project-name>"
-  exit 1
-fi
-
-# Read dump and filter out header and empty lines
-echo "Reading dump..."
-ITEMS=()
-LINE_NUMS=()
-ITEM_TYPES=()
-LINE_NUM=0
-
-while IFS= read -r line; do
-    LINE_NUM=$((LINE_NUM + 1))
     # Skip empty lines and markdown headers
-    if [[ -n "${line// /}" ]] && [[ ! "$line" =~ ^#+ ]]; then
-        # Detect tasks (checkbox)
-        if [[ "$line" =~ ^-\ \[\ \] ]]; then
-            ITEMS+=("$line")
-            LINE_NUMS+=("$LINE_NUM")
-            ITEM_TYPES+=("task")
-        # Detect notes ([Note] prefix)
-        elif [[ "$line" =~ ^\[Note\] ]]; then
-            ITEMS+=("$line")
-            LINE_NUMS+=("$LINE_NUM")
-            ITEM_TYPES+=("note")
-        fi
+    [[ -z "${line// /}" ]] && continue
+    [[ "$line" =~ ^#+ ]] && continue
+
+    # Detect task
+    if [[ "$line" =~ ^-\ \[\ \]\ (.+)$ ]]; then
+      local task_content="${BASH_REMATCH[1]}"
+      local task_id=$(echo -n "${line_num}:${line}:${mtime}" | compute_md5 | cut -c1-6)
+      echo "${line_num}|${line_num}|task|${task_content}|${task_id}" >> "$items_file"
+
+    # Detect note header
+    elif [[ "$line" =~ ^\[Note\]\ (.+)$ ]]; then
+      in_note=true
+      note_start=$line_num
+      note_title="${BASH_REMATCH[1]}"
+      note_content=""
     fi
-done < "$INBOX"
+  done < "$dump_file"
 
-# Check if there are items to process
-ITEM_COUNT=${#ITEMS[@]}
-if [[ $ITEM_COUNT -eq 0 ]]; then
-  echo "Dump is empty! Nothing to refile."
-  exit 0
-fi
-
-echo "Found $ITEM_COUNT item(s) to process"
-echo ""
-
-# Helper: Add both [Todo] and [Note] targets for a project
-add_project_targets() {
-    local proj="$1"
-    local item_type="$2"
-
-    # Color codes (requires fzf --ansi)
-    local GREEN='\033[0;32m'
-    local BLUE='\033[0;34m'
-    local NC='\033[0m'
-
-    # For tasks: [Todo] first (pre-selected)
-    # For notes: [Note] first (pre-selected)
-    if [[ "$item_type" == "task" ]]; then
-        NUM_LIST="${NUM_LIST}${idx}. ${GREEN}[Todo]${NC} ${proj}\n"
-        idx=$((idx + 1))
-        NUM_LIST="${NUM_LIST}${idx}. ${BLUE}[Note]${NC} ${proj}\n"
-        idx=$((idx + 1))
-    else
-        NUM_LIST="${NUM_LIST}${idx}. ${BLUE}[Note]${NC} ${proj}\n"
-        idx=$((idx + 1))
-        NUM_LIST="${NUM_LIST}${idx}. ${GREEN}[Todo]${NC} ${proj}\n"
-        idx=$((idx + 1))
-    fi
+  # Close any remaining note at end of file
+  if [[ "$in_note" == "true" ]]; then
+    local note_id=$(echo -n "${note_start}:${note_title}:${mtime}" | compute_md5 | cut -c1-6)
+    echo "${note_start}|${line_num}|note|${note_title}|${note_id}" >> "$items_file"
+    echo -n "$note_content" > "$content_dir/${note_id}.txt"
+  fi
 }
 
-# Process each item
-PROCESSED_COUNT=0
-SKIPPED_COUNT=0
+# Slugify text for filename
+slugify() {
+  echo "$1" | cut -c1-40 | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-' | sed 's/--*/-/g' | sed 's/^-//' | sed 's/-$//'
+}
 
-for i in "${!ITEMS[@]}"; do
-  ITEM="${ITEMS[$i]}"
-  ITEM_TYPE="${ITEM_TYPES[$i]}"
-  ITEM_NUM=$((i + 1))
+# Refile a single item to a project
+refile_item() {
+  local item_type="$1"
+  local item_title="$2"
+  local item_id="$3"
+  local project_name="$4"
+  local content_dir="$5"
 
-  echo "----------------------------------------"
-  echo "[$ITEM_NUM/$ITEM_COUNT] Refiling:"
-  echo " $ITEM"
-  echo ""
+  local project_dir="$ACTIVE_DIR/$project_name"
 
-  # Build flattened list of options
-  FOCUSED=$(get_focused_project)
-  PROJECTS=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
+  if [[ "$item_type" == "task" ]]; then
+    local todo_file="$project_dir/todo.md"
 
-  NUM_LIST=""
-  idx=1
-
-  # 1. Focused project first (both targets)
-  if [[ -n "$FOCUSED" ]]; then
-      add_project_targets "$FOCUSED" "$ITEM_TYPE"
-  fi
-
-  # 2. Other projects (both targets)
-  while read -r proj; do
-      [[ "$proj" == "$FOCUSED" ]] && continue
-      [[ -z "$proj" ]] && continue
-      add_project_targets "$proj" "$ITEM_TYPE"
-  done <<< "$PROJECTS"
-
-  # 3. Skip and Trash
-  NUM_LIST="${NUM_LIST}${idx}. [SKIP]\n$((idx + 1)). [TRASH]"
-
-  # Use a temp file to capture fzf output to preserve exit code
-  FZF_OUT=$(mktemp)
-  
-  echo -e "$NUM_LIST" | \
-    fzf --height=50% --no-sort --ansi \
-      --header="Select # or type name (Esc/Ctrl-C to quit)" \
-      --prompt="Refile> " \
-      --preview "SELECTION=\$(echo {} | sed 's/\x1b\[[0-9;]*m//g'); P=\$(echo \$SELECTION | sed 's/^[0-9]*\. //' | sed 's/^\[[^]]*\] //'); if [[ \$SELECTION == *'[TRASH]'* ]]; then echo 'Delete this item'; elif [[ \$SELECTION == *'[SKIP]'* ]]; then echo 'Keep in dump'; elif [[ \$SELECTION == *'[Todo]'* ]]; then echo '--- Target: todo.md ---'; cat '$ACTIVE_DIR'/\$P/todo.md 2>/dev/null || echo 'No tasks yet'; elif [[ \$SELECTION == *'[Note]'* ]]; then echo '--- Target: notes.md ---'; cat '$ACTIVE_DIR'/\$P/notes.md 2>/dev/null || echo 'No notes yet'; fi" \
-      --preview-window=right:60% > "$FZF_OUT"
-      
-  FZF_EXIT=$?
-  # Strip the index "1. " from selection
-  SELECTED_RAW=$(cat "$FZF_OUT" | sed 's/^[0-9]*\. //')
-  rm -f "$FZF_OUT"
-
-  # Handle Exit/Abort
-  if [[ $FZF_EXIT -ne 0 ]]; then
-      echo "Refiling aborted."
-      break
-  fi
-
-  # Handle special targets
-  if [[ "$SELECTED_RAW" == "[TRASH]" ]]; then
-    echo "x Deleted item"
-    echo "${LINE_NUMS[$i]}" >> "$TEMP_PROCESSED"
-    PROCESSED_COUNT=$((PROCESSED_COUNT + 1))
-
-  elif [[ "$SELECTED_RAW" == "[SKIP]" ]]; then
-    echo "⊘ Skipped"
-    SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
-
-  elif [[ -n "$SELECTED_RAW" ]]; then
-    # Parse: "[Todo] project-name" or "[Note] project-name"
-    # Strip ANSI codes first
-    SELECTED_CLEAN=$(echo "$SELECTED_RAW" | sed 's/\x1b\[[0-9;]*m//g')
-
-    if [[ "$SELECTED_CLEAN" =~ ^\[Todo\]\ (.+)$ ]]; then
-        TARGET_TYPE="todo"
-        PROJECT_NAME="${BASH_REMATCH[1]}"
-    elif [[ "$SELECTED_CLEAN" =~ ^\[Note\]\ (.+)$ ]]; then
-        TARGET_TYPE="note"
-        PROJECT_NAME="${BASH_REMATCH[1]}"
-    else
-        echo "Error: Invalid selection format"
-        SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
-        continue
-    fi
-
-    PROJECT_DIR="$ACTIVE_DIR/$PROJECT_NAME"
-
-    # Route to file
-    if [[ "$TARGET_TYPE" == "todo" ]]; then
-        TARGET_FILE="$PROJECT_DIR/todo.md"
-
-        # Ensure file exists
-        if [[ ! -f "$TARGET_FILE" ]]; then
-            cat > "$TARGET_FILE" << EOF
+    # Ensure todo.md exists
+    if [[ ! -f "$todo_file" ]]; then
+      cat > "$todo_file" << 'EOF'
 # Tasks
 ## Active
 ## Completed
 EOF
-        fi
-
-        # Normalize item (note→task conversion)
-        CLEAN_ITEM="$ITEM"
-        if [[ "$CLEAN_ITEM" =~ ^\[Note\]\ (.+)$ ]]; then
-            CLEAN_ITEM="- [ ] ${BASH_REMATCH[1]}"
-        fi
-
-        # Append to todo.md
-        echo "$CLEAN_ITEM" >> "$TARGET_FILE"
-        echo "OK: Moved to: $PROJECT_NAME/todo.md"
-
-    elif [[ "$TARGET_TYPE" == "note" ]]; then
-        TARGET_FILE="$PROJECT_DIR/notes.md"
-
-        # Ensure file exists (create from template)
-        if [[ ! -f "$TARGET_FILE" ]]; then
-            cat > "$TARGET_FILE" << EOF
-# $PROJECT_NAME
-Created: $(date +"%Y-%m-%d")
-## Overview
-[Description]
-## Notes
-EOF
-        fi
-
-        # Normalize item (task→note conversion)
-        CLEAN_ITEM="$ITEM"
-        if [[ "$CLEAN_ITEM" =~ ^-\ \[\ \]\ (.+)$ ]]; then
-            CLEAN_ITEM="${BASH_REMATCH[1]}"
-        elif [[ "$CLEAN_ITEM" =~ ^\[Note\]\ (.+)$ ]]; then
-            CLEAN_ITEM="${BASH_REMATCH[1]}"
-        fi
-
-        # Append with timestamp
-        echo "" >> "$TARGET_FILE"
-        echo "### $(date '+%Y-%m-%d %H:%M')" >> "$TARGET_FILE"
-        echo "$CLEAN_ITEM" >> "$TARGET_FILE"
-        echo "OK: Moved to: $PROJECT_NAME/notes.md"
     fi
 
-    # Mark processed
-    echo "${LINE_NUMS[$i]}" >> "$TEMP_PROCESSED"
-    PROCESSED_COUNT=$((PROCESSED_COUNT + 1))
+    # Append task
+    echo "- [ ] $item_title" >> "$todo_file"
+    echo "OK: Task → $project_name/todo.md"
+
+  elif [[ "$item_type" == "note" ]]; then
+    local notes_dir="$project_dir/notes"
+    mkdir -p "$notes_dir"
+
+    # Extract date from title if present
+    local captured_date=$(date +"%Y-%m-%d")
+    local clean_title="$item_title"
+    if [[ "$item_title" =~ \#captured:([0-9-]+) ]]; then
+      captured_date="${BASH_REMATCH[1]}"
+      clean_title=$(echo "$item_title" | sed -E 's/ #captured:[0-9-]+$//')
+    fi
+
+    # Create slug
+    local slug=$(slugify "$clean_title")
+    [[ -z "$slug" ]] && slug="note"
+
+    local filename="${captured_date}-${slug}.md"
+    local filepath="$notes_dir/$filename"
+
+    # Handle duplicates
+    local counter=1
+    while [[ -f "$filepath" ]]; do
+      filename="${captured_date}-${slug}-${counter}.md"
+      filepath="$notes_dir/$filename"
+      counter=$((counter + 1))
+    done
+
+    # Get note content
+    local content=""
+    if [[ -f "$content_dir/${item_id}.txt" ]]; then
+      content=$(cat "$content_dir/${item_id}.txt")
+    fi
+
+    # Create note file
+    cat > "$filepath" << EOF
+# $clean_title
+Created: $captured_date
+
+$content
+EOF
+
+    echo "OK: Note → $project_name/notes/$filename"
+  fi
+}
+
+# Remove lines from dump
+remove_lines_from_dump() {
+  local start_line="$1"
+  local end_line="$2"
+  local temp_dump="$3"
+
+  # Mark lines for removal (we'll process all at once later)
+  for ((i=start_line; i<=end_line; i++)); do
+    echo "$i" >> "$temp_dump.remove"
+  done
+}
+
+# Main interactive refile
+cmd_interactive() {
+  # Check prerequisites
+  if [[ ! -f "$DUMP" ]]; then
+    echo "Error: Dump not found at $DUMP"
+    exit 1
   fi
 
+  if [[ ! -d "$ACTIVE_DIR" ]]; then
+    echo "Error: Active projects directory not found: $ACTIVE_DIR"
+    exit 1
+  fi
+
+  if ! command -v fzf &> /dev/null; then
+    echo "Error: fzf not found"
+    exit 1
+  fi
+
+  # Check for projects
+  local project_count=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
+  if [[ $project_count -eq 0 ]]; then
+    echo "No projects found. Create one with: brain project new <name>"
+    exit 1
+  fi
+
+  # Create temp directory for parsing
+  local temp_dir=$(mktemp -d)
+  local items_file="$temp_dir/items.txt"
+  local content_dir="$temp_dir/content"
+  mkdir -p "$content_dir"
+  touch "$items_file"
+
+  trap "rm -rf '$temp_dir'" EXIT
+
+  # Parse dump
+  echo "Parsing dump..."
+  parse_dump "$DUMP" "$items_file" "$content_dir"
+
+  # Check for items
+  if [[ ! -s "$items_file" ]]; then
+    echo "Dump is empty! Nothing to refile."
+    exit 0
+  fi
+
+  local item_count=$(wc -l < "$items_file" | tr -d ' ')
+  echo "Found $item_count item(s) to process"
   echo ""
-done
 
-# Remove processed items from dump
-if [[ $PROCESSED_COUNT -gt 0 ]]; then
-  echo "Updating dump..."
+  # Get projects list
+  local focused=$(get_focused_project)
+  local projects=$(find "$ACTIVE_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
 
-  # Portable deletion check for Bash 3.2 (macOS)
-  current_line=0
+  # Track processed items
+  local processed_lines="$temp_dir/processed.txt"
+  touch "$processed_lines"
+  local processed_count=0
+  local skipped_count=0
+  local item_num=0
+
+  # Process each item
+  while IFS='|' read -r start_line end_line item_type item_title item_id; do
+    item_num=$((item_num + 1))
+
+    echo "----------------------------------------"
+    echo "[$item_num/$item_count] $item_type:"
+    echo "  $item_title"
+
+    # Show note preview if it's a note with content
+    if [[ "$item_type" == "note" ]] && [[ -f "$content_dir/${item_id}.txt" ]]; then
+      local preview=$(head -3 "$content_dir/${item_id}.txt" | sed 's/^/    /')
+      if [[ -n "$preview" ]]; then
+        echo "$preview"
+        local line_count=$(wc -l < "$content_dir/${item_id}.txt" | tr -d ' ')
+        if [[ $line_count -gt 3 ]]; then
+          echo "    ..."
+        fi
+      fi
+    fi
+    echo ""
+
+    # Build project list for fzf
+    local fzf_list=""
+    local idx=1
+
+    # Focused project first
+    if [[ -n "$focused" ]]; then
+      fzf_list+="${idx}. $focused (focused)\n"
+      idx=$((idx + 1))
+    fi
+
+    # Other projects
+    while IFS= read -r proj; do
+      [[ "$proj" == "$focused" ]] && continue
+      [[ -z "$proj" ]] && continue
+      fzf_list+="${idx}. $proj\n"
+      idx=$((idx + 1))
+    done <<< "$projects"
+
+    # Special options
+    fzf_list+="${idx}. [SKIP]\n"
+    idx=$((idx + 1))
+    fzf_list+="${idx}. [TRASH]"
+
+    # Show fzf picker
+    local selected
+    selected=$(echo -e "$fzf_list" | fzf --height=40% --no-sort \
+      --header="Select destination (Esc to quit)" \
+      --prompt="Refile $item_type > " || true)
+
+    # Handle abort
+    if [[ -z "$selected" ]]; then
+      echo "Refiling aborted."
+      break
+    fi
+
+    # Parse selection (remove number prefix)
+    selected=$(echo "$selected" | sed 's/^[0-9]*\. //' | sed 's/ (focused)$//')
+
+    if [[ "$selected" == "[SKIP]" ]]; then
+      echo "⊘ Skipped"
+      skipped_count=$((skipped_count + 1))
+
+    elif [[ "$selected" == "[TRASH]" ]]; then
+      echo "✗ Deleted"
+      for ((i=start_line; i<=end_line; i++)); do
+        echo "$i" >> "$processed_lines"
+      done
+      processed_count=$((processed_count + 1))
+
+    else
+      # Refile to project
+      refile_item "$item_type" "$item_title" "$item_id" "$selected" "$content_dir"
+      for ((i=start_line; i<=end_line; i++)); do
+        echo "$i" >> "$processed_lines"
+      done
+      processed_count=$((processed_count + 1))
+    fi
+
+    echo ""
+  done < "$items_file"
+
+  # Remove processed lines from dump
+  if [[ $processed_count -gt 0 ]]; then
+    echo "Updating dump..."
+    local new_dump="$temp_dir/new_dump.md"
+    local current_line=0
+
+    while IFS= read -r line; do
+      current_line=$((current_line + 1))
+      if ! grep -Fxq "$current_line" "$processed_lines" 2>/dev/null; then
+        echo "$line" >> "$new_dump"
+      fi
+    done < "$DUMP"
+
+    # Replace dump
+    if [[ -f "$new_dump" ]]; then
+      mv "$new_dump" "$DUMP"
+    else
+      # All items processed, create empty dump
+      echo "# Dump" > "$DUMP"
+    fi
+  fi
+
+  # Summary
+  echo "----------------------------------------"
+  echo "Summary:"
+  echo "  Processed: $processed_count"
+  [[ $skipped_count -gt 0 ]] && echo "  Skipped: $skipped_count"
+}
+
+# Non-interactive refile by ID
+cmd_by_id() {
+  local target_id="$1"
+  local project_name="$2"
+
+  # Create temp directory for parsing
+  local temp_dir=$(mktemp -d)
+  local items_file="$temp_dir/items.txt"
+  local content_dir="$temp_dir/content"
+  mkdir -p "$content_dir"
+  touch "$items_file"
+
+  trap "rm -rf '$temp_dir'" EXIT
+
+  # Parse dump
+  parse_dump "$DUMP" "$items_file" "$content_dir"
+
+  # Find item by ID
+  local found=""
+  while IFS='|' read -r start_line end_line item_type item_title item_id; do
+    if [[ "$item_id" == "$target_id" ]]; then
+      found="$start_line|$end_line|$item_type|$item_title|$item_id"
+      break
+    fi
+  done < "$items_file"
+
+  if [[ -z "$found" ]]; then
+    echo "Error: Item not found: $target_id" >&2
+    exit 3
+  fi
+
+  # Match project
+  local matched_project=$(match_project "$project_name" "$ACTIVE_DIR")
+  if [[ $? -ne 0 ]]; then
+    exit 4
+  fi
+
+  # Parse found item
+  IFS='|' read -r start_line end_line item_type item_title item_id <<< "$found"
+
+  # Refile
+  refile_item "$item_type" "$item_title" "$item_id" "$matched_project" "$content_dir"
+
+  # Remove from dump
+  local new_dump="$temp_dir/new_dump.md"
+  local current_line=0
+
   while IFS= read -r line; do
     current_line=$((current_line + 1))
-    # If the current line number is NOT in the processed file, keep it
-    if ! grep -Fxq "$current_line" "$TEMP_PROCESSED" 2>/dev/null; then
-      echo "$line" >> "$TEMP_INBOX"
+    if [[ $current_line -lt $start_line ]] || [[ $current_line -gt $end_line ]]; then
+      echo "$line" >> "$new_dump"
     fi
-  done < "$INBOX"
+  done < "$DUMP"
 
-  # Replace original dump
-  mv "$TEMP_INBOX" "$INBOX"
-fi
+  if [[ -f "$new_dump" ]]; then
+    mv "$new_dump" "$DUMP"
+  else
+    echo "# Dump" > "$DUMP"
+  fi
+}
 
-# Summary
-echo "----------------------------------------"
-echo "Summary:"
-echo " OK: Processed: $PROCESSED_COUNT"
-if [[ $SKIPPED_COUNT -gt 0 ]]; then
-  echo " ⊘ Skipped: $SKIPPED_COUNT"
-fi
-echo ""
-
-if [[ $PROCESSED_COUNT -gt 0 ]]; then
-  echo "Items moved to project todo.md files"
-fi
-
-if [[ $SKIPPED_COUNT -gt 0 ]]; then
-  echo "Skipped items remain in dump"
+# Route command
+if [[ $# -ge 2 ]] && [[ "${1:-}" =~ ^[a-f0-9]{6}$ ]]; then
+  cmd_by_id "$1" "$2"
+else
+  cmd_interactive
 fi

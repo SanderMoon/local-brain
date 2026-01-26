@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# brain-todo: View all open tasks across projects
-# Searches for unchecked checkboxes and allows interactive selection
+# brain-todo: Manage tasks across projects
+# Supports: interactive selection, ls, done, delete, reopen
 
 set -euo pipefail
 
@@ -10,41 +10,54 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Locate and source library
 if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh" ]]; then
-  # 1. Dev/Repo location (flat lib/)
   source "$(dirname "$SCRIPT_DIR")/lib/brain-config.sh"
 elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh" ]]; then
-  # 2. System install (PREFIX/lib/brain/)
   source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-config.sh"
 elif [[ -f "$HOME/.config/brain/lib/brain-config.sh" ]]; then
-  # 3. User config location (Fallback)
   source "$HOME/.config/brain/lib/brain-config.sh"
 else
   echo "Error: brain-config.sh library not found." >&2
   exit 1
 fi
 
-BRAIN_PATH=$(get_current_brain_path)
+# Source API library
+if [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh" ]]; then
+  source "$(dirname "$SCRIPT_DIR")/lib/brain-api.sh"
+elif [[ -f "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh" ]]; then
+  source "$(dirname "$SCRIPT_DIR")/lib/brain/brain-api.sh"
+elif [[ -f "$HOME/.config/brain/lib/brain-api.sh" ]]; then
+  source "$HOME/.config/brain/lib/brain-api.sh"
+fi
 
-BRAIN_DIR="$BRAIN_PATH"
-ACTIVE_DIR="$BRAIN_DIR/01_active"
+BRAIN_PATH=$(get_current_brain_path)
+ACTIVE_DIR="$BRAIN_PATH/01_active"
 
 show_help() {
   cat << 'EOF'
-brain-todo - View all open tasks
+brain-todo - Manage tasks across projects
 
 Usage:
- brain todo     Show all unchecked tasks across all active projects
+  brain todo                      Interactive fzf picker, open in editor
+  brain todo ls [--json] [--all]  List todos (--all includes completed)
+  brain todo done [ID|pattern]    Mark task complete (toggle checkbox)
+  brain todo delete [ID|pattern]  Remove task with confirmation
+  brain todo reopen [ID|pattern]  Mark task incomplete
 
-Features:
- - Fuzzy search through all open tasks
- - Preview task context with syntax highlighting
- - Press Enter to open task in Neovim at exact line
- - Press Esc to exit
-
-Tasks are found by searching for: - [ ]
+Interactive mode (no args):
+  - Fuzzy search through all open tasks
+  - Preview task context with syntax highlighting
+  - Press Enter to open task in Neovim at exact line
 
 Examples:
- brain todo     # Browse and select from all open tasks
+  brain todo                  # Browse and select from all open tasks
+  brain todo ls               # List all open tasks
+  brain todo ls --json        # List as JSON with IDs
+  brain todo ls --all         # Include completed tasks
+  brain todo done abc123      # Mark complete by ID
+  brain todo done "fix bug"   # Mark complete by pattern match
+  brain todo done             # Interactive selection to complete
+  brain todo delete abc123    # Delete by ID with confirmation
+  brain todo reopen abc123    # Reopen a completed task
 EOF
 }
 
@@ -57,65 +70,364 @@ fi
 # Check if active directory exists
 if [[ ! -d "$ACTIVE_DIR" ]]; then
   echo "Error: Active projects directory not found: $ACTIVE_DIR"
-  echo "Run install.sh first or create the directory manually"
   exit 1
 fi
 
 # Check for required commands
-if ! command -v rg &> /dev/null; then
-  echo "Error: ripgrep (rg) not found"
-  echo "Install with: brew install ripgrep (macOS) or apt install ripgrep (Linux)"
-  exit 1
-fi
-
-if ! command -v fzf &> /dev/null; then
-  echo "Error: fzf not found"
-  echo "Install with: brew install fzf (macOS) or apt install fzf (Linux)"
-  exit 1
-fi
-
-# Search for unchecked tasks
-TASKS=$(rg '^\s*- \[ \]' "$ACTIVE_DIR" --line-number --no-heading 2>/dev/null || true)
-
-if [[ -z "$TASKS" ]]; then
-  echo "No open tasks found in $ACTIVE_DIR"
-  echo ""
-  echo "Add tasks to project todo.md files with:"
-  echo " - [ ] Task description"
-  exit 0
-fi
-
-# Prepare preview command
-# If bat is available, use it for syntax highlighting
-if command -v bat &> /dev/null; then
-  PREVIEW_CMD='bat --color=always --style=numbers --highlight-line {2} {1}'
-else
-  # Fallback to cat with line numbers
-  PREVIEW_CMD='cat -n {1}'
-fi
-
-# Use fzf to select a task
-# Format: filename:line_number:content
-SELECTED=$(echo "$TASKS" | fzf \
-  --delimiter ':' \
-  --preview "$PREVIEW_CMD" \
-  --preview-window 'right:60%:+{2}-5' \
-  --bind 'enter:accept' \
-  --header 'Select a task to open in editor (Esc to cancel)' \
-  --ansi \
-  || true)
-
-# If user selected a task, open it in editor
-if [[ -n "$SELECTED" ]]; then
-  FILE=$(echo "$SELECTED" | cut -d: -f1)
-  LINE=$(echo "$SELECTED" | cut -d: -f2)
-
-  if command -v nvim &> /dev/null; then
-    nvim "+$LINE" "$FILE"
-  elif command -v vim &> /dev/null; then
-    vim "+$LINE" "$FILE"
-  else
-    echo "Error: Neither nvim nor vim found"
+check_ripgrep() {
+  if ! command -v rg &> /dev/null; then
+    echo "Error: ripgrep (rg) not found"
+    echo "Install with: brew install ripgrep (macOS) or apt install ripgrep (Linux)"
     exit 1
   fi
-fi
+}
+
+check_fzf() {
+  if ! command -v fzf &> /dev/null; then
+    echo "Error: fzf not found"
+    echo "Install with: brew install fzf (macOS) or apt install fzf (Linux)"
+    exit 1
+  fi
+}
+
+# Parse all todos across active projects
+# Output format: ID|FILE|LINE_NUM|STATUS|CONTENT|PROJECT
+parse_all_todos() {
+  local include_completed="${1:-false}"
+
+  for proj_dir in "$ACTIVE_DIR"/*/; do
+    [[ ! -d "$proj_dir" ]] && continue
+
+    local todo_file="$proj_dir/todo.md"
+    [[ ! -f "$todo_file" ]] && continue
+
+    local project=$(basename "$proj_dir")
+    local mtime=$(stat -f %m "$todo_file" 2>/dev/null || stat -c %Y "$todo_file" 2>/dev/null)
+    local line_num=0
+
+    while IFS= read -r line; do
+      line_num=$((line_num + 1))
+
+      # Match unchecked: - [ ]
+      if [[ "$line" =~ ^[[:space:]]*-\ \[\ \]\ (.+)$ ]]; then
+        local content="${BASH_REMATCH[1]}"
+        local id=$(echo -n "${line_num}:${line}:${mtime}" | compute_md5 | cut -c1-6)
+        echo "${id}|${todo_file}|${line_num}|open|${content}|${project}"
+      # Match checked: - [x] or - [X]
+      elif [[ "$include_completed" == "true" ]] && [[ "$line" =~ ^[[:space:]]*-\ \[[xX]\]\ (.+)$ ]]; then
+        local content="${BASH_REMATCH[1]}"
+        local id=$(echo -n "${line_num}:${line}:${mtime}" | compute_md5 | cut -c1-6)
+        echo "${id}|${todo_file}|${line_num}|done|${content}|${project}"
+      fi
+    done < "$todo_file"
+  done
+}
+
+# Find todo by ID or pattern
+# Returns: ID|FILE|LINE_NUM|STATUS|CONTENT|PROJECT
+find_todo() {
+  local query="$1"
+  local include_completed="${2:-true}"
+
+  local todos=$(parse_all_todos "$include_completed")
+
+  # First try exact ID match
+  local match=$(echo "$todos" | grep "^${query}|" | head -1)
+  if [[ -n "$match" ]]; then
+    echo "$match"
+    return 0
+  fi
+
+  # Try case-insensitive content match
+  local matches=$(echo "$todos" | grep -i "|${query}" | head -5)
+  local match_count=$(echo "$matches" | grep -c '^' || true)
+
+  if [[ "$match_count" -eq 1 ]]; then
+    echo "$matches"
+    return 0
+  elif [[ "$match_count" -gt 1 ]]; then
+    echo "Error: Multiple matches found. Be more specific or use ID:" >&2
+    echo "$matches" | while IFS='|' read -r id file line status content project; do
+      echo "  $id: [$status] $content ($project)" >&2
+    done
+    return 1
+  fi
+
+  echo "Error: Todo not found: $query" >&2
+  return 1
+}
+
+# Interactive selection with fzf
+# Args: filter (open|done|all), prompt
+# Returns: selected todo line
+interactive_select() {
+  local filter="${1:-open}"
+  local prompt="${2:-Select task}"
+
+  check_fzf
+
+  local include_completed="false"
+  [[ "$filter" == "all" ]] || [[ "$filter" == "done" ]] && include_completed="true"
+
+  local todos=$(parse_all_todos "$include_completed")
+
+  if [[ -z "$todos" ]]; then
+    echo "No tasks found"
+    return 1
+  fi
+
+  # Filter by status
+  if [[ "$filter" == "open" ]]; then
+    todos=$(echo "$todos" | grep '|open|')
+  elif [[ "$filter" == "done" ]]; then
+    todos=$(echo "$todos" | grep '|done|')
+  fi
+
+  if [[ -z "$todos" ]]; then
+    echo "No matching tasks found"
+    return 1
+  fi
+
+  # Format for fzf: ID STATUS CONTENT (PROJECT)
+  local formatted=$(echo "$todos" | while IFS='|' read -r id file line status content project; do
+    local status_mark="[ ]"
+    [[ "$status" == "done" ]] && status_mark="[x]"
+    printf "%s  %s %s (%s)\n" "$id" "$status_mark" "$content" "$project"
+  done)
+
+  # Build preview command
+  local preview_cmd
+  if command -v bat &> /dev/null; then
+    preview_cmd='FILE=$(echo {} | cut -d"|" -f2); LINE=$(echo {} | cut -d"|" -f3); bat --color=always --style=numbers --highlight-line $LINE "$FILE" 2>/dev/null || cat "$FILE"'
+  else
+    preview_cmd='cat $(echo {} | cut -d"|" -f2)'
+  fi
+
+  # Use fzf with preview based on original data
+  local selected=$(echo "$todos" | fzf \
+    --delimiter '|' \
+    --with-nth '1,4,5,6' \
+    --preview 'FILE=$(echo {} | cut -d"|" -f2); LINE=$(echo {} | cut -d"|" -f3); if command -v bat &>/dev/null; then bat --color=always --style=numbers --highlight-line $LINE "$FILE" 2>/dev/null; else cat -n "$FILE"; fi' \
+    --preview-window 'right:60%:+{3}-5' \
+    --header "$prompt (Esc to cancel)" \
+    --ansi \
+    || true)
+
+  if [[ -z "$selected" ]]; then
+    return 1
+  fi
+
+  echo "$selected"
+}
+
+# List todos
+cmd_ls() {
+  local json_mode=false
+  local include_all=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --json) json_mode=true ;;
+      --all) include_all=true ;;
+      *) echo "Unknown option: $1"; exit 1 ;;
+    esac
+    shift
+  done
+
+  local todos=$(parse_all_todos "$include_all")
+
+  if [[ -z "$todos" ]]; then
+    if [[ "$json_mode" == "true" ]]; then
+      echo "[]"
+    else
+      echo "No tasks found"
+    fi
+    return 0
+  fi
+
+  if [[ "$json_mode" == "true" ]]; then
+    # Use jq to create proper JSON array
+    echo "$todos" | while IFS='|' read -r id file line status content project; do
+      jq -n \
+        --arg id "$id" \
+        --arg file "$file" \
+        --arg line "$line" \
+        --arg status "$status" \
+        --arg content "$content" \
+        --arg project "$project" \
+        '{id: $id, file: $file, line: ($line | tonumber), status: $status, content: $content, project: $project}'
+    done | jq -s '.'
+  else
+    # Human-readable list
+    echo "$todos" | while IFS='|' read -r id file line status content project; do
+      local status_mark="[ ]"
+      [[ "$status" == "done" ]] && status_mark="[x]"
+      printf "%s  %s %s (%s)\n" "$id" "$status_mark" "$content" "$project"
+    done
+  fi
+}
+
+# Mark todo as done
+cmd_done() {
+  local query="${1:-}"
+
+  local todo_line
+  if [[ -z "$query" ]]; then
+    # Interactive selection
+    todo_line=$(interactive_select "open" "Select task to complete") || exit 0
+  else
+    todo_line=$(find_todo "$query" "false") || exit 1
+  fi
+
+  IFS='|' read -r id file line_num status content project <<< "$todo_line"
+
+  if [[ "$status" == "done" ]]; then
+    echo "Task is already completed: $content"
+    exit 0
+  fi
+
+  # Toggle [ ] to [x] in the file
+  if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' "${line_num}s/- \[ \]/- [x]/" "$file"
+  else
+    sed -i "${line_num}s/- \[ \]/- [x]/" "$file"
+  fi
+
+  echo "OK: Completed task: $content ($project)"
+}
+
+# Delete todo
+cmd_delete() {
+  local query="${1:-}"
+
+  local todo_line
+  if [[ -z "$query" ]]; then
+    # Interactive selection
+    todo_line=$(interactive_select "all" "Select task to DELETE") || exit 0
+  else
+    todo_line=$(find_todo "$query" "true") || exit 1
+  fi
+
+  IFS='|' read -r id file line_num status content project <<< "$todo_line"
+
+  # Confirmation
+  echo "About to delete: $content ($project)"
+  read -r -p "Are you sure? [y/N] " confirm
+  case "$confirm" in
+    [yY]|[yY][eE][sS])
+      # Delete line from file
+      if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' "${line_num}d" "$file"
+      else
+        sed -i "${line_num}d" "$file"
+      fi
+      echo "OK: Deleted task: $content"
+      ;;
+    *)
+      echo "Cancelled"
+      ;;
+  esac
+}
+
+# Reopen completed todo
+cmd_reopen() {
+  local query="${1:-}"
+
+  local todo_line
+  if [[ -z "$query" ]]; then
+    # Interactive selection from completed tasks
+    todo_line=$(interactive_select "done" "Select completed task to reopen") || exit 0
+  else
+    todo_line=$(find_todo "$query" "true") || exit 1
+  fi
+
+  IFS='|' read -r id file line_num status content project <<< "$todo_line"
+
+  if [[ "$status" == "open" ]]; then
+    echo "Task is already open: $content"
+    exit 0
+  fi
+
+  # Toggle [x] to [ ] in the file
+  if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' "${line_num}s/- \[[xX]\]/- [ ]/" "$file"
+  else
+    sed -i "${line_num}s/- \[[xX]\]/- [ ]/" "$file"
+  fi
+
+  echo "OK: Reopened task: $content ($project)"
+}
+
+# Interactive browse and open (original behavior)
+cmd_interactive() {
+  check_ripgrep
+  check_fzf
+
+  # Search for unchecked tasks
+  local tasks=$(rg '^\s*- \[ \]' "$ACTIVE_DIR" --line-number --no-heading 2>/dev/null || true)
+
+  if [[ -z "$tasks" ]]; then
+    echo "No open tasks found in $ACTIVE_DIR"
+    echo ""
+    echo "Add tasks to project todo.md files with:"
+    echo " - [ ] Task description"
+    exit 0
+  fi
+
+  # Prepare preview command
+  local preview_cmd
+  if command -v bat &> /dev/null; then
+    preview_cmd='bat --color=always --style=numbers --highlight-line {2} {1}'
+  else
+    preview_cmd='cat -n {1}'
+  fi
+
+  # Use fzf to select a task
+  local selected=$(echo "$tasks" | fzf \
+    --delimiter ':' \
+    --preview "$preview_cmd" \
+    --preview-window 'right:60%:+{2}-5' \
+    --bind 'enter:accept' \
+    --header 'Select a task to open in editor (Esc to cancel)' \
+    --ansi \
+    || true)
+
+  # If user selected a task, open it in editor
+  if [[ -n "$selected" ]]; then
+    local file=$(echo "$selected" | cut -d: -f1)
+    local line=$(echo "$selected" | cut -d: -f2)
+
+    if command -v nvim &> /dev/null; then
+      nvim "+$line" "$file"
+    elif command -v vim &> /dev/null; then
+      vim "+$line" "$file"
+    else
+      echo "Error: Neither nvim nor vim found"
+      exit 1
+    fi
+  fi
+}
+
+# Command router
+case "${1:-}" in
+  ls|list)
+    shift
+    cmd_ls "$@"
+    ;;
+  done|complete)
+    shift
+    cmd_done "$@"
+    ;;
+  delete|rm)
+    shift
+    cmd_delete "$@"
+    ;;
+  reopen|undo)
+    shift
+    cmd_reopen "$@"
+    ;;
+  *)
+    # Default: interactive browse and open
+    cmd_interactive
+    ;;
+esac
