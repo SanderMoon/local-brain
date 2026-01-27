@@ -218,15 +218,17 @@ If the Go version seems slower:
 
 ## Reverting to Bash Version
 
-If you need to temporarily revert:
+The bash version has been removed from the main branch. If you need the bash version for any reason, it's available in the git history:
 
 ```bash
-# The bash version is still in the bin/ directory
-cd /path/to/local-brain-repo
-bin/brain-add "Task added with bash version"
+# Check out a commit before the Go migration
+git checkout <commit-before-go-rewrite>
+
+# Or view the old bash scripts
+git show <commit>:bin/brain-add
 ```
 
-Your data remains compatible with both versions.
+However, the Go version is fully compatible with all your existing data.
 
 ## Development
 

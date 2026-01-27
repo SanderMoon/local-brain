@@ -23,13 +23,27 @@ Before getting started, it is helpful to understand the hierarchy of Local Brain
 ## Quick Start
 
 ### 1. Install
-Installs dependencies (`fzf`, `rg`, `jq`, `make`), configures your shell, and sets up your first brain.
+
+**Recommended: One-line install script**
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/local-brain.git
-cd local-brain
-./install-brain.sh
+curl -fsSL https://raw.githubusercontent.com/sandermoonemans/local-brain/main/install.sh | bash
 ```
+
+**Or install via Homebrew (macOS):**
+
+```bash
+brew tap sandermoonemans/tap
+brew install brain
+```
+
+**Or install via Go:**
+
+```bash
+go install github.com/sandermoonemans/local-brain@latest
+```
+
+See [INSTALL.md](INSTALL.md) for detailed installation options.
 
 ### 2. Create a Project
 Start by creating a workspace for your current focus.

@@ -87,7 +87,7 @@ brews:
       name: homebrew-tap
       # If you want to use a different repo, update above
       # You'll need to create this repo: https://github.com/sandermoonemans/homebrew-tap
-    folder: Formula
+    directory: Formula
     homepage: https://github.com/sandermoonemans/local-brain
     description: Local Brain - A personal knowledge management CLI tool
     license: MIT

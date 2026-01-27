@@ -242,7 +242,7 @@ brain --version
 
 ## Backward Compatibility
 
-Everything remains **100% backward compatible**:
+Everything remains **100% backward compatible** with previous bash version:
 
 ✅ Same configuration format
 ✅ Same directory structure
@@ -250,7 +250,7 @@ Everything remains **100% backward compatible**:
 ✅ Same file formats
 ✅ Same task IDs
 
-The old bash version in `bin/` and the old `install-brain.sh` can remain for reference.
+The bash implementation has been removed. It's available in git history if needed.
 
 ## File Structure Summary
 
@@ -264,9 +264,8 @@ local-brain/
 │   ├── root.go                  # MODIFIED: Version support
 │   └── ...
 ├── pkg/                         # Go packages
-├── lib/                         # Shell libraries (kept)
-│   └── brain-prompt.sh
-├── bin/                         # Bash scripts (kept for reference)
+├── lib/                         # Shell integration
+│   └── brain-prompt.sh          # Shell prompt helper
 ├── scripts/
 │   └── release.sh               # NEW: Release helper
 ├── .goreleaser.yml              # NEW: GoReleaser config
@@ -274,7 +273,6 @@ local-brain/
 ├── Makefile                     # UPDATED: Release targets
 ├── main.go                      # UPDATED: Version injection
 ├── install.sh                   # NEW: Modern installer
-├── install-brain.sh             # OLD: Bash installer (keep for now)
 ├── INSTALL.md                   # NEW: Installation guide
 ├── RELEASE.md                   # NEW: Release process
 ├── MIGRATION.md                 # NEW: Bash to Go migration
