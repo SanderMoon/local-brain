@@ -1,0 +1,165 @@
+# GoReleaser configuration for Local Brain CLI
+# See https://goreleaser.com for documentation
+
+version: 2
+
+before:
+  hooks:
+    # Ensure dependencies are up to date
+    - go mod tidy
+    # Run tests before building
+    - go test ./...
+
+builds:
+  - id: brain
+    main: ./main.go
+    binary: brain
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Ignore certain combinations
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: brain
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE*
+      - lib/brain-prompt.sh
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: 'Performance improvements'
+      regexp: "^.*perf[(\\w)]*:+.*$"
+      order: 2
+    - title: Others
+      order: 999
+
+# Homebrew tap for easy macOS installation
+brews:
+  - name: brain
+    repository:
+      owner: sandermoonemans
+      name: homebrew-tap
+      # If you want to use a different repo, update above
+      # You'll need to create this repo: https://github.com/sandermoonemans/homebrew-tap
+    folder: Formula
+    homepage: https://github.com/sandermoonemans/local-brain
+    description: Local Brain - A personal knowledge management CLI tool
+    license: MIT
+    # This script will be run after installation
+    caveats: |
+      To get started with Local Brain:
+
+      1. Initialize your first brain:
+         brain init
+
+      2. Add the brain-prompt.sh to your shell config:
+         echo 'source $(brew --prefix)/share/brain/brain-prompt.sh' >> ~/.zshrc
+
+      3. Install dependencies (if not already installed):
+         brew install ripgrep fzf bat syncthing jq
+
+      For more information, visit: https://github.com/sandermoonemans/local-brain
+
+    install: |
+      bin.install "brain"
+      # Install the shell prompt helper
+      (share/"brain").install "lib/brain-prompt.sh"
+
+      # Generate shell completions
+      bash_completion.install "completions/brain.bash" => "brain"
+      zsh_completion.install "completions/_brain" => "_brain"
+      fish_completion.install "completions/brain.fish"
+
+    test: |
+      system "#{bin}/brain", "version"
+
+    dependencies:
+      - name: ripgrep
+        type: optional
+      - name: fzf
+        type: optional
+      - name: bat
+        type: optional
+      - name: syncthing
+        type: optional
+      - name: jq
+        type: optional
+
+# Generate shell completions
+# These will be included in archives and homebrew
+# You need to add completion generation to your build process
+# See the Makefile updates below
+
+# Release notes configuration
+release:
+  github:
+    owner: sandermoonemans
+    name: local-brain
+  draft: false
+  prerelease: auto
+  mode: append
+  header: |
+    ## Local Brain {{ .Tag }}
+
+    {{ if .Major gt 0 -}}
+    **This is a major release with potential breaking changes.**
+    {{- end }}
+
+    Thanks to all contributors! 🎉
+
+# Signing (optional - uncomment and configure if you want to sign releases)
+# signs:
+#   - cmd: gpg
+#     args:
+#       - --output
+#       - $signature
+#       - --detach-sign
+#       - $artifact
+#     signature: ${artifact}.sig
+#     artifacts: checksum

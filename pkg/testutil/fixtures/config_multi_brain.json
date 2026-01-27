@@ -1,0 +1,19 @@
+{
+  "current": "work",
+  "brains": {
+    "work": {
+      "path": "/Users/test/brains/work",
+      "created": "2024-01-01",
+      "focus": "auth-system"
+    },
+    "personal": {
+      "path": "/Users/test/brains/personal",
+      "created": "2024-01-15"
+    },
+    "research": {
+      "path": "/Users/test/brains/research",
+      "created": "2024-02-01",
+      "focus": "ml-project"
+    }
+  }
+}

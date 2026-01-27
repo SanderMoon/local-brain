@@ -23,3 +23,24 @@ test_env/
 
 # Build artifacts
 *.tar.gz
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.html
+coverage.out
+go.work
+
+# Local Brain build artifacts
+brain
+dist/
+completions/
+
+# Local configuration
+.envrc
+.env
