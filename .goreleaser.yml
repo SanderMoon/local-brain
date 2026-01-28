@@ -85,8 +85,7 @@ brews:
     repository:
       owner: SanderMoon
       name: homebrew-tap
-      # If you want to use a different repo, update above
-      # You'll need to create this repo: https://github.com/SanderMoon/homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
     directory: Formula
     homepage: https://github.com/SanderMoon/local-brain
     description: Local Brain - A personal knowledge management CLI tool

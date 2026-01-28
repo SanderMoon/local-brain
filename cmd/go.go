@@ -255,14 +255,10 @@ clear
 
 	// Setup notes window
 	notesCmd := fmt.Sprintf("%s notes.md todo.md", editorCmd)
-	if err := external.SendKeys(sessionName+":notes", notesCmd); err != nil {
-		// Non-critical
-	}
+	_ = external.SendKeys(sessionName+":notes", notesCmd) // Non-critical, ignore errors
 
 	// Select code window
-	if err := external.SelectWindow(sessionName, 1); err != nil {
-		// Non-critical
-	}
+	_ = external.SelectWindow(sessionName, 1) // Non-critical, ignore errors
 
 	// Attach to session
 	return external.AttachSession(sessionName)

@@ -263,7 +263,7 @@ func TestRenameBrain_NameConflict(t *testing.T) {
 	cfg, _ := Load()
 
 	// Add a second brain
-	cfg.AddBrain("work", "/path/to/work")
+	_ = cfg.AddBrain("work", "/path/to/work")
 
 	// Try to rename test to work (conflict)
 	err := cfg.RenameBrain("test", "work", "/new/path")
@@ -277,7 +277,7 @@ func TestDeleteBrain(t *testing.T) {
 	cfg, _ := Load()
 
 	// Add another brain
-	cfg.AddBrain("work", "/path/to/work")
+	_ = cfg.AddBrain("work", "/path/to/work")
 
 	// Delete test brain
 	if err := cfg.DeleteBrain("test"); err != nil {
@@ -300,7 +300,7 @@ func TestDeleteBrain_NonCurrent(t *testing.T) {
 	cfg, _ := Load()
 
 	// Add another brain
-	cfg.AddBrain("work", "/path/to/work")
+	_ = cfg.AddBrain("work", "/path/to/work")
 
 	// Delete non-current brain
 	if err := cfg.DeleteBrain("work"); err != nil {
