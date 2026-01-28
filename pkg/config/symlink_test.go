@@ -18,7 +18,7 @@ func TestUpdateSymlink(t *testing.T) {
 	if err := os.MkdirAll(brain2Path, 0755); err != nil {
 		t.Fatalf("Failed to create brain2: %v", err)
 	}
-	cfg.AddBrain("brain2", brain2Path)
+	_ = cfg.AddBrain("brain2", brain2Path)
 
 	// Update symlink to brain2
 	err := UpdateSymlink("brain2", cfg)
