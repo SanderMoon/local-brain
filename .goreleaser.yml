@@ -147,10 +147,6 @@ release:
   header: |
     ## Local Brain {{ .Tag }}
 
-    {{ if .Major gt 0 -}}
-    **This is a major release with potential breaking changes.**
-    {{- end }}
-
     Thanks to all contributors! 🎉
 
 # Signing (optional - uncomment and configure if you want to sign releases)
