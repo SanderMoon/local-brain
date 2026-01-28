@@ -328,8 +328,8 @@ func TestListBrains(t *testing.T) {
 	cfg, _ := Load()
 
 	// Add more brains
-	cfg.AddBrain("work", "/path/to/work")
-	cfg.AddBrain("personal", "/path/to/personal")
+	_ = cfg.AddBrain("work", "/path/to/work")
+	_ = cfg.AddBrain("personal", "/path/to/personal")
 
 	brains := cfg.ListBrains()
 	if len(brains) != 3 {
@@ -423,7 +423,7 @@ func TestThreadSafety(t *testing.T) {
 	// Add some brains
 	for i := 0; i < 5; i++ {
 		name := string(rune('a' + i))
-		cfg.AddBrain(name, filepath.Join(tb.TmpDir, name))
+		_ = cfg.AddBrain(name, filepath.Join(tb.TmpDir, name))
 	}
 
 	// Concurrent operations
