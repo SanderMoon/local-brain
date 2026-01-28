@@ -52,7 +52,7 @@ func TestUpdateSymlink_CreateNew(t *testing.T) {
 	cfg, _ := Load()
 
 	// Remove symlink if it exists
-	fileutil.RemoveSymlink(tb.SymlinkPath)
+	_ = fileutil.RemoveSymlink(tb.SymlinkPath)
 
 	// Update symlink should create it
 	err := UpdateSymlink("test", cfg)

@@ -676,7 +676,7 @@ func runProjectDelete(cmd *cobra.Command, args []string) error {
 	fmt.Print("Type the project name to confirm: ")
 
 	var confirmation string
-	fmt.Scanln(&confirmation)
+	_, _ = fmt.Scanln(&confirmation)
 
 	if confirmation != projectName {
 		fmt.Println("Aborted")

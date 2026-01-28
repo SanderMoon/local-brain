@@ -152,13 +152,13 @@ func runSimpleShell(projectDir, projectName string, repos []string) error {
 		return fmt.Errorf("failed to change directory: %w", err)
 	}
 
-	shell := os.Getenv("SHELL")
-	if shell == "" {
-		shell = "/bin/bash"
-	}
+	// TODO: Actually exec the shell (requires syscall.Exec)
+	// shell := os.Getenv("SHELL")
+	// if shell == "" {
+	//     shell = "/bin/bash"
+	// }
 
 	return external.OpenFile(projectDir) // This will fail, but we want to exec shell
-	// TODO: Actually exec the shell (requires syscall.Exec)
 }
 
 func runTmuxEnvironment(projectDir, projectName string, repos []string) error {
@@ -179,11 +179,11 @@ func runTmuxEnvironment(projectDir, projectName string, repos []string) error {
 				if err := os.Chdir(projectDir); err != nil {
 					return fmt.Errorf("failed to change directory: %w", err)
 				}
-				shell := os.Getenv("SHELL")
-				if shell == "" {
-					shell = "/bin/bash"
-				}
 				// TODO: exec shell
+				// shell := os.Getenv("SHELL")
+				// if shell == "" {
+				//     shell = "/bin/bash"
+				// }
 				return nil
 			}
 			return err
@@ -197,7 +197,7 @@ func runTmuxEnvironment(projectDir, projectName string, repos []string) error {
 		fmt.Printf("Warning: Repository directory not found at %s\n", primaryRepo)
 		fmt.Println("Run 'brain project pull' to clone it first.")
 		fmt.Print("Press Enter to continue to notes only...")
-		fmt.Scanln()
+		_, _ = fmt.Scanln()
 
 		if err := os.Chdir(projectDir); err != nil {
 			return fmt.Errorf("failed to change directory: %w", err)
@@ -223,9 +223,7 @@ func runTmuxEnvironment(projectDir, projectName string, repos []string) error {
 	}
 
 	// Rename first window to "code"
-	if err := external.SendKeys(sessionName+":1", "tmux rename-window code"); err != nil {
-		// Non-critical, continue
-	}
+	_ = external.SendKeys(sessionName+":1", "tmux rename-window code") // Non-critical, ignore errors
 
 	// Setup code window
 	editorCmd := "vim"
@@ -250,14 +248,10 @@ clear
 %s .
 `, editorCmd)
 
-	if err := external.SendKeys(sessionName+":code", setupScript); err != nil {
-		// Non-critical
-	}
+	_ = external.SendKeys(sessionName+":code", setupScript) // Non-critical, ignore errors
 
 	// Create notes window
-	if err := external.NewWindow(sessionName, 2, "notes", projectDir); err != nil {
-		// Non-critical
-	}
+	_ = external.NewWindow(sessionName, 2, "notes", projectDir) // Non-critical, ignore errors
 
 	// Setup notes window
 	notesCmd := fmt.Sprintf("%s notes.md todo.md", editorCmd)

@@ -81,7 +81,9 @@ func WithLock(filePath string, fn func() error) error {
 		return err
 	}
 
-	defer lock.Release()
+	defer func() {
+		_ = lock.Release() // Ignore release errors in defer
+	}()
 
 	return fn()
 }

@@ -84,13 +84,15 @@ func TestFileLock_AcquireTwice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to acquire first lock: %v", err)
 	}
-	defer lock1.Release()
+	defer func() {
+		_ = lock1.Release()
+	}()
 
 	// Try to acquire second lock (should fail)
 	err = lock2.Acquire()
 	if err == nil {
 		t.Error("Expected error when acquiring lock twice")
-		lock2.Release()
+		_ = lock2.Release()
 	}
 }
 
@@ -132,7 +134,7 @@ func TestFileLock_ConcurrentAccess(t *testing.T) {
 				// Hold lock briefly
 				time.Sleep(10 * time.Millisecond)
 
-				lock.Release()
+				_ = lock.Release()
 			}
 		}(i)
 	}
@@ -210,7 +212,7 @@ func TestWithLock_Nested(t *testing.T) {
 		err := lock.Acquire()
 		if err == nil {
 			t.Error("Expected error when acquiring nested lock")
-			lock.Release()
+			_ = lock.Release()
 		}
 		return nil
 	})
@@ -233,7 +235,7 @@ func TestFileLock_Retry(t *testing.T) {
 	// Try to acquire second lock in background, release first after delay
 	go func() {
 		time.Sleep(200 * time.Millisecond)
-		lock1.Release()
+		_ = lock1.Release()
 	}()
 
 	// Second lock with retries should eventually succeed
@@ -245,7 +247,9 @@ func TestFileLock_Retry(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to acquire lock after retry: %v", err)
 	}
-	defer lock2.Release()
+	defer func() {
+		_ = lock2.Release()
+	}()
 
 	// Should have taken at least one retry period
 	if elapsed < 100*time.Millisecond {
@@ -296,5 +300,5 @@ func TestFileLock_CrossGoroutineRelease(t *testing.T) {
 	if err := lock1.Acquire(); err != nil {
 		t.Errorf("Failed to reacquire after release: %v", err)
 	}
-	lock1.Release()
+	_ = lock1.Release()
 }
