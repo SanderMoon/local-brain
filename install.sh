@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO="sandermoonemans/local-brain"
+REPO="SanderMoon/local-brain"
 BINARY_NAME="brain"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 CONFIG_DIR="$HOME/.config/brain"
@@ -114,8 +114,8 @@ install_via_homebrew() {
     return 1
   fi
 
-  print_info "Adding tap sandermoonemans/tap..."
-  brew tap sandermoonemans/tap || {
+  print_info "Adding tap SanderMoon/tap..."
+  brew tap SanderMoon/tap || {
     print_warning "Tap not available yet - falling back to other methods"
     return 1
   }

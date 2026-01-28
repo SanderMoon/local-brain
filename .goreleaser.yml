@@ -83,12 +83,12 @@ changelog:
 brews:
   - name: brain
     repository:
-      owner: sandermoonemans
+      owner: SanderMoon
       name: homebrew-tap
       # If you want to use a different repo, update above
-      # You'll need to create this repo: https://github.com/sandermoonemans/homebrew-tap
+      # You'll need to create this repo: https://github.com/SanderMoon/homebrew-tap
     directory: Formula
-    homepage: https://github.com/sandermoonemans/local-brain
+    homepage: https://github.com/SanderMoon/local-brain
     description: Local Brain - A personal knowledge management CLI tool
     license: MIT
     # This script will be run after installation
@@ -104,7 +104,7 @@ brews:
       3. Install dependencies (if not already installed):
          brew install ripgrep fzf bat syncthing jq
 
-      For more information, visit: https://github.com/sandermoonemans/local-brain
+      For more information, visit: https://github.com/SanderMoon/local-brain
 
     install: |
       bin.install "brain"
@@ -139,7 +139,7 @@ brews:
 # Release notes configuration
 release:
   github:
-    owner: sandermoonemans
+    owner: SanderMoon
     name: local-brain
   draft: false
   prerelease: auto
