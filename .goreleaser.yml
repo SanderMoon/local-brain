@@ -110,13 +110,8 @@ brews:
       # Install the shell prompt helper
       (share/"brain").install "lib/brain-prompt.sh"
 
-      # Generate shell completions
-      bash_completion.install "completions/brain.bash" => "brain"
-      zsh_completion.install "completions/_brain" => "_brain"
-      fish_completion.install "completions/brain.fish"
-
     test: |
-      system "#{bin}/brain", "version"
+      system "#{bin}/brain", "--version"
 
     dependencies:
       - name: ripgrep
