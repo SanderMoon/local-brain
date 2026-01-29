@@ -100,8 +100,8 @@ brews:
       2. Add the brain-prompt.sh to your shell config:
          echo 'source $(brew --prefix)/share/brain/brain-prompt.sh' >> ~/.zshrc
 
-      3. Install dependencies (if not already installed):
-         brew install ripgrep fzf bat syncthing jq
+      3. Optional enhancements:
+         brew install tmux bat syncthing jq
 
       For more information, visit: https://github.com/SanderMoon/local-brain
 
@@ -114,9 +114,11 @@ brews:
       system "#{bin}/brain", "--version"
 
     dependencies:
-      - name: ripgrep
-        type: optional
       - name: fzf
+        # Required for interactive commands: plan, refile, todo
+      - name: ripgrep
+        # Required for fast search across projects
+      - name: tmux
         type: optional
       - name: bat
         type: optional
