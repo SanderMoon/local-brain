@@ -53,7 +53,7 @@ make release            # Create production release (requires git tag)
 
 ### Package Structure
 
-**`cmd/`** - Cobra CLI commands (18 commands)
+**`cmd/`** - Cobra CLI commands (19 commands)
 - Each command in separate file (e.g., `add.go`, `project.go`, `todo.go`)
 - All register with `rootCmd` in their `init()` functions
 - `root.go` defines base command and version handling

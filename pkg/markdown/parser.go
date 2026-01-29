@@ -134,6 +134,84 @@ func ExtractTimestamp(content string) (string, string) {
 	return cleanContent, timestamp
 }
 
+// ExtractPriority extracts the #p:[1-3] priority tag from content
+// Returns the content without priority tag and the priority value (1=high, 2=medium, 3=low)
+// Returns nil priority if no valid tag is found
+func ExtractPriority(content string) (string, *int) {
+	priorityPattern := regexp.MustCompile(`\s*#p:([1-3])(?:\s|$)`)
+	matches := priorityPattern.FindStringSubmatch(content)
+
+	if matches == nil {
+		return content, nil
+	}
+
+	priorityStr := matches[1]
+	priority := int(priorityStr[0] - '0')
+	cleanContent := priorityPattern.ReplaceAllString(content, " ")
+	cleanContent = strings.TrimSpace(cleanContent)
+
+	return cleanContent, &priority
+}
+
+// ExtractDueDate extracts the #due:YYYY-MM-DD tag from content
+// Returns the content without due date tag and the due date string (YYYY-MM-DD or whatever was in the tag)
+// Returns empty string if no valid tag is found
+func ExtractDueDate(content string) (string, string) {
+	dueDatePattern := regexp.MustCompile(`\s*#due:([^\s]+)(?:\s|$)`)
+	matches := dueDatePattern.FindStringSubmatch(content)
+
+	if matches == nil {
+		return content, ""
+	}
+
+	dueDate := matches[1]
+	cleanContent := dueDatePattern.ReplaceAllString(content, " ")
+	cleanContent = strings.TrimSpace(cleanContent)
+
+	return cleanContent, dueDate
+}
+
+// ExtractTags extracts all freeform #tag markers from content
+// Returns the content without tags and a slice of tag names
+// Freeform tags are hashtags WITHOUT colons (e.g., #bug, #feature)
+// Metadata tags WITH colons are NOT extracted (#p:1, #due:2026-02-15, #captured:2024-01-21)
+func ExtractTags(content string) (string, []string) {
+	// Pattern matches: #word followed by either : or non-word character or end of string
+	tagPattern := regexp.MustCompile(`#([a-zA-Z0-9_-]+)(:?)`)
+
+	// Find all matches
+	matches := tagPattern.FindAllStringSubmatch(content, -1)
+
+	var tags []string
+	var freeformTags []string
+	seen := make(map[string]bool)
+
+	for _, match := range matches {
+		tag := match[1]
+		hasColon := match[2] == ":"
+
+		// Only collect tags without colons (freeform tags)
+		if !hasColon && !seen[tag] {
+			tags = append(tags, tag)
+			freeformTags = append(freeformTags, "#"+tag)
+			seen[tag] = true
+		}
+	}
+
+	// Remove only freeform tags from content
+	cleanContent := content
+	for _, freeformTag := range freeformTags {
+		// Use word boundary to ensure we match whole tags
+		cleanContent = strings.ReplaceAll(cleanContent, freeformTag, "")
+	}
+
+	// Clean up extra spaces
+	cleanContent = regexp.MustCompile(`\s+`).ReplaceAllString(cleanContent, " ")
+	cleanContent = strings.TrimSpace(cleanContent)
+
+	return cleanContent, tags
+}
+
 // IsEmptyOrWhitespace checks if a string is empty or contains only whitespace
 func IsEmptyOrWhitespace(s string) bool {
 	return strings.TrimSpace(s) == ""
