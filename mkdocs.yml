@@ -1,0 +1,61 @@
+site_name: Local Brain
+site_description: A minimalist, local-first project management CLI for developers
+site_url: https://sandermoon.github.io/local-brain/
+repo_url: https://github.com/SanderMoon/local-brain
+repo_name: SanderMoon/local-brain
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant    # Instant loading
+    - navigation.tracking   # Anchor tracking
+    - navigation.top        # Back to top button
+    - search.suggest        # Search suggestions
+    - search.highlight      # Highlight search results
+    - content.code.copy     # Copy code button
+    - content.code.annotate # Code annotations
+
+nav:
+  - 🚀 Quickstart: index.md
+  - 📦 Installation: installation.md
+  - 📖 Command Reference: commands.md
+  - 💻 Development: development.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/SanderMoon/local-brain
