@@ -4,6 +4,9 @@ site_url: https://sandermoon.github.io/local-brain/
 repo_url: https://github.com/SanderMoon/local-brain
 repo_name: SanderMoon/local-brain
 
+exclude_docs: |
+  README.md
+
 theme:
   name: material
   palette:
