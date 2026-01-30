@@ -206,46 +206,46 @@ func TestExtractPriority(t *testing.T) {
 
 func TestExtractDueDate(t *testing.T) {
 	tests := []struct {
-		name             string
-		input            string
-		expectedContent  string
-		expectedDueDate  string
+		name            string
+		input           string
+		expectedContent string
+		expectedDueDate string
 	}{
 		{
-			name:             "due date at end",
-			input:            "Fix bug #due:2026-02-15",
-			expectedContent:  "Fix bug",
-			expectedDueDate:  "2026-02-15",
+			name:            "due date at end",
+			input:           "Fix bug #due:2026-02-15",
+			expectedContent: "Fix bug",
+			expectedDueDate: "2026-02-15",
 		},
 		{
-			name:             "no due date",
-			input:            "Regular task",
-			expectedContent:  "Regular task",
-			expectedDueDate:  "",
+			name:            "no due date",
+			input:           "Regular task",
+			expectedContent: "Regular task",
+			expectedDueDate: "",
 		},
 		{
-			name:             "due date with priority",
-			input:            "Important task #p:1 #due:2026-03-01",
-			expectedContent:  "Important task #p:1",
-			expectedDueDate:  "2026-03-01",
+			name:            "due date with priority",
+			input:           "Important task #p:1 #due:2026-03-01",
+			expectedContent: "Important task #p:1",
+			expectedDueDate: "2026-03-01",
 		},
 		{
-			name:             "due date at start",
-			input:            "#due:2026-01-20 Task description",
-			expectedContent:  "Task description",
-			expectedDueDate:  "2026-01-20",
+			name:            "due date at start",
+			input:           "#due:2026-01-20 Task description",
+			expectedContent: "Task description",
+			expectedDueDate: "2026-01-20",
 		},
 		{
-			name:             "due date with extra spaces",
-			input:            "Task  #due:2026-04-15  extra spaces",
-			expectedContent:  "Task  extra spaces",
-			expectedDueDate:  "2026-04-15",
+			name:            "due date with extra spaces",
+			input:           "Task  #due:2026-04-15  extra spaces",
+			expectedContent: "Task  extra spaces",
+			expectedDueDate: "2026-04-15",
 		},
 		{
-			name:             "invalid due date format (should still extract)",
-			input:            "Task #due:not-a-date",
-			expectedContent:  "Task",
-			expectedDueDate:  "not-a-date",
+			name:            "invalid due date format (should still extract)",
+			input:           "Task #due:not-a-date",
+			expectedContent: "Task",
+			expectedDueDate: "not-a-date",
 		},
 	}
 

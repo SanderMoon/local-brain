@@ -61,6 +61,11 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		text := strings.Join(args, " ")
 
+		// Strip newlines to ensure single-line todos
+		text = strings.ReplaceAll(text, "\n", " ")
+		text = strings.ReplaceAll(text, "\r", " ")
+		text = strings.TrimSpace(text)
+
 		// Acquire lock and append
 		err := fileutil.WithLock(dumpPath, func() error {
 			f, err := os.OpenFile(dumpPath, os.O_APPEND|os.O_WRONLY, 0644)
@@ -95,6 +100,9 @@ func addNoteMode(dumpPath, timestamp string) error {
 		return fmt.Errorf("failed to read title: %w", err)
 	}
 
+	// Strip newlines to ensure single-line title
+	title = strings.ReplaceAll(title, "\n", " ")
+	title = strings.ReplaceAll(title, "\r", " ")
 	title = strings.TrimSpace(title)
 	if title == "" {
 		fmt.Println("Aborted (no title)")

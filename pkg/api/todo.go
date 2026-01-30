@@ -17,7 +17,7 @@ type TodoItem struct {
 	ID       string   `json:"id"`
 	File     string   `json:"file"`
 	Line     int      `json:"line"`
-	Status   string   `json:"status"`   // "open", "in-progress", "blocked", or "done"
+	Status   string   `json:"status"` // "open", "in-progress", "blocked", or "done"
 	Content  string   `json:"content"`
 	Project  string   `json:"project"`
 	Priority *int     `json:"priority"` // 1=high, 2=medium, 3=low, nil=unprioritized

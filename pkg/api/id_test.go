@@ -20,7 +20,7 @@ func TestGenerateItemID(t *testing.T) {
 			lineNum:  5,
 			content:  "- [ ] Fix authentication bug #captured:2024-01-21",
 			mtime:    1705843200, // 2024-01-21 00:00:00 UTC
-			expected: "e3b0c4", // This is a placeholder - will need to verify with bash
+			expected: "e3b0c4",   // This is a placeholder - will need to verify with bash
 		},
 		{
 			name:     "note header",
