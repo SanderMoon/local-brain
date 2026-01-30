@@ -61,14 +61,14 @@ var todoLsCmd = &cobra.Command{
 }
 
 var todoDoneCmd = &cobra.Command{
-	Use:   "done [ID]",
-	Short: "Mark task as complete",
-	Long: `Mark a task as complete by toggling [ ] to [x].
+	Use:   "done [ID...]",
+	Short: "Mark task(s) as complete",
+	Long: `Mark one or more tasks as complete by toggling [ ] to [x].
 
-If no ID is provided, shows interactive selection.`,
-	Example: `  brain todo done abc123  # Mark complete by ID
-  brain todo done         # Interactive selection`,
-	Args: cobra.MaximumNArgs(1),
+If no IDs provided, shows interactive multi-select (Tab to select multiple).`,
+	Example: `  brain todo done abc123           # Mark one complete by ID
+  brain todo done abc123 def456   # Mark multiple complete by ID
+  brain todo done                 # Interactive multi-select`,
 	RunE: runTodoDone,
 }
 
@@ -166,11 +166,11 @@ func formatPriorityBadge(priority *int) string {
 	}
 	switch *priority {
 	case 1:
-		return "[P1]"
+		return "\033[91m[P1]\033[0m" // Bright red for high priority
 	case 2:
-		return "[P2]"
+		return "\033[93m[P2]\033[0m" // Bright yellow for medium priority
 	case 3:
-		return "[P3]"
+		return "\033[94m[P3]\033[0m" // Bright blue for low priority
 	default:
 		return "    "
 	}
@@ -386,6 +386,44 @@ func sortTodosByDeadlineAndPriority(todos []api.TodoItem) {
 	})
 }
 
+// sortTodosByProjectThenDeadline groups by project, then sorts by deadline/priority within each project
+func sortTodosByProjectThenDeadline(todos []api.TodoItem) {
+	sort.SliceStable(todos, func(i, j int) bool {
+		// First, group by project
+		if todos[i].Project != todos[j].Project {
+			return todos[i].Project < todos[j].Project
+		}
+
+		// Within same project, sort by deadline and priority
+		iHasDue := todos[i].DueDate != ""
+		jHasDue := todos[j].DueDate != ""
+
+		// Both have no due date - sort by priority
+		if !iHasDue && !jHasDue {
+			return comparePriority(todos[i].Priority, todos[j].Priority)
+		}
+
+		// One has due date, one doesn't - due date comes first
+		if !iHasDue {
+			return false
+		}
+		if !jHasDue {
+			return true
+		}
+
+		// Both have due dates - sort by date, then priority
+		iDate, _ := time.Parse("2006-01-02", todos[i].DueDate)
+		jDate, _ := time.Parse("2006-01-02", todos[j].DueDate)
+
+		if !iDate.Equal(jDate) {
+			return iDate.Before(jDate)
+		}
+
+		// Same date - sort by priority
+		return comparePriority(todos[i].Priority, todos[j].Priority)
+	})
+}
+
 // comparePriority compares two priority values (lower number = higher priority comes first)
 func comparePriority(a, b *int) bool {
 	if a == nil && b == nil {
@@ -400,22 +438,22 @@ func comparePriority(a, b *int) bool {
 	return *a < *b
 }
 
-// displayTodos shows todos with enhanced formatting
+// displayTodos shows todos with enhanced formatting and project color-coding
 func displayTodos(todos []api.TodoItem) {
+	// Build project color map for unique color assignment
+	colorMap := buildProjectColorMap(todos)
+
 	for _, todo := range todos {
 		statusMark := formatStatusMark(todo.Status)
 		prioBadge := formatPriorityBadge(todo.Priority)
 
-		// Build display line
+		// Build display line: hash priority status content
 		line := fmt.Sprintf("%s %s %s %s", todo.ID, prioBadge, statusMark, todo.Content)
 
 		// Add tags
 		if len(todo.Tags) > 0 {
 			line += " " + formatTags(todo.Tags)
 		}
-
-		// Add project
-		line += fmt.Sprintf(" (%s)", todo.Project)
 
 		// Add due date with overdue highlighting
 		if todo.DueDate != "" {
@@ -431,8 +469,79 @@ func displayTodos(todos []api.TodoItem) {
 			}
 		}
 
+		// Add project with color-coding at the end
+		projectColor := colorMap[todo.Project]
+		line += fmt.Sprintf(" %s(%s)%s", projectColor, todo.Project, colorReset)
+
 		fmt.Println(line)
 	}
+}
+
+// ANSI color codes
+const (
+	colorReset  = "\033[0m"
+	colorRed    = "\033[31m"
+	colorGreen  = "\033[32m"
+	colorYellow = "\033[33m"
+	colorBlue   = "\033[34m"
+	colorPurple = "\033[35m"
+	colorCyan   = "\033[36m"
+	colorWhite  = "\033[37m"
+	// Bright variants
+	colorBrightRed    = "\033[91m"
+	colorBrightGreen  = "\033[92m"
+	colorBrightYellow = "\033[93m"
+	colorBrightBlue   = "\033[94m"
+	colorBrightPurple = "\033[95m"
+	colorBrightCyan   = "\033[96m"
+)
+
+// getColorPalette returns the available color palette
+func getColorPalette() []string {
+	// Expanded color palette (14 colors for better distribution)
+	// Excludes white and very dark colors for readability
+	return []string{
+		colorCyan,
+		colorGreen,
+		colorYellow,
+		colorBlue,
+		colorPurple,
+		colorRed,
+		colorBrightCyan,
+		colorBrightGreen,
+		colorBrightYellow,
+		colorBrightBlue,
+		colorBrightPurple,
+		colorBrightRed,
+		"\033[38;5;208m", // Orange (256-color)
+		"\033[38;5;205m", // Pink (256-color)
+	}
+}
+
+// buildProjectColorMap assigns unique colors to projects using a slot system
+// This ensures no color collisions for up to 14 active projects
+func buildProjectColorMap(todos []api.TodoItem) map[string]string {
+	// Extract unique projects
+	projectSet := make(map[string]bool)
+	for _, todo := range todos {
+		projectSet[todo.Project] = true
+	}
+
+	// Sort projects alphabetically for consistent color assignment
+	var projects []string
+	for project := range projectSet {
+		projects = append(projects, project)
+	}
+	sort.Strings(projects)
+
+	// Assign colors sequentially from palette
+	palette := getColorPalette()
+	colorMap := make(map[string]string)
+	for i, project := range projects {
+		colorMap[project] = palette[i%len(palette)]
+	}
+
+	return colorMap
 }
 
 func runTodoLs(cmd *cobra.Command, args []string) error {
@@ -460,7 +569,7 @@ func runTodoLs(cmd *cobra.Command, args []string) error {
 	if todoSortFlag != "" {
 		sortTodos(todos, todoSortFlag)
 	} else {
-		// Default sort: deadline first (overdue/upcoming), then priority
+		// Default sort: deadline first (overdue/upcoming), then priority across all projects
 		sortTodosByDeadlineAndPriority(todos)
 	}
 
@@ -493,33 +602,60 @@ func runTodoDone(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var todo *api.TodoItem
+	var todos []*api.TodoItem
 
 	if len(args) == 0 {
-		// Interactive selection
-		todo, err = selectTodo(activeDir, "open", "Select task to complete")
+		// Interactive multi-select
+		todos, err = selectMultipleTodosForAction(activeDir, "open", "Select tasks to complete (Tab to select, Enter to confirm)")
 		if err != nil {
 			return err
 		}
 	} else {
-		// Find by ID
-		todo, err = findTodo(activeDir, args[0], false)
-		if err != nil {
-			return err
+		// Find by IDs
+		for _, query := range args {
+			todo, err := findTodo(activeDir, query, false)
+			if err != nil {
+				return err
+			}
+			todos = append(todos, todo)
 		}
 	}
 
-	if todo.Status == "done" {
-		fmt.Printf("Task is already completed: %s\n", todo.Content)
+	if len(todos) == 0 {
+		fmt.Println("No tasks selected")
 		return nil
 	}
 
-	// Set status to done
-	if err := api.SetTodoStatus(todo, "done"); err != nil {
-		return fmt.Errorf("failed to update todo: %w", err)
+	// Filter out already completed tasks
+	var toComplete []*api.TodoItem
+	for _, todo := range todos {
+		if todo.Status != "done" {
+			toComplete = append(toComplete, todo)
+		}
 	}
 
-	fmt.Printf("OK: Completed task: %s (%s)\n", todo.Content, todo.Project)
+	if len(toComplete) == 0 {
+		if len(todos) == 1 {
+			fmt.Println("Task is already completed")
+		} else {
+			fmt.Println("All selected tasks are already completed")
+		}
+		return nil
+	}
+
+	// Mark as done
+	for _, todo := range toComplete {
+		if err := api.SetTodoStatus(todo, "done"); err != nil {
+			fmt.Printf("Error completing %s: %v\n", todo.ID, err)
+		}
+	}
+
+	// Confirmation message
+	if len(toComplete) == 1 {
+		fmt.Printf("✓ Completed task: %s (%s)\n", toComplete[0].Content, toComplete[0].Project)
+	} else {
+		fmt.Printf("✓ Completed %d tasks\n", len(toComplete))
+	}
 	return nil
 }
 
@@ -710,6 +846,76 @@ func findTodo(activeDir, query string, includeCompleted bool) (*api.TodoItem, er
 	}
 
 	return nil, fmt.Errorf("todo not found: %s", query)
+}
+
+func selectMultipleTodosForAction(activeDir, filter, prompt string) ([]*api.TodoItem, error) {
+	includeCompleted := filter == "all" || filter == "done"
+
+	todos, err := api.ParseAllTodos(activeDir, includeCompleted)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse todos: %w", err)
+	}
+
+	// Filter by status
+	var filtered []api.TodoItem
+	for _, todo := range todos {
+		if filter == "all" {
+			filtered = append(filtered, todo)
+		} else if filter == "open" && todo.Status == "open" {
+			filtered = append(filtered, todo)
+		} else if filter == "done" && todo.Status == "done" {
+			filtered = append(filtered, todo)
+		}
+	}
+
+	if len(filtered) == 0 {
+		return nil, fmt.Errorf("no matching tasks found")
+	}
+
+	// Sort by priority in reverse (unprioritized first for FZF cursor)
+	sortTodosByPriorityReverse(filtered)
+
+	// Format for FZF
+	var items []string
+	todoMap := make(map[string]*api.TodoItem)
+	for i := range filtered {
+		todo := &filtered[i]
+		statusMark := formatStatusMark(todo.Status)
+		prioBadge := formatPriorityBadge(todo.Priority)
+		display := fmt.Sprintf("%s %s %s %s (%s)", todo.ID, prioBadge, statusMark, todo.Content, todo.Project)
+		items = append(items, display)
+		todoMap[todo.ID] = todo
+	}
+
+	// Select with FZF (multi-select enabled, Tab selects and moves up)
+	selections, err := external.Select(items, external.FZFOptions{
+		Header:        prompt,
+		Multi:         true,
+		Preview:       "",
+		PreviewWindow: "",
+		ExtraArgs:     []string{"--bind", "tab:toggle+up"},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract todos from selections
+	var selectedTodos []*api.TodoItem
+	for _, selected := range selections {
+		// Extract ID from selection (first field)
+		parts := strings.Fields(selected)
+		if len(parts) == 0 {
+			continue
+		}
+
+		todoID := parts[0]
+		if todo, ok := todoMap[todoID]; ok {
+			selectedTodos = append(selectedTodos, todo)
+		}
+	}
+
+	return selectedTodos, nil
 }
 
 func selectTodo(activeDir, filter, prompt string) (*api.TodoItem, error) {

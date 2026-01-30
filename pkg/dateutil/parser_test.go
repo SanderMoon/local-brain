@@ -15,8 +15,8 @@ func TestParseNaturalDate_ISO(t *testing.T) {
 		{"2026-02-15", "2026-02-15", false},
 		{"2024-01-01", "2024-01-01", false},
 		{"2025-12-31", "2025-12-31", false},
-		{"2026-13-01", "", true},  // Invalid month
-		{"2026-02-30", "", true},  // Invalid day
+		{"2026-13-01", "", true}, // Invalid month
+		{"2026-02-30", "", true}, // Invalid day
 		{"not-a-date", "", true},
 	}
 
@@ -310,9 +310,9 @@ func TestParseNaturalDate_CaseInsensitive(t *testing.T) {
 
 func TestParseNaturalDate_Whitespace(t *testing.T) {
 	tests := map[string]string{
-		"  today  ":   "today",
+		"  today  ":    "today",
 		"\ttomorrow\t": "tomorrow",
-		" +3d ":       "+3d",
+		" +3d ":        "+3d",
 	}
 
 	for input, normalized := range tests {

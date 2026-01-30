@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -260,19 +261,47 @@ func refileTask(item *markdown.DumpItem, projectDir string) error {
 		}
 	}
 
-	// Append task (preserve the original format with captured timestamp)
-	err := fileutil.WithLock(todoFile, func() error {
-		f, err := os.OpenFile(todoFile, os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			return err
+	// Read existing content
+	content, err := os.ReadFile(todoFile)
+	if err != nil {
+		return fmt.Errorf("failed to read todo.md: %w", err)
+	}
+
+	lines := strings.Split(string(content), "\n")
+	newTask := fmt.Sprintf("- [ ] %s", item.Content)
+
+	// Find the "## Active" section and insert after it
+	activeIdx := -1
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "## Active" {
+			activeIdx = i
+			break
 		}
-		defer f.Close()
+	}
 
-		_, err = fmt.Fprintf(f, "- [ ] %s\n", item.Content)
-		return err
-	})
+	var newLines []string
+	if activeIdx == -1 {
+		// No Active section found, append to end (fallback)
+		newLines = append(lines, newTask)
+	} else {
+		// Insert after "## Active" line, after any existing tasks but before next section
+		insertIdx := activeIdx + 1
 
-	return err
+		// Skip empty lines immediately after "## Active"
+		for insertIdx < len(lines) && strings.TrimSpace(lines[insertIdx]) == "" {
+			insertIdx++
+		}
+
+		// Insert the new task
+		newLines = make([]string, 0, len(lines)+1)
+		newLines = append(newLines, lines[:insertIdx]...)
+		newLines = append(newLines, newTask)
+		newLines = append(newLines, lines[insertIdx:]...)
+	}
+
+	// Write back atomically
+	newContent := strings.Join(newLines, "\n")
+	return fileutil.AtomicWriteFile(todoFile, []byte(newContent))
 }
 
 func refileNote(item *markdown.DumpItem, projectDir, dumpPath string) error {
@@ -401,6 +430,9 @@ func listProjects(activeDir string) ([]string, error) {
 			projects = append(projects, entry.Name())
 		}
 	}
+
+	// Sort alphabetically for better UX
+	sort.Strings(projects)
 
 	return projects, nil
 }

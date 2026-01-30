@@ -195,7 +195,7 @@ func TestAtomicWrite_NoTempFileLeftBehind(t *testing.T) {
 
 	for _, entry := range entries {
 		if filepath.Ext(entry.Name()) == ".tmp" ||
-		   filepath.Base(entry.Name())[:5] == ".brain-tmp-" {
+			filepath.Base(entry.Name())[:5] == ".brain-tmp-" {
 			t.Errorf("Temp file left behind: %s", entry.Name())
 		}
 	}

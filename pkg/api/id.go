@@ -9,9 +9,9 @@ import (
 // This must match the bash implementation exactly for backward compatibility
 //
 // Algorithm from brain-api.sh lines 20-27:
-//   1. Create hash input: "${line_num}:${content}:${mtime}"
-//   2. Compute MD5 hash
-//   3. Take first 6 hex characters
+//  1. Create hash input: "${line_num}:${content}:${mtime}"
+//  2. Compute MD5 hash
+//  3. Take first 6 hex characters
 //
 // Args:
 //   - lineNum: Line number in the file (1-indexed)
