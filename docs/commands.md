@@ -493,6 +493,28 @@ backend-api
 
 ---
 
+### `brain project describe`
+
+**Description:** Edit or display project description
+
+**Usage:**
+```bash
+brain project describe              # Edit in editor
+brain project describe --show       # Display description
+brain project describe --show --json
+```
+
+**Options:**
+- `--show` - Display instead of editing
+- `--json` - JSON output (with `--show`)
+
+**Notes:**
+- Stored in separate `description.md` file
+- Use for brief project overview (notes.md is for detailed documentation)
+- Created on first use, not with `brain project new`
+
+---
+
 ### `brain project clone <url> [name]`
 
 **Description:** Import a git repository as a new project

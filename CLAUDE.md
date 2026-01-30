@@ -159,6 +159,14 @@ func TestParseProject(t *testing.T) {
 }
 ```
 
+### Documentation Must Be Updated
+All new commands and features must be documented in `docs/commands.md`:
+- Add command documentation under the appropriate section
+- Follow the existing concise format (usage, options, notes)
+- Include practical examples
+- Document flags and behavior
+- Keep descriptions brief but complete
+
 ### ID Generation Must Match Bash
 The `pkg/api/id.go` GenerateItemID function uses MD5 hashing that **must** match the original bash implementation for backward compatibility. Do not change the algorithm without extensive testing.
 

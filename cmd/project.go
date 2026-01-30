@@ -102,6 +102,18 @@ var projectDeleteCmd = &cobra.Command{
 	RunE:  runProjectDelete,
 }
 
+var projectDescribeCmd = &cobra.Command{
+	Use:   "describe",
+	Short: "Edit or show project description",
+	Long: `Edit or display the project description.
+
+By default, opens description.md in your editor.
+Use --show to display the current description.`,
+	RunE: runProjectDescribe,
+}
+
+var projectDescribeShowFlag bool
+
 func init() {
 	rootCmd.AddCommand(projectCmd)
 
@@ -115,8 +127,11 @@ func init() {
 	projectCmd.AddCommand(projectArchiveCmd)
 	projectCmd.AddCommand(projectMoveCmd)
 	projectCmd.AddCommand(projectDeleteCmd)
+	projectCmd.AddCommand(projectDescribeCmd)
 
 	projectListCmd.Flags().BoolVar(&projectJSONFlag, "json", false, "Output JSON format")
+	projectDescribeCmd.Flags().BoolVar(&projectDescribeShowFlag, "show", false, "Display description instead of editing")
+	projectDescribeCmd.Flags().BoolVar(&projectJSONFlag, "json", false, "Output JSON format (with --show)")
 }
 
 func runProjectList(cmd *cobra.Command, args []string) error {
@@ -228,9 +243,6 @@ Created: %s
 	todoContent := `# Tasks
 
 ## Active
-
-- [ ] Define project goals
-- [ ] Set up development environment
 
 ## Completed
 `
@@ -699,6 +711,79 @@ func runProjectDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("OK: Deleted project: %s\n", projectName)
+	return nil
+}
+
+func runProjectDescribe(cmd *cobra.Command, args []string) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Resolve target project (focused or interactive)
+	projectName, projectDir, err := resolveTargetProject(cfg, "describe project")
+	if err != nil {
+		return err
+	}
+
+	descPath := filepath.Join(projectDir, "description.md")
+
+	// Display mode
+	if projectDescribeShowFlag {
+		content, err := api.ReadProjectDescription(projectDir)
+		if err != nil {
+			return err
+		}
+
+		if projectJSONFlag {
+			type DescriptionOutput struct {
+				Project     string `json:"project"`
+				Description string `json:"description"`
+				HasContent  bool   `json:"has_content"`
+			}
+
+			output := DescriptionOutput{
+				Project:     projectName,
+				Description: content,
+				HasContent:  content != "",
+			}
+
+			data, err := json.MarshalIndent(output, "", "  ")
+			if err != nil {
+				return fmt.Errorf("failed to marshal JSON: %w", err)
+			}
+			fmt.Println(string(data))
+			return nil
+		}
+
+		// Human-readable output
+		if content == "" {
+			fmt.Println("(No description)")
+			return nil
+		}
+
+		fmt.Print(content)
+		return nil
+	}
+
+	// Interactive editing mode
+	// Create file with helpful comment if it doesn't exist
+	if !fileutil.FileExists(descPath) {
+		initialContent := `# Add a brief description of this project
+# Lines starting with # are comments and can be removed
+
+`
+		if err := os.WriteFile(descPath, []byte(initialContent), 0644); err != nil {
+			return fmt.Errorf("failed to create description.md: %w", err)
+		}
+	}
+
+	// Open in editor
+	if err := external.OpenFile(descPath); err != nil {
+		return fmt.Errorf("failed to open editor: %w", err)
+	}
+
+	fmt.Printf("OK: Updated description for: %s\n", projectName)
 	return nil
 }
 

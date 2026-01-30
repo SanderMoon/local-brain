@@ -229,3 +229,149 @@ func TestGetLinkedRepos_EmptyFile(t *testing.T) {
 		t.Errorf("Expected 0 repos, got %d", len(repos))
 	}
 }
+
+func TestReadProjectDescription(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	projectDir := filepath.Join(tb.ActiveDirPath, "test-project")
+	descFile := filepath.Join(projectDir, "description.md")
+
+	expectedContent := `This is a test project description.
+It has multiple lines.
+`
+	tb.WriteFile(descFile, expectedContent)
+
+	content, err := ReadProjectDescription(projectDir)
+	if err != nil {
+		t.Fatalf("ReadProjectDescription failed: %v", err)
+	}
+
+	if content != expectedContent {
+		t.Errorf("Expected %q, got %q", expectedContent, content)
+	}
+}
+
+func TestReadProjectDescription_NotExists(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	projectDir := filepath.Join(tb.ActiveDirPath, "no-description")
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		t.Fatalf("Failed to create project dir: %v", err)
+	}
+
+	content, err := ReadProjectDescription(projectDir)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if content != "" {
+		t.Errorf("Expected empty string, got %q", content)
+	}
+}
+
+func TestWriteProjectDescription(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	projectDir := filepath.Join(tb.ActiveDirPath, "test-project")
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		t.Fatalf("Failed to create project dir: %v", err)
+	}
+
+	content := "This is a new project description."
+
+	err := WriteProjectDescription(projectDir, content)
+	if err != nil {
+		t.Fatalf("WriteProjectDescription failed: %v", err)
+	}
+
+	// Verify file was created
+	descFile := filepath.Join(projectDir, "description.md")
+	data, err := os.ReadFile(descFile)
+	if err != nil {
+		t.Fatalf("Failed to read description.md: %v", err)
+	}
+
+	// Should have single trailing newline
+	expected := content + "\n"
+	if string(data) != expected {
+		t.Errorf("Expected %q, got %q", expected, string(data))
+	}
+}
+
+func TestWriteProjectDescription_Update(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	projectDir := filepath.Join(tb.ActiveDirPath, "test-project")
+	descFile := filepath.Join(projectDir, "description.md")
+
+	// Create initial description
+	initialContent := "Initial description"
+	tb.WriteFile(descFile, initialContent)
+
+	// Update it
+	updatedContent := "Updated description"
+	err := WriteProjectDescription(projectDir, updatedContent)
+	if err != nil {
+		t.Fatalf("WriteProjectDescription failed: %v", err)
+	}
+
+	// Verify update
+	data, err := os.ReadFile(descFile)
+	if err != nil {
+		t.Fatalf("Failed to read description.md: %v", err)
+	}
+
+	expected := updatedContent + "\n"
+	if string(data) != expected {
+		t.Errorf("Expected %q, got %q", expected, string(data))
+	}
+}
+
+func TestWriteProjectDescription_NormalizesNewlines(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	projectDir := filepath.Join(tb.ActiveDirPath, "test-project")
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		t.Fatalf("Failed to create project dir: %v", err)
+	}
+
+	// Test with multiple trailing newlines
+	content := "Description with extra newlines\n\n\n"
+
+	err := WriteProjectDescription(projectDir, content)
+	if err != nil {
+		t.Fatalf("WriteProjectDescription failed: %v", err)
+	}
+
+	descFile := filepath.Join(projectDir, "description.md")
+	data, err := os.ReadFile(descFile)
+	if err != nil {
+		t.Fatalf("Failed to read description.md: %v", err)
+	}
+
+	// Should normalize to single trailing newline
+	expected := "Description with extra newlines\n"
+	if string(data) != expected {
+		t.Errorf("Expected %q, got %q", expected, string(data))
+	}
+}
+
+func TestProjectDescriptionExists(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	projectDir := filepath.Join(tb.ActiveDirPath, "test-project")
+	descFile := filepath.Join(projectDir, "description.md")
+
+	// Should not exist initially
+	if ProjectDescriptionExists(projectDir) {
+		t.Error("Expected description to not exist")
+	}
+
+	// Create description
+	tb.WriteFile(descFile, "Test description")
+
+	// Should exist now
+	if !ProjectDescriptionExists(projectDir) {
+		t.Error("Expected description to exist")
+	}
+}

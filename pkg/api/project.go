@@ -159,3 +159,41 @@ func AddRepoLink(projectDir, gitURL string) error {
 	_, err = fmt.Fprintln(f, gitURL)
 	return err
 }
+
+// ReadProjectDescription reads the description.md file for a project
+// Returns empty string if file doesn't exist (not an error)
+func ReadProjectDescription(projectDir string) (string, error) {
+	descPath := filepath.Join(projectDir, "description.md")
+
+	data, err := os.ReadFile(descPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", fmt.Errorf("failed to read description.md: %w", err)
+	}
+
+	return string(data), nil
+}
+
+// WriteProjectDescription writes content to the description.md file
+// Creates the file if it doesn't exist
+func WriteProjectDescription(projectDir, content string) error {
+	descPath := filepath.Join(projectDir, "description.md")
+
+	// Ensure single trailing newline
+	content = strings.TrimRight(content, "\n") + "\n"
+
+	if err := os.WriteFile(descPath, []byte(content), 0644); err != nil {
+		return fmt.Errorf("failed to write description.md: %w", err)
+	}
+
+	return nil
+}
+
+// ProjectDescriptionExists checks if a project has a description.md file
+func ProjectDescriptionExists(projectDir string) bool {
+	descPath := filepath.Join(projectDir, "description.md")
+	_, err := os.Stat(descPath)
+	return err == nil
+}
