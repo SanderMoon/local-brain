@@ -1,5 +1,13 @@
 # Local Brain
 
+```
+ ______     ______     ______     __     __   __
+/\  == \   /\  == \   /\  __ \   /\ \   /\ "-.\ \
+\ \  __<   \ \  __<   \ \  __ \  \ \ \  \ \ \-.  \  
+ \ \_____\  \ \_\ \_\  \ \_\ \_\  \ \_\  \ \_\\"\_\
+  \/_____/   \/_/ /_/   \/_/\/_/   \/_/   \/_/ \/_/
+```
+
 > A minimalist, local-first project management system for developers who live in the terminal.
 
 [![Documentation](https://img.shields.io/badge/docs-sandermoon.github.io-blue)](https://sandermoon.github.io/local-brain/)
@@ -43,7 +51,7 @@ brain refile
 brain plan
 ```
 
-**[📖 Full Documentation →](https://sandermoon.github.io/local-brain/)**
+__[📖 Full Documentation →](https://sandermoon.github.io/local-brain/)__
 
 ---
 
@@ -51,11 +59,13 @@ brain plan
 
 Local Brain follows a two-phase workflow:
 
-**Phase 1: Capture** (< 1 second)
+__Phase 1: Capture__ (< 1 second)
+
 - No metadata, no decisions, no interruptions
 - Everything goes to your dump (`00_dump.md`)
 
-**Phase 2: Curate** (dedicated time blocks)
+__Phase 2: Curate__ (dedicated time blocks)
+
 - Batch process items with `brain refile`
 - Enrich tasks with `brain plan` (priorities, due dates, tags)
 
@@ -65,33 +75,35 @@ This keeps you in flow while maintaining organized projects.
 
 ## Features
 
-- **Zero-Friction Capture** - Add tasks in < 1 second without context switching
-- **Batch Curation** - Process and organize during dedicated time blocks
-- **Local-First** - Plain text Markdown files, grep-able, version-controllable
-- **Developer-Friendly** - Integrates with git repos, supports JSON API for scripts
-- **Privacy-First** - Everything lives locally in `~/brains/`, syncable via Syncthing/Dropbox
+- __Zero-Friction Capture__ - Add tasks in < 1 second without context switching
+- __Batch Curation__ - Process and organize during dedicated time blocks
+- __Local-First__ - Plain text Markdown files, grep-able, version-controllable
+- __Developer-Friendly__ - Integrates with git repos, supports JSON API for scripts
+- __Privacy-First__ - Everything lives locally in `~/brains/`, syncable via Syncthing/Dropbox
 
 ---
 
 ## Documentation
 
-- **[🚀 Quickstart Guide](https://sandermoon.github.io/local-brain/)** - Get started in 3 minutes
-- **[📦 Installation](https://sandermoon.github.io/local-brain/installation/)** - All installation methods
-- **[📖 Command Reference](https://sandermoon.github.io/local-brain/commands/)** - Complete command documentation
-- **[💻 Development Guide](https://sandermoon.github.io/local-brain/development/)** - Contributing and architecture
+- __[🚀 Quickstart Guide](https://sandermoon.github.io/local-brain/)__ - Get started in 3 minutes
+- __[📦 Installation](https://sandermoon.github.io/local-brain/installation/)__ - All installation methods
+- __[📖 Command Reference](https://sandermoon.github.io/local-brain/commands/)__ - Complete command documentation
+- __[💻 Development Guide](https://sandermoon.github.io/local-brain/development/)__ - Contributing and architecture
 
 ---
 
 ## Daily Workflow Example
 
-**Morning** (Capture):
+__Morning__ (Capture):
+
 ```bash
 brain add "Fix auth bug in login"
 brain add "Review Sarah's PR"
 brain add "Update deployment docs"
 ```
 
-**End of Day** (Curate - Refile):
+__End of Day__ (Curate - Refile):
+
 ```bash
 brain refile
 # Interactive prompts move items to projects:
@@ -100,13 +112,15 @@ brain refile
 # - "Update deployment docs" → backend-api
 ```
 
-**Friday** (Curate - Plan):
+__Friday__ (Curate - Plan):
+
 ```bash
 brain plan
 # Add priorities, due dates, tags, states
 ```
 
-**Throughout the Week**:
+__Throughout the Week__:
+
 ```bash
 brain todo ls --status in-progress --priority 1
 brain todo ls --overdue
@@ -117,13 +131,13 @@ brain todo done <id>
 
 ## Key Concepts
 
-**Brains**: Top-level workspaces (e.g., "Work", "Personal"). Only one active at a time, symlinked to `~/brain`.
+__Brains__: Top-level workspaces (e.g., "Work", "Personal"). Only one active at a time, symlinked to `~/brain`.
 
-**Projects**: Focus areas within a brain (e.g., "website-redesign"). Each has `notes.md`, `todo.md`, and optional code repo links.
+__Projects__: Focus areas within a brain (e.g., "website-redesign"). Each has `notes.md`, `todo.md`, and optional code repo links.
 
-**Dump**: Your inbox (`00_dump.md`) for rapid capture. Process it regularly with `brain refile`.
+__Dump__: Your inbox (`00_dump.md`) for rapid capture. Process it regularly with `brain refile`.
 
-**[Learn more →](https://sandermoon.github.io/local-brain/)**
+__[Learn more →](https://sandermoon.github.io/local-brain/)__
 
 ---
 
@@ -143,9 +157,9 @@ make test
 
 ## Community
 
-- **Issues**: [GitHub Issues](https://github.com/SanderMoon/local-brain/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/SanderMoon/local-brain/discussions)
-- **Documentation**: [https://sandermoon.github.io/local-brain/](https://sandermoon.github.io/local-brain/)
+- __Issues__: [GitHub Issues](https://github.com/SanderMoon/local-brain/issues)
+- __Discussions__: [GitHub Discussions](https://github.com/SanderMoon/local-brain/discussions)
+- __Documentation__: [https://sandermoon.github.io/local-brain/](https://sandermoon.github.io/local-brain/)
 
 ---
 
@@ -155,4 +169,4 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**[📖 Read the Full Documentation](https://sandermoon.github.io/local-brain/)**
+__[📖 Read the Full Documentation](https://sandermoon.github.io/local-brain/)__
