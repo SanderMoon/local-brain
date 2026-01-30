@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sandermoonemans/local-brain/pkg/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -47,6 +48,18 @@ Features:
   - Tmux workspace integration
   - Programmatic JSON API`,
 	Version: buildVersion(),
+	Run: func(cmd *cobra.Command, args []string) {
+		// If no arguments and no flags (except version), launch TUI
+		if len(args) == 0 && !cmd.Flags().Changed("version") {
+			if err := tui.Launch(); err != nil {
+				fmt.Fprintln(os.Stderr, "Error launching TUI:", err)
+				os.Exit(1)
+			}
+			return
+		}
+		// Otherwise show help
+		_ = cmd.Help()
+	},
 }
 
 // Execute runs the root command
