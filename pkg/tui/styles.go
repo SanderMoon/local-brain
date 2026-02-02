@@ -5,8 +5,6 @@ import "github.com/charmbracelet/lipgloss"
 // Color palette
 var (
 	primaryColor = lipgloss.Color("205") // Magenta
-	accentColor  = lipgloss.Color("170") // Purple
-	successColor = lipgloss.Color("42")  // Green
 	warningColor = lipgloss.Color("208") // Orange
 	errorColor   = lipgloss.Color("196") // Red
 	mutedColor   = lipgloss.Color("240") // Gray

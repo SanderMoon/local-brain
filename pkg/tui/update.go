@@ -52,15 +52,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case KeyRefresh:
-			return m, refreshDataCmd(m.config, m.showCompleted, m.showAllProjects)
+			return m, refreshDataCmd(m.config, m.shouldIncludeCompleted(), m.showAllProjects)
 
 		case "c": // Toggle showing completed todos
 			m.showCompleted = !m.showCompleted
-			return m, refreshDataCmd(m.config, m.showCompleted, m.showAllProjects)
+			return m, refreshDataCmd(m.config, m.shouldIncludeCompleted(), m.showAllProjects)
 
 		case "a": // Toggle showing all projects
 			m.showAllProjects = !m.showAllProjects
-			return m, refreshDataCmd(m.config, m.showCompleted, m.showAllProjects)
+			return m, refreshDataCmd(m.config, m.shouldIncludeCompleted(), m.showAllProjects)
 
 		case Key1:
 			m.activeView = ViewNotes
@@ -106,10 +106,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = msg.Error
 		}
 		// Refresh data after editor closes
-		return m, refreshDataCmd(m.config, m.showCompleted, m.showAllProjects)
+		return m, refreshDataCmd(m.config, m.shouldIncludeCompleted(), m.showAllProjects)
 
 	case DataRefreshNeededMsg:
-		return m, refreshDataCmd(m.config, m.showCompleted, m.showAllProjects)
+		return m, refreshDataCmd(m.config, m.shouldIncludeCompleted(), m.showAllProjects)
 	}
 
 	return m, nil
@@ -122,10 +122,6 @@ func (m Model) updateSidebar(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case KeyDown, KeyArrowDown:
 		if m.sidebarSection == SidebarBrains {
 			m.brainList, cmd = m.brainList.Update(msg)
-			// Check if we should switch to projects section
-			if m.brainList.Index() >= len(m.brains)-1 {
-				// At the end of brains, stay here
-			}
 		} else {
 			m.projectList, cmd = m.projectList.Update(msg)
 		}
@@ -136,11 +132,6 @@ func (m Model) updateSidebar(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.brainList, cmd = m.brainList.Update(msg)
 		} else {
 			m.projectList, cmd = m.projectList.Update(msg)
-			// Check if we should switch to brains section
-			if m.projectList.Index() == 0 {
-				// At the top of projects, could switch to brains
-				// But let's keep it simple for now
-			}
 		}
 		return m, cmd
 
@@ -181,7 +172,7 @@ func (m Model) updateSidebar(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				}
 
 				m.currentBrain = selected.name
-				return m, refreshDataCmd(m.config, m.showCompleted, m.showAllProjects)
+				return m, refreshDataCmd(m.config, m.shouldIncludeCompleted(), m.showAllProjects)
 			}
 		} else {
 			// Select project
@@ -191,7 +182,7 @@ func (m Model) updateSidebar(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				if err := m.config.SetFocusedProject(selected.name); err == nil {
 					_ = m.config.Save()
 				}
-				return m, refreshDataCmd(m.config, m.showCompleted, m.showAllProjects)
+				return m, refreshDataCmd(m.config, m.shouldIncludeCompleted(), m.showAllProjects)
 			}
 		}
 	}
@@ -278,10 +269,16 @@ func (m Model) updateContent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		case KeyUp, KeyArrowUp:
 			m.kanbanView.MoveUp()
 			return m, nil
-		case "m": // Move task to next column
+		case "m": // Move task to next column (forward)
 			todo := m.kanbanView.GetSelectedTodo()
 			if todo != nil {
 				return m, cycleStatusCmd(*todo)
+			}
+			return m, nil
+		case "b": // Move task to previous column (backward)
+			todo := m.kanbanView.GetSelectedTodo()
+			if todo != nil {
+				return m, cycleStatusBackwardCmd(*todo)
 			}
 			return m, nil
 		case KeyEdit:
@@ -537,7 +534,7 @@ func setPriorityCmd(todo api.TodoItem, priorityStr string) tea.Cmd {
 	}
 }
 
-// cycleStatusCmd cycles through todo statuses
+// cycleStatusCmd cycles through todo statuses (forward)
 func cycleStatusCmd(todo api.TodoItem) tea.Cmd {
 	return func() tea.Msg {
 		statuses := []string{"open", "in-progress", "blocked", "done"}
@@ -551,6 +548,28 @@ func cycleStatusCmd(todo api.TodoItem) tea.Cmd {
 		}
 
 		err := api.SetTodoStatus(&todo, nextStatus)
+		if err != nil {
+			return DataRefreshNeededMsg{}
+		}
+
+		return DataRefreshNeededMsg{}
+	}
+}
+
+// cycleStatusBackwardCmd cycles through todo statuses (backward)
+func cycleStatusBackwardCmd(todo api.TodoItem) tea.Cmd {
+	return func() tea.Msg {
+		statuses := []string{"open", "in-progress", "blocked", "done"}
+		prevStatus := "done"
+
+		for i, status := range statuses {
+			if status == todo.Status {
+				prevStatus = statuses[(i-1+len(statuses))%len(statuses)]
+				break
+			}
+		}
+
+		err := api.SetTodoStatus(&todo, prevStatus)
 		if err != nil {
 			return DataRefreshNeededMsg{}
 		}
@@ -591,7 +610,7 @@ func addTagsCmd(todo api.TodoItem, tagsStr string) tea.Cmd {
 // Init initializes the model
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
-		refreshDataCmd(m.config, m.showCompleted, m.showAllProjects),
+		refreshDataCmd(m.config, m.shouldIncludeCompleted(), m.showAllProjects),
 		tea.EnterAltScreen,
 	)
 }
@@ -612,6 +631,12 @@ func (m Model) getViewName() string {
 	}
 }
 
+// shouldIncludeCompleted determines if completed todos should be loaded
+// Kanban view always needs completed todos for the "Done" column
+func (m Model) shouldIncludeCompleted() bool {
+	return m.showCompleted || m.activeView == ViewTodosKanban
+}
+
 // getKeyHints returns context-sensitive keyboard hints
 func (m Model) getKeyHints() string {
 	if m.showHelp {
@@ -624,11 +649,11 @@ func (m Model) getKeyHints() string {
 
 	switch m.activeView {
 	case ViewTodosList:
-		return fmt.Sprintf("↑↓: navigate | e: edit | p: priority | s: status | c: completed | a: all projects | ?: help")
+		return "↑↓: navigate | e: edit | p: priority | s: status | c: completed | a: all projects | ?: help"
 	case ViewNotes:
 		return "↑↓: navigate | e: edit | p: toggle preview | tab: sidebar | 1-4: views | ?: help | q: quit"
 	case ViewTodosKanban:
-		return "↑↓←→: navigate | e: edit | m: move | c: completed | a: all projects | ?: help"
+		return "↑↓←→: navigate | e: edit | m: move fwd | b: move back | c: completed | a: all projects | ?: help"
 	case ViewDump:
 		return "↑↓: navigate | r: refile | tab: sidebar | 1-4: views | ?: help | q: quit"
 	default:

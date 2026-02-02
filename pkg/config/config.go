@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
 
@@ -173,8 +174,11 @@ func (c *Config) ListBrains() []string {
 
 	names := make([]string, 0, len(c.Brains))
 	for name := range c.Brains {
-		names = append(names, name)
+		if name != "" {
+			names = append(names, name)
+		}
 	}
+	sort.Strings(names)
 	return names
 }
 

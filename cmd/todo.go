@@ -386,44 +386,6 @@ func sortTodosByDeadlineAndPriority(todos []api.TodoItem) {
 	})
 }
 
-// sortTodosByProjectThenDeadline groups by project, then sorts by deadline/priority within each project
-func sortTodosByProjectThenDeadline(todos []api.TodoItem) {
-	sort.SliceStable(todos, func(i, j int) bool {
-		// First, group by project
-		if todos[i].Project != todos[j].Project {
-			return todos[i].Project < todos[j].Project
-		}
-
-		// Within same project, sort by deadline and priority
-		iHasDue := todos[i].DueDate != ""
-		jHasDue := todos[j].DueDate != ""
-
-		// Both have no due date - sort by priority
-		if !iHasDue && !jHasDue {
-			return comparePriority(todos[i].Priority, todos[j].Priority)
-		}
-
-		// One has due date, one doesn't - due date comes first
-		if !iHasDue {
-			return false
-		}
-		if !jHasDue {
-			return true
-		}
-
-		// Both have due dates - sort by date, then priority
-		iDate, _ := time.Parse("2006-01-02", todos[i].DueDate)
-		jDate, _ := time.Parse("2006-01-02", todos[j].DueDate)
-
-		if !iDate.Equal(jDate) {
-			return iDate.Before(jDate)
-		}
-
-		// Same date - sort by priority
-		return comparePriority(todos[i].Priority, todos[j].Priority)
-	})
-}
-
 // comparePriority compares two priority values (lower number = higher priority comes first)
 func comparePriority(a, b *int) bool {
 	if a == nil && b == nil {

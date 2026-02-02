@@ -57,7 +57,7 @@ func (m Model) renderSidebar(width, height int) string {
 	// Brains section
 	brainsTitleStyle := titleStyle
 	if m.focusedArea == FocusSidebar && m.sidebarSection == SidebarBrains {
-		brainsTitleStyle = titleStyle.Copy().Foreground(primaryColor).Underline(true)
+		brainsTitleStyle = titleStyle.Foreground(primaryColor).Underline(true)
 	}
 	brainsTitle := brainsTitleStyle.Render("Brains")
 	sections = append(sections, brainsTitle)
@@ -86,7 +86,7 @@ func (m Model) renderSidebar(width, height int) string {
 	// Projects section
 	projectsTitleStyle := titleStyle
 	if m.focusedArea == FocusSidebar && m.sidebarSection == SidebarProjects {
-		projectsTitleStyle = titleStyle.Copy().Foreground(primaryColor).Underline(true)
+		projectsTitleStyle = titleStyle.Foreground(primaryColor).Underline(true)
 	}
 	projectsTitle := projectsTitleStyle.Render("Projects")
 	sections = append(sections, projectsTitle)
@@ -207,21 +207,6 @@ func (m Model) renderTodoList(width, height int) string {
 	}
 
 	return strings.Join(lines, "\n")
-}
-
-// renderNotesPlaceholder is a placeholder for notes view
-func (m Model) renderNotesPlaceholder(width, height int) string {
-	return lipgloss.NewStyle().Foreground(mutedColor).Render("Notes view - coming soon\nPress 2 for todos")
-}
-
-// renderKanbanPlaceholder is a placeholder for kanban view
-func (m Model) renderKanbanPlaceholder(width, height int) string {
-	return lipgloss.NewStyle().Foreground(mutedColor).Render("Kanban view - coming soon\nPress 2 for todos list")
-}
-
-// renderDumpPlaceholder is a placeholder for dump view
-func (m Model) renderDumpPlaceholder(width, height int) string {
-	return lipgloss.NewStyle().Foreground(mutedColor).Render("Dump view - coming soon\nPress 2 for todos")
 }
 
 // renderStatusBar renders the bottom status bar

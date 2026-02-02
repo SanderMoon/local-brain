@@ -52,11 +52,11 @@ type Model struct {
 	dumpView    views.DumpViewModel
 
 	// Data cache
-	brains     []Brain
-	projects   []api.ProjectInfo
-	todos      []api.TodoItem
-	notes      []api.NoteFile
-	dumpItems  []api.DumpItemJSON
+	brains    []Brain
+	projects  []api.ProjectInfo
+	todos     []api.TodoItem
+	notes     []api.NoteFile
+	dumpItems []api.DumpItemJSON
 
 	// UI state
 	selectedBrainIdx   int
