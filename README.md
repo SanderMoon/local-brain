@@ -3,10 +3,13 @@
 ```
  ______     ______     ______     __     __   __
 /\  == \   /\  == \   /\  __ \   /\ \   /\ "-.\ \
-\ \  __<   \ \  __<   \ \  __ \  \ \ \  \ \ \-.  \  
+\ \  __<   \ \  __<   \ \  __ \  \ \ \  \ \ \-.  \
  \ \_____\  \ \_\ \_\  \ \_\ \_\  \ \_\  \ \_\\"\_\
   \/_____/   \/_/ /_/   \/_/\/_/   \/_/   \/_/ \/_/
 ```
+
+![Local Brain TUI](docs/images/tui-screenshot.png)
+_Interactive terminal interface for managing projects, tasks, and notes across multiple workspaces_
 
 > A minimalist, local-first project management system for developers who live in the terminal.
 
