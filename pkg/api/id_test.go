@@ -58,6 +58,9 @@ func TestExtractID(t *testing.T) {
 }
 
 func TestGenerateNewID(t *testing.T) {
+	// Compile regex once for performance
+	hexPattern := regexp.MustCompile("^[a-f0-9]{6}$")
+
 	// Test ID format
 	for i := 0; i < 100; i++ {
 		id := GenerateNewID()
@@ -68,11 +71,7 @@ func TestGenerateNewID(t *testing.T) {
 		}
 
 		// Check all hex characters
-		matched, err := regexp.MatchString("^[a-f0-9]{6}$", id)
-		if err != nil {
-			t.Fatalf("Regex error: %v", err)
-		}
-		if !matched {
+		if !hexPattern.MatchString(id) {
 			t.Errorf("ID contains non-hex characters: %s", id)
 		}
 	}
@@ -89,6 +88,8 @@ func TestGenerateNewID(t *testing.T) {
 }
 
 func TestGetOrGenerateID(t *testing.T) {
+	hexPattern := regexp.MustCompile("^[a-f0-9]{6}$")
+
 	tests := []struct {
 		name      string
 		line      string
@@ -120,8 +121,7 @@ func TestGetOrGenerateID(t *testing.T) {
 				t.Errorf("Expected 6-char ID, got %d chars: %s", len(id), id)
 			}
 
-			matched, _ := regexp.MatchString("^[a-f0-9]{6}$", id)
-			if !matched {
+			if !hexPattern.MatchString(id) {
 				t.Errorf("ID contains non-hex characters: %s", id)
 			}
 
@@ -137,6 +137,8 @@ func TestGetOrGenerateID(t *testing.T) {
 }
 
 func TestAddIDToLine(t *testing.T) {
+	hexPattern := regexp.MustCompile("^[a-f0-9]{6}$")
+
 	tests := []struct {
 		name           string
 		line           string
@@ -173,8 +175,7 @@ func TestAddIDToLine(t *testing.T) {
 				t.Errorf("Expected 6-char ID, got %d chars: %s", len(id), id)
 			}
 
-			matched, _ := regexp.MatchString("^[a-f0-9]{6}$", id)
-			if !matched {
+			if !hexPattern.MatchString(id) {
 				t.Errorf("ID contains non-hex characters: %s", id)
 			}
 
