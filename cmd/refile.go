@@ -81,23 +81,12 @@ func refileDirect(dumpPath, activeDir, itemID, projectName string) error {
 		return fmt.Errorf("failed to parse dump: %w", err)
 	}
 
-	// Get file mtime for ID calculation
-	fileInfo, err := os.Stat(dumpPath)
-	if err != nil {
-		return fmt.Errorf("failed to stat dump: %w", err)
-	}
-	mtime := fileInfo.ModTime().Unix()
-
 	// Find item by ID
 	var targetItem *markdown.DumpItem
 	for i := range items {
 		item := &items[i]
-		var id string
-		if item.Type == markdown.ItemTypeTodo {
-			id = api.GenerateTaskID(item.StartLine, item.RawLine, mtime)
-		} else {
-			id = api.GenerateNoteID(item.StartLine, item.RawLine, mtime)
-		}
+		// Use stable ID extraction
+		id := api.GetOrGenerateID(item.RawLine)
 
 		if id == itemID {
 			targetItem = item
@@ -116,7 +105,7 @@ func refileDirect(dumpPath, activeDir, itemID, projectName string) error {
 	}
 
 	// Refile item
-	if err := refileItem(targetItem, projectDir, dumpPath, mtime); err != nil {
+	if err := refileItem(targetItem, projectDir, dumpPath); err != nil {
 		return err
 	}
 
@@ -158,13 +147,6 @@ func refileInteractive(dumpPath, activeDir string) error {
 		fmt.Println("No items in dump")
 		return nil
 	}
-
-	// Get file mtime
-	fileInfo, err := os.Stat(dumpPath)
-	if err != nil {
-		return fmt.Errorf("failed to stat dump: %w", err)
-	}
-	mtime := fileInfo.ModTime().Unix()
 
 	processed := 0
 
@@ -221,7 +203,7 @@ func refileInteractive(dumpPath, activeDir string) error {
 
 		// Refile to project
 		projectDir := filepath.Join(activeDir, selected)
-		if err := refileItem(item, projectDir, dumpPath, mtime); err != nil {
+		if err := refileItem(item, projectDir, dumpPath); err != nil {
 			return err
 		}
 
@@ -238,7 +220,7 @@ func refileInteractive(dumpPath, activeDir string) error {
 	return nil
 }
 
-func refileItem(item *markdown.DumpItem, projectDir, dumpPath string, mtime int64) error {
+func refileItem(item *markdown.DumpItem, projectDir, dumpPath string) error {
 	if item.Type == markdown.ItemTypeTodo {
 		return refileTask(item, projectDir)
 	}
@@ -268,7 +250,10 @@ func refileTask(item *markdown.DumpItem, projectDir string) error {
 	}
 
 	lines := strings.Split(string(content), "\n")
-	newTask := fmt.Sprintf("- [ ] %s", item.Content)
+
+	// Create task with stable ID
+	newTaskLine := fmt.Sprintf("- [ ] %s", item.Content)
+	newTaskLine, _ = api.AddIDToLine(newTaskLine)
 
 	// Find the "## Active" section and insert after it
 	activeIdx := -1
@@ -282,7 +267,7 @@ func refileTask(item *markdown.DumpItem, projectDir string) error {
 	var newLines []string
 	if activeIdx == -1 {
 		// No Active section found, append to end (fallback)
-		newLines = append(lines, newTask)
+		newLines = append(lines, newTaskLine)
 	} else {
 		// Insert after "## Active" line, after any existing tasks but before next section
 		insertIdx := activeIdx + 1
@@ -295,7 +280,7 @@ func refileTask(item *markdown.DumpItem, projectDir string) error {
 		// Insert the new task
 		newLines = make([]string, 0, len(lines)+1)
 		newLines = append(newLines, lines[:insertIdx]...)
-		newLines = append(newLines, newTask)
+		newLines = append(newLines, newTaskLine)
 		newLines = append(newLines, lines[insertIdx:]...)
 	}
 

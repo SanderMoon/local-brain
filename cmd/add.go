@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sandermoonemans/local-brain/pkg/api"
 	"github.com/sandermoonemans/local-brain/pkg/config"
 	"github.com/sandermoonemans/local-brain/pkg/external"
 	"github.com/sandermoonemans/local-brain/pkg/fileutil"
@@ -74,7 +75,11 @@ func runAdd(cmd *cobra.Command, args []string) error {
 			}
 			defer f.Close()
 
-			line := fmt.Sprintf("- [ ] %s #captured:%s\n", text, timestamp)
+			// Create task line with stable ID
+			line := fmt.Sprintf("- [ ] %s #captured:%s", text, timestamp)
+			line, _ = api.AddIDToLine(line)
+			line += "\n"
+
 			_, err = f.WriteString(line)
 			return err
 		})
@@ -156,8 +161,11 @@ func addNoteMode(dumpPath, timestamp string) error {
 		}
 		defer f.Close()
 
-		// Write note header
-		header := fmt.Sprintf("[Note] %s #captured:%s\n", title, timestamp)
+		// Write note header with stable ID
+		header := fmt.Sprintf("[Note] %s #captured:%s", title, timestamp)
+		header, _ = api.AddIDToLine(header)
+		header += "\n"
+
 		if _, err := f.WriteString(header); err != nil {
 			return err
 		}

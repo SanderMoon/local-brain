@@ -76,13 +76,6 @@ func parseTodoFile(filePath, projectName string, includeCompleted bool) ([]TodoI
 	}
 	defer file.Close()
 
-	// Get file mtime for ID generation
-	fileInfo, err := os.Stat(filePath)
-	if err != nil {
-		return nil, err
-	}
-	mtime := fileInfo.ModTime().Unix()
-
 	var todos []TodoItem
 	scanner := bufio.NewScanner(file)
 	lineNum := 0
@@ -110,10 +103,17 @@ func parseTodoFile(filePath, projectName string, includeCompleted bool) ([]TodoI
 		// If we found a match, create the TodoItem
 		if matches != nil {
 			rawContent := matches[1]
+
+			// Extract or generate stable ID
+			id := GetOrGenerateID(line)
+
+			// Extract metadata (priority, due date, tags)
 			content, priority := markdown.ExtractPriority(rawContent)
 			content, dueDate := markdown.ExtractDueDate(content)
 			content, tags := markdown.ExtractTags(content)
-			id := GenerateTaskID(lineNum, line, mtime)
+
+			// Remove #id: tag from content for clean display
+			content = RemoveIDFromContent(content)
 
 			todos = append(todos, TodoItem{
 				ID:       id,

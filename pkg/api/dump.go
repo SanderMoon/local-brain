@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"os"
 
 	"github.com/sandermoonemans/local-brain/pkg/markdown"
 )
@@ -21,13 +20,6 @@ type DumpItemJSON struct {
 // ParseDumpToJSON parses a dump file and returns JSON array of items
 // This replicates the combination of parse_dump_items + dump_to_json from brain-api.sh
 func ParseDumpToJSON(filePath string) ([]DumpItemJSON, error) {
-	// Get file modification time for ID generation
-	fileInfo, err := os.Stat(filePath)
-	if err != nil {
-		return nil, err
-	}
-	mtime := fileInfo.ModTime().Unix()
-
 	// Parse dump file
 	items, err := markdown.ParseDumpFile(filePath)
 	if err != nil {
@@ -41,15 +33,11 @@ func ParseDumpToJSON(filePath string) ([]DumpItemJSON, error) {
 		// Extract timestamp from content
 		cleanContent, timestamp := markdown.ExtractTimestamp(item.Content)
 
-		// Generate ID based on item type
-		var id string
-		if item.Type == markdown.ItemTypeTodo {
-			// For tasks, use full line content for ID (including "- [ ] ")
-			id = GenerateTaskID(item.StartLine, item.RawLine, mtime)
-		} else {
-			// For notes, use start line and title
-			id = GenerateNoteID(item.StartLine, item.RawLine, mtime)
-		}
+		// Get or generate stable ID from the raw line
+		id := GetOrGenerateID(item.RawLine)
+
+		// Remove #id: tag from content for display
+		cleanContent = RemoveIDFromContent(cleanContent)
 
 		jsonItems = append(jsonItems, DumpItemJSON{
 			ID:        id,

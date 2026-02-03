@@ -305,10 +305,12 @@ func TestTodoItem_IDConsistency(t *testing.T) {
 	tb.AddProject("consistency")
 	todoFile := filepath.Join(tb.ActiveDirPath, "consistency", "todo.md")
 
+	// With new stable ID system, IDs are stored in #id: tags
+	// Tasks with IDs should have consistent IDs across parses
 	content := `# Test
 
-- [ ] Task 1
-- [ ] Task 2
+- [ ] Task 1 #id:abc123
+- [ ] Task 2 #id:def456
 `
 	tb.WriteFile(todoFile, content)
 
@@ -323,7 +325,7 @@ func TestTodoItem_IDConsistency(t *testing.T) {
 		t.Fatalf("Second parse failed: %v", err)
 	}
 
-	// IDs should be the same (deterministic)
+	// IDs should be the same (stable from #id: tags)
 	if len(todos1) != len(todos2) {
 		t.Fatalf("Length mismatch: %d vs %d", len(todos1), len(todos2))
 	}
@@ -332,6 +334,14 @@ func TestTodoItem_IDConsistency(t *testing.T) {
 		if todos1[i].ID != todos2[i].ID {
 			t.Errorf("Task %d ID mismatch: %s vs %s", i, todos1[i].ID, todos2[i].ID)
 		}
+	}
+
+	// Verify specific IDs match what's in the file
+	if todos1[0].ID != "abc123" {
+		t.Errorf("Expected ID abc123, got %s", todos1[0].ID)
+	}
+	if todos1[1].ID != "def456" {
+		t.Errorf("Expected ID def456, got %s", todos1[1].ID)
 	}
 }
 
