@@ -14,9 +14,25 @@ type Editor struct {
 }
 
 // DetectEditor detects the best available editor
-// Priority: nvim > vim > $EDITOR environment variable
+// Priority: configured editor > nvim > vim > $EDITOR environment variable
+// If configuredEditor is provided (non-empty), it will be used if available
 func DetectEditor() (*Editor, error) {
-	// Try nvim first
+	return DetectEditorWithConfig("")
+}
+
+// DetectEditorWithConfig detects the best available editor with optional config preference
+// Priority: configured editor > nvim > vim > $EDITOR environment variable
+func DetectEditorWithConfig(configuredEditor string) (*Editor, error) {
+	// Try configured editor first if specified
+	if configuredEditor != "" {
+		if _, err := exec.LookPath(configuredEditor); err == nil {
+			return &Editor{command: configuredEditor}, nil
+		}
+		// If configured editor is not found, fall through to auto-detection
+		fmt.Fprintf(os.Stderr, "Warning: configured editor '%s' not found, falling back to auto-detection\n", configuredEditor)
+	}
+
+	// Try nvim
 	if _, err := exec.LookPath("nvim"); err == nil {
 		return &Editor{command: "nvim"}, nil
 	}
@@ -129,4 +145,9 @@ func OpenFileAtLineFromString(filePath string, lineNumStr string) error {
 	}
 
 	return OpenFileAtLine(filePath, lineNum)
+}
+
+// GetCommand returns the editor command name (for use with exec.Command)
+func (e *Editor) GetCommand() string {
+	return e.command
 }

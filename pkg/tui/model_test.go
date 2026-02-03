@@ -43,12 +43,6 @@ func TestModel_ShouldIncludeCompleted(t *testing.T) {
 			showCompleted:  false,
 			expectedResult: false,
 		},
-		{
-			name:           "Dump view with showCompleted true",
-			activeView:     ViewDump,
-			showCompleted:  true,
-			expectedResult: true,
-		},
 	}
 
 	for _, tt := range tests {
@@ -76,7 +70,6 @@ func TestModel_GetViewName(t *testing.T) {
 		{ViewNotes, "Notes"},
 		{ViewTodosList, "Todos (List)"},
 		{ViewTodosKanban, "Todos (Kanban)"},
-		{ViewDump, "Dump"},
 	}
 
 	cfg := &config.Config{}

@@ -24,7 +24,7 @@ func NewNotesViewModel() NotesViewModel {
 	return NotesViewModel{
 		Notes:        []api.NoteFile{},
 		SelectedIdx:  0,
-		ShowPreview:  false,
+		ShowPreview:  true,
 		PreviewPane:  vp,
 		PreviewReady: false,
 	}
@@ -87,8 +87,9 @@ func (n *NotesViewModel) LoadPreview() {
 
 // SetPreviewSize sets the preview pane size
 func (n *NotesViewModel) SetPreviewSize(width, height int) {
-	n.PreviewPane.Width = width
-	n.PreviewPane.Height = height
+	// Account for borders (2) and padding (2) = 4 total
+	n.PreviewPane.Width = width - 4
+	n.PreviewPane.Height = height - 4
 	n.PreviewReady = true
 }
 
@@ -104,7 +105,10 @@ func (n *NotesViewModel) Render(width, height int, primaryColor, mutedColor lipg
 	previewWidth := width - listWidth - 2
 
 	// Update preview size if needed
-	if !n.PreviewReady || n.PreviewPane.Width != previewWidth || n.PreviewPane.Height != height {
+	// Account for borders and padding (4 total) when comparing
+	expectedWidth := previewWidth - 4
+	expectedHeight := height - 4
+	if !n.PreviewReady || n.PreviewPane.Width != expectedWidth || n.PreviewPane.Height != expectedHeight {
 		n.SetPreviewSize(previewWidth, height)
 		n.LoadPreview()
 	}
@@ -120,6 +124,7 @@ func (n *NotesViewModel) renderList(width, height int, primaryColor, mutedColor 
 	listStyle := lipgloss.NewStyle().
 		Width(width).
 		Height(height).
+		MaxHeight(height). // Prevents terminal scroll push
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(mutedColor).
 		Padding(1)
@@ -188,6 +193,7 @@ func (n *NotesViewModel) renderPreview(width, height int, primaryColor, mutedCol
 	previewStyle := lipgloss.NewStyle().
 		Width(width).
 		Height(height).
+		MaxHeight(height). // Prevents terminal scroll push
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(primaryColor).
 		Padding(1)

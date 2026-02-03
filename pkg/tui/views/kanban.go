@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -13,9 +14,10 @@ import (
 const (
 	// CardHeight: 3 lines of content + 2 lines of border = 5 lines total
 	CardHeight = 5
-	// CardSpacing: 1 line of space between cards
+	// CardSpacing: 1 line of space between cards (currently not rendered)
 	CardSpacing = 1
-	// CardStride: Total vertical space a single card occupies (used for calculation)
+	// CardStride: Total vertical space a single card would occupy with spacing
+	// Note: Currently unused as spacing is not implemented in rendering
 	CardStride = CardHeight + CardSpacing
 )
 
@@ -69,7 +71,31 @@ func (k *KanbanViewModel) UpdateTodos(todos []api.TodoItem) {
 		}
 	}
 
-	// 3. Validate cursor and scroll positions against new data
+	// 3. Sort each column by priority (high priority first)
+	for i := range k.Columns {
+		sort.SliceStable(k.Columns[i].Items, func(a, b int) bool {
+			itemA := k.Columns[i].Items[a]
+			itemB := k.Columns[i].Items[b]
+
+			// Items with priority come before items without
+			if itemA.Priority == nil && itemB.Priority != nil {
+				return false
+			}
+			if itemA.Priority != nil && itemB.Priority == nil {
+				return true
+			}
+
+			// Both have priority: lower number = higher priority (P1 > P2 > P3)
+			if itemA.Priority != nil && itemB.Priority != nil {
+				return *itemA.Priority < *itemB.Priority
+			}
+
+			// Both nil: maintain order (stable sort handles this)
+			return false
+		})
+	}
+
+	// 4. Validate cursor and scroll positions against new data
 	k.validateCursor()
 }
 
@@ -121,14 +147,23 @@ func (k *KanbanViewModel) GetSelectedTodo() *api.TodoItem {
 
 // cardCapacity calculates how many cards fit in the given screen height safely.
 func (k *KanbanViewModel) cardCapacity(screenHeight int) int {
-	// Safety Margin: -2 for Border, -2 for Header, -1 buffer to prevent overflow
-	availableHeight := screenHeight - 5
-	
+	// Column overhead:
+	// - Border: 2 lines (top + bottom)
+	// - Header: 1 line
+	// - Empty line after header: 1 line
+	// - "More above" indicator/empty: 1 line
+	// - "More below" indicator: 1 line
+	// Total overhead: 6 lines
+	const columnOverhead = 6
+
+	availableHeight := screenHeight - columnOverhead
+
 	if availableHeight < CardHeight {
 		return 0
 	}
-	
-	count := availableHeight / CardStride
+
+	// Each card is exactly CardHeight (5) lines, no spacing between cards
+	count := availableHeight / CardHeight
 	if count < 1 {
 		return 1 // Always try to show at least one
 	}

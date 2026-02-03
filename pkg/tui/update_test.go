@@ -266,7 +266,6 @@ func TestModel_ViewSwitching(t *testing.T) {
 		{"1", ViewNotes},
 		{"2", ViewTodosList},
 		{"3", ViewTodosKanban},
-		{"4", ViewDump},
 	}
 
 	for _, tt := range tests {

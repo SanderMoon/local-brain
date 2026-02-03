@@ -138,8 +138,6 @@ func (m Model) renderContent(width, height int) string {
 		content = m.notesView.Render(width-4, height-4, primaryColor, mutedColor)
 	case ViewTodosKanban:
 		content = m.kanbanView.Render(width-4, height-4, primaryColor, mutedColor)
-	case ViewDump:
-		content = m.dumpView.Render(width-4, height-4, primaryColor, mutedColor)
 	}
 
 	return style.Width(width).Height(height).Render(content)
@@ -229,22 +227,57 @@ func (m Model) renderStatusBar(width int) string {
 		projectDisplay = "(none)"
 	}
 
-	leftText := fmt.Sprintf("Brain: %s | Project: %s | View: %s%s",
-		m.currentBrain, projectDisplay, m.getViewName(), indicatorText)
+	// Build view selector with current view highlighted
+	viewOptions := []string{
+		m.formatViewOption("1", "Notes", m.activeView == ViewNotes),
+		m.formatViewOption("2", "List", m.activeView == ViewTodosList),
+		m.formatViewOption("3", "Kanban", m.activeView == ViewTodosKanban),
+	}
+	viewSelector := strings.Join(viewOptions, " ")
+
+	leftText := fmt.Sprintf("Brain: %s | Project: %s%s",
+		m.currentBrain, projectDisplay, indicatorText)
 
 	rightText := m.getKeyHints()
 
 	// Calculate padding
 	leftWidth := lipgloss.Width(leftText)
+	viewWidth := lipgloss.Width(viewSelector)
 	rightWidth := lipgloss.Width(rightText)
-	padding := width - leftWidth - rightWidth - 4
-	if padding < 0 {
-		padding = 0
-	}
+	totalContent := leftWidth + viewWidth + rightWidth
 
-	return statusBarStyle.Width(width).Render(
-		leftText + strings.Repeat(" ", padding) + rightText,
-	)
+	// Create layout: left | views (centered) | right
+	if totalContent+6 <= width {
+		// Enough space for all three sections
+		leftPadding := (width - totalContent - 4) / 2
+		rightPadding := width - totalContent - 4 - leftPadding
+		if leftPadding < 1 {
+			leftPadding = 1
+		}
+		if rightPadding < 1 {
+			rightPadding = 1
+		}
+		return statusBarStyle.Width(width).Render(
+			leftText + strings.Repeat(" ", leftPadding) + viewSelector + strings.Repeat(" ", rightPadding) + rightText,
+		)
+	} else {
+		// Not enough space, just show left and right
+		padding := width - leftWidth - rightWidth - 4
+		if padding < 0 {
+			padding = 0
+		}
+		return statusBarStyle.Width(width).Render(
+			leftText + strings.Repeat(" ", padding) + rightText,
+		)
+	}
+}
+
+// formatViewOption formats a single view option for the status bar
+func (m Model) formatViewOption(number, name string, active bool) string {
+	if active {
+		return lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render(number + ":" + name)
+	}
+	return lipgloss.NewStyle().Foreground(mutedColor).Render(number + ":" + name)
 }
 
 // renderErrorOverlay renders an error message overlay
@@ -322,7 +355,6 @@ func (m Model) renderHelpOverlay() string {
 		"  1           Notes view",
 		"  2           Todos list view",
 		"  3           Todos kanban view",
-		"  4           Dump inbox view",
 		"",
 		lipgloss.NewStyle().Bold(true).Render("Actions"),
 		"  e           Edit in external editor",
@@ -333,6 +365,11 @@ func (m Model) renderHelpOverlay() string {
 		"  c           Toggle showing completed todos",
 		"  a           Toggle showing all projects (vs current only)",
 		"  r           Refresh data",
+		"",
+		lipgloss.NewStyle().Bold(true).Render("CLI Workflow"),
+		"  brain add        Quick capture to dump inbox",
+		"  brain refile     Process dump items into projects",
+		"  brain plan       Batch tag todos with metadata",
 		"",
 		lipgloss.NewStyle().Bold(true).Render("Other"),
 		"  ?           Toggle this help",

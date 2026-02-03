@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/sandermoonemans/local-brain/pkg/api"
 	"github.com/sandermoonemans/local-brain/pkg/config"
+	"github.com/sandermoonemans/local-brain/pkg/external"
 )
 
 // Update handles incoming messages and updates the model
@@ -71,9 +71,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case Key3:
 			m.activeView = ViewTodosKanban
 			return m, nil
-		case Key4:
-			m.activeView = ViewDump
-			return m, nil
 		}
 
 		// Handle focus-specific keys
@@ -93,12 +90,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.projects = msg.Projects
 		m.todos = msg.Todos
 		m.notes = msg.Notes
-		m.dumpItems = msg.DumpItems
 		m.updateBrainList()
 		m.updateProjectList()
 		m.kanbanView.UpdateTodos(msg.Todos)
 		m.notesView.UpdateNotes(msg.Notes)
-		m.dumpView.UpdateItems(msg.DumpItems)
 		return m, nil
 
 	case EditorClosedMsg:
@@ -197,31 +192,6 @@ func (m Model) updateContent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleInputMode(msg)
 	}
 
-	// Handle dump navigation
-	if m.activeView == ViewDump {
-		switch msg.String() {
-		case KeyDown, KeyArrowDown:
-			m.dumpView.MoveDown()
-			return m, nil
-		case KeyUp, KeyArrowUp:
-			m.dumpView.MoveUp()
-			return m, nil
-		case "r": // Refile
-			item := m.dumpView.GetSelectedItem()
-			if item != nil {
-				// Show project selector prompt
-				m.showInput = true
-				m.inputMode = InputNone // We'll use a special mode
-				m.inputPrompt = "Refile to project (or cancel with Esc): "
-				m.textInput.SetValue("")
-				m.textInput.Placeholder = "project-name"
-				m.textInput.Focus()
-				return m, nil
-			}
-			return m, nil
-		}
-		return m, nil
-	}
 
 	// Handle notes navigation
 	if m.activeView == ViewNotes {
@@ -247,7 +217,7 @@ func (m Model) updateContent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		case KeyEdit:
 			note := m.notesView.GetSelectedNote()
 			if note != nil {
-				return m, launchNoteEditorCmd(note.Path)
+				return m, launchNoteEditorCmd(note.Path, m.config.GetEditor())
 			}
 			return m, nil
 		}
@@ -284,7 +254,7 @@ func (m Model) updateContent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		case KeyEdit:
 			todo := m.kanbanView.GetSelectedTodo()
 			if todo != nil {
-				return m, launchEditorCmd(*todo)
+				return m, launchEditorCmd(*todo, m.config.GetEditor())
 			}
 			return m, nil
 		}
@@ -308,7 +278,7 @@ func (m Model) updateContent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case KeyEdit:
 		if m.activeView == ViewTodosList && len(m.todos) > 0 && m.selectedTodoIdx < len(m.todos) {
 			todo := m.todos[m.selectedTodoIdx]
-			return m, launchEditorCmd(todo)
+			return m, launchEditorCmd(todo, m.config.GetEditor())
 		}
 
 	case "p": // Set priority
@@ -425,16 +395,11 @@ func refreshDataCmd(cfg *config.Config, showCompleted bool, showAllProjects bool
 			notes, _ = api.ListNotes(projectDir) // Ignore errors, just return empty
 		}
 
-		// Load dump items
-		dumpPath := filepath.Join(brainPath, "00_dump.md")
-		dumpItems, _ := api.ParseDumpToJSON(dumpPath) // Ignore errors, just return empty
-
 		return DataRefreshedMsg{
-			Brains:    brains,
-			Projects:  projects,
-			Todos:     todos,
-			Notes:     notes,
-			DumpItems: dumpItems,
+			Brains:   brains,
+			Projects: projects,
+			Todos:    todos,
+			Notes:    notes,
 		}
 	}
 }
@@ -486,15 +451,17 @@ func (m Model) handleInputMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // launchEditorCmd opens a todo in the external editor
-func launchEditorCmd(todo api.TodoItem) tea.Cmd {
-	// Get the editor from environment or use vim as default
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		editor = "vim"
+func launchEditorCmd(todo api.TodoItem, configuredEditor string) tea.Cmd {
+	// Detect editor with config preference
+	editorObj, err := external.DetectEditorWithConfig(configuredEditor)
+	if err != nil {
+		return func() tea.Msg {
+			return EditorClosedMsg{Error: err}
+		}
 	}
 
 	// Build command to open file at specific line
-	cmd := exec.Command(editor, "+"+strconv.Itoa(todo.Line), todo.File)
+	cmd := exec.Command(editorObj.GetCommand(), "+"+strconv.Itoa(todo.Line), todo.File)
 
 	return tea.ExecProcess(cmd, func(err error) tea.Msg {
 		return EditorClosedMsg{Error: err}
@@ -502,15 +469,17 @@ func launchEditorCmd(todo api.TodoItem) tea.Cmd {
 }
 
 // launchNoteEditorCmd opens a note file in the external editor
-func launchNoteEditorCmd(notePath string) tea.Cmd {
-	// Get the editor from environment or use vim as default
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		editor = "vim"
+func launchNoteEditorCmd(notePath string, configuredEditor string) tea.Cmd {
+	// Detect editor with config preference
+	editorObj, err := external.DetectEditorWithConfig(configuredEditor)
+	if err != nil {
+		return func() tea.Msg {
+			return EditorClosedMsg{Error: err}
+		}
 	}
 
 	// Build command to open file
-	cmd := exec.Command(editor, notePath)
+	cmd := exec.Command(editorObj.GetCommand(), notePath)
 
 	return tea.ExecProcess(cmd, func(err error) tea.Msg {
 		return EditorClosedMsg{Error: err}
@@ -624,8 +593,6 @@ func (m Model) getViewName() string {
 		return "Todos (List)"
 	case ViewTodosKanban:
 		return "Todos (Kanban)"
-	case ViewDump:
-		return "Dump"
 	default:
 		return ""
 	}
@@ -651,12 +618,10 @@ func (m Model) getKeyHints() string {
 	case ViewTodosList:
 		return "↑↓: navigate | e: edit | p: priority | s: status | c: completed | a: all projects | ?: help"
 	case ViewNotes:
-		return "↑↓: navigate | e: edit | p: toggle preview | tab: sidebar | 1-4: views | ?: help | q: quit"
+		return "↑↓: navigate | e: edit | p: toggle preview | tab: sidebar | 1-3: views | ?: help | q: quit"
 	case ViewTodosKanban:
 		return "↑↓←→: navigate | e: edit | m: move fwd | b: move back | c: completed | a: all projects | ?: help"
-	case ViewDump:
-		return "↑↓: navigate | r: refile | tab: sidebar | 1-4: views | ?: help | q: quit"
 	default:
-		return "tab: sidebar | 1-4: views | c: completed | a: all projects | ?: help | q: quit"
+		return "tab: sidebar | 1-3: views | c: completed | a: all projects | ?: help | q: quit"
 	}
 }

@@ -31,7 +31,6 @@ const (
 	ViewTodosList ViewType = iota
 	ViewNotes
 	ViewTodosKanban
-	ViewDump
 )
 
 // Model represents the root application state
@@ -49,14 +48,12 @@ type Model struct {
 	projectList list.Model
 	kanbanView  views.KanbanViewModel
 	notesView   views.NotesViewModel
-	dumpView    views.DumpViewModel
 
 	// Data cache
-	brains    []Brain
-	projects  []api.ProjectInfo
-	todos     []api.TodoItem
-	notes     []api.NoteFile
-	dumpItems []api.DumpItemJSON
+	brains   []Brain
+	projects []api.ProjectInfo
+	todos    []api.TodoItem
+	notes    []api.NoteFile
 
 	// UI state
 	selectedBrainIdx   int
@@ -116,7 +113,6 @@ func NewModel(cfg *config.Config) Model {
 		projectList:        projectList,
 		kanbanView:         views.NewKanbanViewModel(),
 		notesView:          views.NewNotesViewModel(),
-		dumpView:           views.NewDumpViewModel(),
 		textInput:          ti,
 		selectedBrainIdx:   0,
 		selectedProjectIdx: 0,
