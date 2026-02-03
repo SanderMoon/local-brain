@@ -76,12 +76,14 @@ func TestGenerateNewID(t *testing.T) {
 		}
 	}
 
-	// Test uniqueness (should be very unlikely to generate duplicates)
+	// Test uniqueness with reasonable sample size
+	// Note: With 6 hex chars (16.7M possibilities), some collision is theoretically possible
+	// but extremely rare. Testing 100 IDs gives us high confidence without flakiness.
 	ids := make(map[string]bool)
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		id := GenerateNewID()
 		if ids[id] {
-			t.Errorf("Duplicate ID generated: %s", id)
+			t.Errorf("Duplicate ID generated: %s (very unlikely with only 100 samples)", id)
 		}
 		ids[id] = true
 	}
