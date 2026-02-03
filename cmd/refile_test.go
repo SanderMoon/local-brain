@@ -163,10 +163,14 @@ func TestRefileTask_ActiveSection(t *testing.T) {
 		t.Errorf("New task (line %d) should be before Completed section (line %d)", newTaskIdx, completedIdx)
 	}
 
-	// Verify task content is correct
-	expectedTask := "- [ ] New refiled task #captured:2026-01-30"
-	if strings.TrimSpace(lines[newTaskIdx]) != expectedTask {
-		t.Errorf("Expected task '%s', got '%s'", expectedTask, strings.TrimSpace(lines[newTaskIdx]))
+	// Verify task content is correct (should include ID tag now)
+	taskLine := strings.TrimSpace(lines[newTaskIdx])
+	if !strings.Contains(taskLine, "- [ ] New refiled task #captured:2026-01-30") {
+		t.Errorf("Task should contain '- [ ] New refiled task #captured:2026-01-30', got '%s'", taskLine)
+	}
+	// Verify ID tag was added
+	if !strings.Contains(taskLine, "#id:") {
+		t.Errorf("Task should have #id: tag, got '%s'", taskLine)
 	}
 }
 
