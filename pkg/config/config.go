@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,15 +24,38 @@ type BrainInfo struct {
 type Config struct {
 	Current string                `json:"current"`
 	Brains  map[string]*BrainInfo `json:"brains"`
+	Editor  string                `json:"editor,omitempty"` // Preferred editor (e.g., "nvim", "vim", "emacs", "nano")
 	mu      sync.RWMutex          `json:"-"`
 }
 
 var (
 	// Default paths (can be overridden by environment variables for testing)
-	defaultConfigDir  = filepath.Join(os.Getenv("HOME"), ".config", "brain")
-	defaultConfigFile = filepath.Join(defaultConfigDir, "config.json")
-	defaultSymlink    = filepath.Join(os.Getenv("HOME"), "brain")
+	defaultConfigDir  string
+	defaultConfigFile string
+	defaultSymlink    string
 )
+
+func init() {
+	// Detect dev mode from binary name
+	suffix := ""
+	if isDevMode() {
+		suffix = "-dev"
+	}
+
+	home := os.Getenv("HOME")
+	defaultConfigDir = filepath.Join(home, ".config", "brain"+suffix)
+	defaultConfigFile = filepath.Join(defaultConfigDir, "config.json")
+	defaultSymlink = filepath.Join(home, "brain"+suffix)
+}
+
+// isDevMode checks if the binary name contains "dev"
+func isDevMode() bool {
+	if len(os.Args) > 0 {
+		binaryName := filepath.Base(os.Args[0])
+		return strings.Contains(binaryName, "dev")
+	}
+	return false
+}
 
 // GetConfigDir returns the configuration directory path
 // Can be overridden with BRAIN_CONFIG_DIR environment variable (for testing)
@@ -313,4 +337,18 @@ func (c *Config) DeleteBrain(name string) error {
 	}
 
 	return nil
+}
+
+// GetEditor returns the configured editor
+func (c *Config) GetEditor() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.Editor
+}
+
+// SetEditor sets the preferred editor
+func (c *Config) SetEditor(editor string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.Editor = editor
 }

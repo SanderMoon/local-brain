@@ -70,11 +70,7 @@ func runNew(cmd *cobra.Command, args []string) error {
 	}
 
 	// Define standardized location
-	brainRoot := os.Getenv("BRAIN_ROOT")
-	if brainRoot == "" {
-		brainRoot = filepath.Join(os.Getenv("HOME"), "brains")
-	}
-
+	brainRoot := config.GetBrainRoot()
 	location := filepath.Join(brainRoot, brainName)
 
 	// Check directory collision

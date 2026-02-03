@@ -7,7 +7,29 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/sandermoonemans/local-brain/pkg/fileutil"
 )
+
+// GetBrainRoot returns the root directory for all brains
+// Can be overridden with BRAIN_ROOT environment variable
+// In dev mode (brain-dev binary), uses ~/brains-dev by default
+func GetBrainRoot() string {
+	if brainRoot := os.Getenv("BRAIN_ROOT"); brainRoot != "" {
+		expanded, err := fileutil.ExpandPath(brainRoot)
+		if err == nil {
+			return expanded
+		}
+	}
+
+	// Use dev-specific path if running brain-dev
+	suffix := ""
+	if isDevMode() {
+		suffix = "-dev"
+	}
+
+	return filepath.Join(os.Getenv("HOME"), "brains"+suffix)
+}
 
 // GetDumpPath returns the path to the dump file for the current brain
 func GetDumpPath(cfg *Config) (string, error) {

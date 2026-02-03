@@ -88,6 +88,7 @@ test-verbose:
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -f $(BUILD_DIR)/$(BINARY_NAME)
+	rm -f $(BUILD_DIR)/$(BINARY_NAME)-dev
 	rm -f coverage.out coverage.html
 	go clean
 	@echo "Clean complete"
@@ -140,13 +141,20 @@ snapshot: install-goreleaser build
 	@echo "Snapshot artifacts created in dist/"
 
 # Quick local install (for development)
-dev-install: build
+dev-install:
+	@echo "Building $(BINARY_NAME)-dev..."
+	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-dev .
 	@echo "Installing for development..."
 	mkdir -p $(HOME)/.local/bin
-	cp $(BUILD_DIR)/$(BINARY_NAME) $(HOME)/.local/bin/
-	chmod +x $(HOME)/.local/bin/$(BINARY_NAME)
-	@echo "Installed to $(HOME)/.local/bin/$(BINARY_NAME)"
+	cp $(BUILD_DIR)/$(BINARY_NAME)-dev $(HOME)/.local/bin/
+	chmod +x $(HOME)/.local/bin/$(BINARY_NAME)-dev
+	@echo "Installed to $(HOME)/.local/bin/$(BINARY_NAME)-dev"
 	@echo "Make sure $(HOME)/.local/bin is in your PATH"
+	@echo ""
+	@echo "Dev mode uses separate paths:"
+	@echo "  Config: ~/.config/brain-dev/"
+	@echo "  Brains: ~/brains-dev/"
+	@echo "  Symlink: ~/brain-dev"
 
 # Show help
 help:

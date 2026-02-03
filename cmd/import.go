@@ -39,10 +39,7 @@ func runImport(cmd *cobra.Command, args []string) error {
 	}
 
 	// Determine root to scan
-	scanRoot := filepath.Join(os.Getenv("HOME"), "brains")
-	if brainRoot := os.Getenv("BRAIN_ROOT"); brainRoot != "" {
-		scanRoot = brainRoot
-	}
+	scanRoot := config.GetBrainRoot()
 	if len(args) > 0 {
 		scanRoot = args[0]
 	}
