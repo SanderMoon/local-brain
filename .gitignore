@@ -44,4 +44,4 @@ site/
 
 # Local configuration
 .envrc
-.env
+.envbrain-dev

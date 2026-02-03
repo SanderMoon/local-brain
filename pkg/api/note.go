@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/sandermoonemans/local-brain/pkg/fileutil"
 )
 
 // NoteFile represents a note file in a project
@@ -110,4 +112,53 @@ func parseNoteFile(filePath, projectName string) (NoteFile, error) {
 // DeleteNote removes a note file
 func DeleteNote(notePath string) error {
 	return os.Remove(notePath)
+}
+
+// CreateNoteFile creates a timestamped note file in a project's notes/ directory
+// Returns the path to the created file
+func CreateNoteFile(projectDir, title, content, timestamp string) (string, error) {
+	notesDir := filepath.Join(projectDir, "notes")
+
+	// Ensure notes/ directory exists
+	if err := fileutil.EnsureDir(notesDir); err != nil {
+		return "", fmt.Errorf("failed to create notes directory: %w", err)
+	}
+
+	// Generate slug from title
+	slug := Slugify(title)
+	if slug == "" {
+		slug = "note"
+	}
+
+	// Create filename
+	filename := fmt.Sprintf("%s-%s.md", timestamp, slug)
+	filePath := filepath.Join(notesDir, filename)
+
+	// Handle duplicate filenames
+	counter := 1
+	for fileutil.FileExists(filePath) {
+		filename = fmt.Sprintf("%s-%s-%d.md", timestamp, slug, counter)
+		filePath = filepath.Join(notesDir, filename)
+		counter++
+	}
+
+	// Format note content
+	noteContent := fmt.Sprintf("# %s\n\nCreated: %s\n\n%s\n", title, timestamp, content)
+
+	// Write note file
+	if err := os.WriteFile(filePath, []byte(noteContent), 0644); err != nil {
+		return "", fmt.Errorf("failed to write note file: %w", err)
+	}
+
+	return filePath, nil
+}
+
+// ReadNoteFile reads the complete content of a note file
+func ReadNoteFile(notePath string) (string, error) {
+	content, err := os.ReadFile(notePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read note file: %w", err)
+	}
+
+	return string(content), nil
 }

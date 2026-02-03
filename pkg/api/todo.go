@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sandermoonemans/local-brain/pkg/fileutil"
 	"github.com/sandermoonemans/local-brain/pkg/markdown"
 )
 
@@ -518,4 +519,68 @@ func ListAllTags(todos []TodoItem) map[string]int {
 	}
 
 	return tagCounts
+}
+
+// AppendTodoToProject adds a new task to a project's todo.md file
+// The task is inserted under the "## Active" section with a new ID
+func AppendTodoToProject(projectDir, content string) error {
+	todoFile := filepath.Join(projectDir, "todo.md")
+
+	// Ensure todo.md exists
+	if !fileutil.FileExists(todoFile) {
+		todoContent := `# Tasks
+
+## Active
+
+## Completed
+`
+		if err := os.WriteFile(todoFile, []byte(todoContent), 0644); err != nil {
+			return fmt.Errorf("failed to create todo.md: %w", err)
+		}
+	}
+
+	// Read existing content
+	fileContent, err := os.ReadFile(todoFile)
+	if err != nil {
+		return fmt.Errorf("failed to read todo.md: %w", err)
+	}
+
+	lines := strings.Split(string(fileContent), "\n")
+
+	// Create new task line with ID
+	newTaskLine := fmt.Sprintf("- [ ] %s", content)
+	newTaskLine, _ = AddIDToLine(newTaskLine)
+
+	// Find the "## Active" section and insert after it
+	activeIdx := -1
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "## Active" {
+			activeIdx = i
+			break
+		}
+	}
+
+	var newLines []string
+	if activeIdx == -1 {
+		// No Active section found, append to end
+		newLines = append(lines, newTaskLine)
+	} else {
+		// Insert after "## Active", after any empty lines
+		insertIdx := activeIdx + 1
+
+		// Skip empty lines immediately after "## Active"
+		for insertIdx < len(lines) && strings.TrimSpace(lines[insertIdx]) == "" {
+			insertIdx++
+		}
+
+		// Insert the new task
+		newLines = make([]string, 0, len(lines)+1)
+		newLines = append(newLines, lines[:insertIdx]...)
+		newLines = append(newLines, newTaskLine)
+		newLines = append(newLines, lines[insertIdx:]...)
+	}
+
+	// Write back atomically
+	newContent := strings.Join(newLines, "\n")
+	return fileutil.AtomicWriteFile(todoFile, []byte(newContent))
 }

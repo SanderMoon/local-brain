@@ -136,6 +136,15 @@ Build: `go build -ldflags "-X main.version=v1.0.0 -X main.commit=abc123 -X main.
 
 ## Important Notes
 
+### CLI/API Parity
+Any feature implemented in the CLI (`cmd/`) must have corresponding core logic exposed in the API layer (`pkg/api/`), and vice versa. The CLI should act as a thin wrapper around the API package.
+
+### Verification Before Completion
+Before considering any task complete:
+1.  Run `make test` to ensure all unit tests pass.
+2.  Run `make lint` to ensure code quality standards are met.
+3.  Verify no regressions were introduced.
+
 ### New Features Require Unit Tests
 All new features and bug fixes must include unit tests following these patterns:
 - Place tests in `*_test.go` files alongside the code (e.g., `dump.go` → `dump_test.go`)
