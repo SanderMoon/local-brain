@@ -10,11 +10,11 @@ import (
 
 // Session manages state and caching for the MCP server
 type Session struct {
-	mu             sync.RWMutex
-	cfg            *config.Config
-	lastRefresh    time.Time
-	cacheTTL       time.Duration
-	overviewCache  *api.BrainOverview
+	mu            sync.RWMutex
+	cfg           *config.Config
+	lastRefresh   time.Time
+	cacheTTL      time.Duration
+	overviewCache *api.BrainOverview
 }
 
 // NewSession creates a new session manager

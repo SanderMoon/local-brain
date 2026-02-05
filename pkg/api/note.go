@@ -162,3 +162,103 @@ func ReadNoteFile(notePath string) (string, error) {
 
 	return string(content), nil
 }
+
+// NoteSearchResult represents a note matching search criteria
+type NoteSearchResult struct {
+	NoteFile
+	MatchedContent string `json:"matched_content,omitempty"` // Preview of matching content
+}
+
+// SearchNotes searches notes by content query and project filter
+func SearchNotes(activeDir string, query string, project string, searchContent bool) ([]NoteSearchResult, error) {
+	var results []NoteSearchResult
+
+	// Determine which projects to search
+	var projectDirs []string
+	if project != "" {
+		projectDirs = []string{filepath.Join(activeDir, project)}
+	} else {
+		// Search all projects
+		entries, err := os.ReadDir(activeDir)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range entries {
+			if entry.IsDir() && !strings.HasPrefix(entry.Name(), ".") {
+				projectDirs = append(projectDirs, filepath.Join(activeDir, entry.Name()))
+			}
+		}
+	}
+
+	for _, pDir := range projectDirs {
+		notes, err := ListNotes(pDir)
+		if err != nil {
+			continue // Skip projects with errors
+		}
+
+		for _, note := range notes {
+			matched := false
+			matchedContent := ""
+
+			// Search in title
+			if query == "" || strings.Contains(strings.ToLower(note.Title), strings.ToLower(query)) {
+				matched = true
+			}
+
+			// Search in content if requested
+			if searchContent && !matched {
+				content, err := ReadNoteFile(note.Path)
+				if err == nil {
+					if strings.Contains(strings.ToLower(content), strings.ToLower(query)) {
+						matched = true
+						// Extract preview around match
+						matchedContent = extractMatchPreview(content, query, 200)
+					}
+				}
+			}
+
+			if matched {
+				results = append(results, NoteSearchResult{
+					NoteFile:       note,
+					MatchedContent: matchedContent,
+				})
+			}
+		}
+	}
+
+	return results, nil
+}
+
+// extractMatchPreview extracts text around the query match
+func extractMatchPreview(content, query string, maxLen int) string {
+	lowerContent := strings.ToLower(content)
+	lowerQuery := strings.ToLower(query)
+
+	idx := strings.Index(lowerContent, lowerQuery)
+	if idx == -1 {
+		if len(content) > maxLen {
+			return content[:maxLen] + "..."
+		}
+		return content
+	}
+
+	start := idx - 50
+	if start < 0 {
+		start = 0
+	}
+
+	end := idx + len(query) + 150
+	if end > len(content) {
+		end = len(content)
+	}
+
+	preview := content[start:end]
+	if start > 0 {
+		preview = "..." + preview
+	}
+	if end < len(content) {
+		preview = preview + "..."
+	}
+
+	return preview
+}

@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 
@@ -52,38 +51,6 @@ func RegisterProjectTools(srv *mcp.Server, sess *session.Session) error {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
 				&mcp.TextContent{Text: fmt.Sprintf("Created project: %s", args.Name)},
-			},
-		}, nil, nil
-	})
-
-	// list_projects
-	type ListProjectsArgs struct{}
-	mcp.AddTool(srv, &mcp.Tool{
-		Name:        "list_projects",
-		Description: "Get list of all projects with stats",
-	}, func(ctx context.Context, req *mcp.CallToolRequest, args ListProjectsArgs) (*mcp.CallToolResult, any, error) {
-		cfg := sess.GetConfig()
-		brainPath, err := cfg.GetCurrentBrainPath()
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
-		}
-
-		activeDir := filepath.Join(brainPath, "01_active")
-		focusedProject := cfg.GetFocusedProject()
-
-		projects, err := api.ListProjects(activeDir, focusedProject)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to list projects: %w", err)
-		}
-
-		data, err := json.MarshalIndent(projects, "", "  ")
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to marshal projects: %w", err)
-		}
-
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: string(data)},
 			},
 		}, nil, nil
 	})

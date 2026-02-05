@@ -1318,3 +1318,62 @@ func equalStringSlices(a, b []string) bool {
 	}
 	return true
 }
+
+func TestParseAllTodos_TemporalFields(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	// Create a project with todos including temporal metadata
+	tb.AddProject("test-project")
+	todoFile := filepath.Join(tb.ActiveDirPath, "test-project", "todo.md")
+
+	todoContent := `# Test Project
+
+## Active
+
+- [ ] Task with captured date #captured:2026-01-15
+- [ ] Task without dates
+- [ ] Task with priority #p:1
+
+## Completed
+
+- [x] Completed task #captured:2026-01-10 #done:2026-02-01
+`
+	tb.WriteFile(todoFile, todoContent)
+
+	// Parse todos (including completed)
+	todos, err := ParseAllTodos(tb.ActiveDirPath, true)
+	if err != nil {
+		t.Fatalf("ParseAllTodos failed: %v", err)
+	}
+
+	// Find the todo with captured date
+	var capturedTodo *TodoItem
+	var completedTodo *TodoItem
+	for i := range todos {
+		if strings.Contains(todos[i].Content, "captured date") {
+			capturedTodo = &todos[i]
+		}
+		if todos[i].Status == "done" {
+			completedTodo = &todos[i]
+		}
+	}
+
+	if capturedTodo == nil {
+		t.Errorf("Could not find todo with captured date")
+	} else {
+		if capturedTodo.CapturedDate != "2026-01-15" {
+			t.Errorf("Expected captured date '2026-01-15', got '%s'", capturedTodo.CapturedDate)
+		}
+	}
+
+	if completedTodo == nil {
+		t.Errorf("Could not find completed todo")
+	} else {
+		if completedTodo.CapturedDate != "2026-01-10" {
+			t.Errorf("Expected captured date '2026-01-10', got '%s'", completedTodo.CapturedDate)
+		}
+		if completedTodo.CompletedDate != "2026-02-01" {
+			t.Errorf("Expected completed date '2026-02-01', got '%s'", completedTodo.CompletedDate)
+		}
+	}
+}

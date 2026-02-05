@@ -21,10 +21,10 @@ type TodoItem struct {
 	Status        string   `json:"status"` // "open", "in-progress", "blocked", or "done"
 	Content       string   `json:"content"`
 	Project       string   `json:"project"`
-	Priority      *int     `json:"priority"` // 1=high, 2=medium, 3=low, nil=unprioritized
-	DueDate       string   `json:"due_date"` // YYYY-MM-DD format, empty if no due date
-	Tags          []string `json:"tags"`     // Freeform tags (e.g., "bug", "feature", "urgent")
-	RawLine       string   `json:"-"`        // Original line for ID generation
+	Priority      *int     `json:"priority"`                 // 1=high, 2=medium, 3=low, nil=unprioritized
+	DueDate       string   `json:"due_date"`                 // YYYY-MM-DD format, empty if no due date
+	Tags          []string `json:"tags"`                     // Freeform tags (e.g., "bug", "feature", "urgent")
+	RawLine       string   `json:"-"`                        // Original line for ID generation
 	CapturedDate  string   `json:"captured_date,omitempty"`  // YYYY-MM-DD from #captured:
 	CompletedDate string   `json:"completed_date,omitempty"` // YYYY-MM-DD from #done:
 }
@@ -115,30 +115,30 @@ func parseTodoFile(filePath, projectName string, includeCompleted bool) ([]TodoI
 			content, dueDate := markdown.ExtractDueDate(content)
 			content, tags := markdown.ExtractTags(content)
 
-		// Extract temporal metadata
-		content, capturedDate := markdown.ExtractTimestamp(content)
-		var completedDate string
-		if status == "done" {
-			content, completedDate = markdown.ExtractCompletedDate(content)
-		}
+			// Extract temporal metadata
+			content, capturedDate := markdown.ExtractTimestamp(content)
+			var completedDate string
+			if status == "done" {
+				content, completedDate = markdown.ExtractCompletedDate(content)
+			}
 
-		// Remove #id: tag from content for clean display
-		content = RemoveIDFromContent(content)
+			// Remove #id: tag from content for clean display
+			content = RemoveIDFromContent(content)
 
-		todos = append(todos, TodoItem{
-			ID:            id,
-			File:          filePath,
-			Line:          lineNum,
-			Status:        status,
-			Content:       content,
-			Project:       projectName,
-			Priority:      priority,
-			DueDate:       dueDate,
-			Tags:          tags,
-			RawLine:       line,
-			CapturedDate:  capturedDate,
-			CompletedDate: completedDate,
-		})
+			todos = append(todos, TodoItem{
+				ID:            id,
+				File:          filePath,
+				Line:          lineNum,
+				Status:        status,
+				Content:       content,
+				Project:       projectName,
+				Priority:      priority,
+				DueDate:       dueDate,
+				Tags:          tags,
+				RawLine:       line,
+				CapturedDate:  capturedDate,
+				CompletedDate: completedDate,
+			})
 		}
 	}
 

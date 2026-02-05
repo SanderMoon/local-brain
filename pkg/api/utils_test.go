@@ -128,64 +128,64 @@ func TestSlugify(t *testing.T) {
 
 func TestExtractCapturedDate(t *testing.T) {
 	tests := []struct {
-		name           string
-		input          string
-		expectedText   string
-		expectedDate   string
+		name         string
+		input        string
+		expectedText string
+		expectedDate string
 	}{
 		{
-			name:           "task with captured date",
-			input:          "Fix authentication bug #captured:2024-01-21",
-			expectedText:   "Fix authentication bug",
-			expectedDate:   "2024-01-21",
+			name:         "task with captured date",
+			input:        "Fix authentication bug #captured:2024-01-21",
+			expectedText: "Fix authentication bug",
+			expectedDate: "2024-01-21",
 		},
 		{
-			name:           "note title with captured date",
-			input:          "Meeting notes #captured:2024-12-15",
-			expectedText:   "Meeting notes",
-			expectedDate:   "2024-12-15",
+			name:         "note title with captured date",
+			input:        "Meeting notes #captured:2024-12-15",
+			expectedText: "Meeting notes",
+			expectedDate: "2024-12-15",
 		},
 		{
-			name:           "content without captured date",
-			input:          "Some task content",
-			expectedText:   "Some task content",
-			expectedDate:   "",
+			name:         "content without captured date",
+			input:        "Some task content",
+			expectedText: "Some task content",
+			expectedDate: "",
 		},
 		{
-			name:           "multiple metadata tags",
-			input:          "Task #p:1 #due:2024-02-15 #captured:2024-01-21 #bug",
-			expectedText:   "Task #p:1 #due:2024-02-15 #bug",
-			expectedDate:   "2024-01-21",
+			name:         "multiple metadata tags",
+			input:        "Task #p:1 #due:2024-02-15 #captured:2024-01-21 #bug",
+			expectedText: "Task #p:1 #due:2024-02-15 #bug",
+			expectedDate: "2024-01-21",
 		},
 		{
-			name:           "captured date in middle",
-			input:          "Task #captured:2024-01-21 with more content",
-			expectedText:   "Task with more content",
-			expectedDate:   "2024-01-21",
+			name:         "captured date in middle",
+			input:        "Task #captured:2024-01-21 with more content",
+			expectedText: "Task with more content",
+			expectedDate: "2024-01-21",
 		},
 		{
-			name:           "captured date with space before",
-			input:          "Task  #captured:2024-01-21",
-			expectedText:   "Task",
-			expectedDate:   "2024-01-21",
+			name:         "captured date with space before",
+			input:        "Task  #captured:2024-01-21",
+			expectedText: "Task",
+			expectedDate: "2024-01-21",
 		},
 		{
-			name:           "empty string",
-			input:          "",
-			expectedText:   "",
-			expectedDate:   "",
+			name:         "empty string",
+			input:        "",
+			expectedText: "",
+			expectedDate: "",
 		},
 		{
-			name:           "only captured tag",
-			input:          "#captured:2024-01-21",
-			expectedText:   "",
-			expectedDate:   "2024-01-21",
+			name:         "only captured tag",
+			input:        "#captured:2024-01-21",
+			expectedText: "",
+			expectedDate: "2024-01-21",
 		},
 		{
-			name:           "date with letters",
-			input:          "Task #captured:2024-01-21",
-			expectedText:   "Task",
-			expectedDate:   "2024-01-21",
+			name:         "date with letters",
+			input:        "Task #captured:2024-01-21",
+			expectedText: "Task",
+			expectedDate: "2024-01-21",
 		},
 	}
 

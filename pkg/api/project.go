@@ -446,16 +446,23 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
+// NoteWithContent extends NoteFile with optional content
+type NoteWithContent struct {
+	NoteFile
+	Content string `json:"content,omitempty"` // Full content if requested
+	Preview string `json:"preview,omitempty"` // First 200 chars if preview mode
+}
+
 // ProjectContext provides complete project details in a single call
 // Optimized for MCP server to minimize round-trips
 type ProjectContext struct {
-	Name        string     `json:"name"`
-	Path        string     `json:"path"`
-	Description string     `json:"description"`
-	Focused     bool       `json:"focused"`
-	Todos       []TodoItem `json:"todos"`
-	LinkedRepos []string   `json:"linked_repos"`
-	NoteFiles   []NoteFile `json:"note_files"`
+	Name        string            `json:"name"`
+	Path        string            `json:"path"`
+	Description string            `json:"description"`
+	Focused     bool              `json:"focused"`
+	Todos       []TodoItem        `json:"todos"`
+	LinkedRepos []string          `json:"linked_repos"`
+	NoteFiles   []NoteWithContent `json:"note_files"`
 }
 
 // GetProjectContext returns complete project context including todos, notes, repos, and description
@@ -463,7 +470,8 @@ type ProjectContext struct {
 // projectName: name of the project
 // focusedProject: name of the currently focused project (empty string if none)
 // includeCompleted: whether to include completed todos
-func GetProjectContext(projectPath, projectName, focusedProject string, includeCompleted bool) (*ProjectContext, error) {
+// includeNoteContent: "none" (metadata only), "preview" (first 200 chars), or "full" (entire content)
+func GetProjectContext(projectPath, projectName, focusedProject string, includeCompleted bool, includeNoteContent string) (*ProjectContext, error) {
 	// Check if project exists
 	if !fileutil.FileExists(projectPath) {
 		return nil, fmt.Errorf("project not found: %s", projectName)
@@ -501,6 +509,34 @@ func GetProjectContext(projectPath, projectName, focusedProject string, includeC
 		noteFiles = []NoteFile{}
 	}
 
+	// Convert to NoteWithContent and optionally load content
+	notesWithContent := make([]NoteWithContent, 0, len(noteFiles))
+	for _, note := range noteFiles {
+		nwc := NoteWithContent{
+			NoteFile: note,
+		}
+
+		switch includeNoteContent {
+		case "full":
+			content, err := ReadNoteFile(note.Path)
+			if err == nil {
+				nwc.Content = content
+			}
+		case "preview":
+			content, err := ReadNoteFile(note.Path)
+			if err == nil {
+				if len(content) > 200 {
+					nwc.Preview = content[:200] + "..."
+				} else {
+					nwc.Preview = content
+				}
+			}
+			// "none" or default - just metadata
+		}
+
+		notesWithContent = append(notesWithContent, nwc)
+	}
+
 	return &ProjectContext{
 		Name:        projectName,
 		Path:        projectPath,
@@ -508,6 +544,6 @@ func GetProjectContext(projectPath, projectName, focusedProject string, includeC
 		Focused:     projectName == focusedProject,
 		Todos:       todos,
 		LinkedRepos: linkedRepos,
-		NoteFiles:   noteFiles,
+		NoteFiles:   notesWithContent,
 	}, nil
 }

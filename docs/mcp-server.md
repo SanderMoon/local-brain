@@ -31,27 +31,44 @@ Add to your Claude Desktop config at `~/Library/Application Support/Claude/claud
 
 Restart Claude Desktop to activate.
 
-## Available Tools (18)
+## Available Tools (17)
 
-### Context Retrieval (6 tools)
+### Context Retrieval & Search (7 tools)
 
 **`get_brain_overview`** - Complete workspace overview (brain name, focused project, all projects with stats, inbox count)
 
 **`get_dump_items`** - All inbox items with IDs, content, and timestamps
 
-**`get_all_todos`** - All tasks across projects with metadata (status, priority, due date, tags)
+**`get_all_todos`** - All tasks across projects with metadata (status, priority, due date, tags, capture/complete dates)
 - `include_completed` (bool) - Include done tasks
 - `project` (string, optional) - Filter by project name
+- `created_after` (string, optional) - Filter by capture date >= YYYY-MM-DD
+- `created_before` (string, optional) - Filter by capture date <= YYYY-MM-DD
+- `completed_after` (string, optional) - Filter by completion date >= YYYY-MM-DD
+- `completed_before` (string, optional) - Filter by completion date <= YYYY-MM-DD
 
-**`get_project_context`** - Complete project details (description, todos, repos, notes)
+**`get_project_context`** - Complete project details (description, todos, repos, notes with optional content)
 - `project_name` (string) - Project to retrieve
 - `include_completed` (bool) - Include done tasks
+- `include_note_content` (string, optional) - Note content: none|preview|full (default: preview)
 
-**`search_todos`** - Filter todos by query, project, status, or tags
+**`search_todos`** - Filter todos by query, project, status, tags, and dates
 - `query` (string, optional) - Search term
 - `project` (string, optional) - Project filter
 - `status` (string, optional) - Status filter (open, in-progress, blocked, done)
 - `tags` ([]string, optional) - Tag filter (OR logic)
+- `created_after` (string, optional) - Filter by capture date >= YYYY-MM-DD
+- `created_before` (string, optional) - Filter by capture date <= YYYY-MM-DD
+- `completed_after` (string, optional) - Filter by completion date >= YYYY-MM-DD
+- `completed_before` (string, optional) - Filter by completion date <= YYYY-MM-DD
+
+**`search`** - Unified search across todos and notes with temporal filtering
+- `query` (string, optional) - Search term
+- `project` (string, optional) - Project filter
+- `include_todos` (bool, optional) - Include todos (default: true)
+- `include_notes` (bool, optional) - Include notes (default: true)
+- `search_note_content` (bool, optional) - Search note content not just titles
+- `created_after`, `created_before`, `completed_after`, `completed_before` (strings, optional) - Temporal filters
 
 **`switch_brain`** - Switch to different brain workspace
 - `brain_name` (string) - Brain to activate
@@ -69,14 +86,11 @@ Restart Claude Desktop to activate.
 - `item_id` (string) - 6-character hex ID
 - `project_name` (string) - Target project
 
-### Todo Management (4 tools)
+### Todo Management (3 tools)
 
-**`update_todo_status`** - Change task status
+**`update_todo`** - Update todo status and/or metadata in one call
 - `todo_id` (string) - 6-character hex ID
-- `status` (string) - open | in-progress | blocked | done
-
-**`update_todo_metadata`** - Batch update task metadata
-- `todo_id` (string) - 6-character hex ID
+- `status` (string, optional) - open | in-progress | blocked | done
 - `priority` (int, optional) - 1 (high), 2 (medium), 3 (low), null to clear
 - `due_date` (string, optional) - YYYY-MM-DD format or empty to clear
 - `add_tags` ([]string, optional) - Tags to add
@@ -99,13 +113,11 @@ Restart Claude Desktop to activate.
 **`get_note_content`** - Read note file content
 - `note_path` (string) - Full path to note file
 
-### Project Management (3 tools)
+### Project Management (2 tools)
 
 **`create_project`** - Create new project
 - `name` (string) - Project name (alphanumeric, hyphens, underscores)
 - `description` (string, optional) - Project description
-
-**`list_projects`** - Get all projects with stats (alternative to get_brain_overview when only project list needed)
 
 **`set_focused_project`** - Set the focused project
 - `project_name` (string) - Project to focus
@@ -132,8 +144,8 @@ Ask Claude: "Show me all high priority tasks"
 → Calls get_all_todos
 → Filters by priority
 
-Ask Claude: "Mark task abc123 as in-progress"
-→ Calls update_todo_status(todo_id: "abc123", status: "in-progress")
+Ask Claude: "Mark task abc123 as in-progress with high priority"
+→ Calls update_todo(todo_id: "abc123", status: "in-progress", priority: 1)
 
 Ask Claude: "What's overdue?"
 → Calls get_all_todos

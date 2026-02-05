@@ -192,7 +192,6 @@ func (m Model) updateContent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleInputMode(msg)
 	}
 
-
 	// Handle notes navigation
 	if m.activeView == ViewNotes {
 		switch msg.String() {

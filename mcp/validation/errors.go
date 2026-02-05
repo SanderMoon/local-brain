@@ -31,9 +31,9 @@ func NewNotFoundError(resource, name string, available []string) error {
 		Code:    fmt.Sprintf("%s_NOT_FOUND", resource),
 		Message: fmt.Sprintf("%s '%s' not found", resource, name),
 		Details: map[string]interface{}{
-			"requested":  name,
-			"available":  available,
-			"resource":   resource,
+			"requested": name,
+			"available": available,
+			"resource":  resource,
 		},
 	}
 }

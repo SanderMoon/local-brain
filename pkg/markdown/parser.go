@@ -121,7 +121,7 @@ func ParseDumpFile(filePath string) ([]DumpItem, error) {
 // ExtractTimestamp extracts the #captured:YYYY-MM-DD timestamp from content
 // Returns the content without timestamp and the timestamp string
 func ExtractTimestamp(content string) (string, string) {
-	timestampPattern := regexp.MustCompile(`\s*#captured:([0-9-]+)$`)
+	timestampPattern := regexp.MustCompile(`\s*#captured:([0-9-]+)(?:\s|$)`)
 	matches := timestampPattern.FindStringSubmatch(content)
 
 	if matches == nil {
@@ -130,6 +130,7 @@ func ExtractTimestamp(content string) (string, string) {
 
 	timestamp := matches[1]
 	cleanContent := timestampPattern.ReplaceAllString(content, "")
+	cleanContent = strings.TrimSpace(cleanContent)
 
 	return cleanContent, timestamp
 }

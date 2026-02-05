@@ -72,10 +72,14 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 	type GetAllTodosArgs struct {
 		IncludeCompleted bool   `json:"include_completed" jsonschema:"Whether to include completed tasks (default: false)"`
 		Project          string `json:"project,omitempty" jsonschema:"Filter by specific project name (optional)"`
+		CreatedAfter     string `json:"created_after,omitempty" jsonschema:"Filter by captured date >= YYYY-MM-DD (optional)"`
+		CreatedBefore    string `json:"created_before,omitempty" jsonschema:"Filter by captured date <= YYYY-MM-DD (optional)"`
+		CompletedAfter   string `json:"completed_after,omitempty" jsonschema:"Filter by done date >= YYYY-MM-DD (optional)"`
+		CompletedBefore  string `json:"completed_before,omitempty" jsonschema:"Filter by done date <= YYYY-MM-DD (optional)"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "get_all_todos",
-		Description: "Get all tasks across all projects with rich metadata (status, priority, due date, tags)",
+		Description: "Get all tasks across all projects with rich metadata (status, priority, due date, tags) and optional temporal filtering",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, args GetAllTodosArgs) (*mcp.CallToolResult, any, error) {
 		cfg := sess.GetConfig()
 		brainPath, err := cfg.GetCurrentBrainPath()
@@ -100,6 +104,11 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 			todos = filtered
 		}
 
+		// Apply temporal filters
+		if args.CreatedAfter != "" || args.CreatedBefore != "" || args.CompletedAfter != "" || args.CompletedBefore != "" {
+			todos = api.FilterTodosByTemporal(todos, args.CreatedAfter, args.CreatedBefore, args.CompletedAfter, args.CompletedBefore)
+		}
+
 		data, err := json.MarshalIndent(todos, "", "  ")
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to marshal todos: %w", err)
@@ -114,16 +123,22 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 
 	// get_project_context
 	type GetProjectContextArgs struct {
-		ProjectName      string `json:"project_name" jsonschema:"Name of the project"`
-		IncludeCompleted bool   `json:"include_completed" jsonschema:"Whether to include completed tasks (default: false)"`
+		ProjectName        string `json:"project_name" jsonschema:"Name of the project"`
+		IncludeCompleted   bool   `json:"include_completed" jsonschema:"Whether to include completed tasks (default: false)"`
+		IncludeNoteContent string `json:"include_note_content,omitempty" jsonschema:"Note content: none|preview|full (default: preview)"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "get_project_context",
-		Description: "Get complete project details including description, todos, linked repos, and note files",
+		Description: "Get complete project details including description, todos, linked repos, and note files (with optional note content)",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, args GetProjectContextArgs) (*mcp.CallToolResult, any, error) {
 		// Validate inputs
 		if err := validation.ValidateProjectName(args.ProjectName); err != nil {
 			return nil, nil, err
+		}
+
+		// Default to preview if not specified
+		if args.IncludeNoteContent == "" {
+			args.IncludeNoteContent = "preview"
 		}
 
 		cfg := sess.GetConfig()
@@ -135,7 +150,7 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		projectPath := filepath.Join(brainPath, "01_active", args.ProjectName)
 		focusedProject := cfg.GetFocusedProject()
 
-		projectCtx, err := api.GetProjectContext(projectPath, args.ProjectName, focusedProject, args.IncludeCompleted)
+		projectCtx, err := api.GetProjectContext(projectPath, args.ProjectName, focusedProject, args.IncludeCompleted, args.IncludeNoteContent)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get project context: %w", err)
 		}
@@ -154,14 +169,18 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 
 	// search_todos
 	type SearchTodosArgs struct {
-		Query   string   `json:"query,omitempty" jsonschema:"Search query for todo content (case-insensitive)"`
-		Project string   `json:"project,omitempty" jsonschema:"Filter by project name (optional)"`
-		Status  string   `json:"status,omitempty" jsonschema:"Filter by status: open, in-progress, blocked, done (optional)"`
-		Tags    []string `json:"tags,omitempty" jsonschema:"Filter by tags (OR logic - match any tag)"`
+		Query           string   `json:"query,omitempty" jsonschema:"Search query for todo content (case-insensitive)"`
+		Project         string   `json:"project,omitempty" jsonschema:"Filter by project name (optional)"`
+		Status          string   `json:"status,omitempty" jsonschema:"Filter by status: open, in-progress, blocked, done (optional)"`
+		Tags            []string `json:"tags,omitempty" jsonschema:"Filter by tags (OR logic - match any tag)"`
+		CreatedAfter    string   `json:"created_after,omitempty" jsonschema:"Filter by captured date >= YYYY-MM-DD (optional)"`
+		CreatedBefore   string   `json:"created_before,omitempty" jsonschema:"Filter by captured date <= YYYY-MM-DD (optional)"`
+		CompletedAfter  string   `json:"completed_after,omitempty" jsonschema:"Filter by done date >= YYYY-MM-DD (optional)"`
+		CompletedBefore string   `json:"completed_before,omitempty" jsonschema:"Filter by done date <= YYYY-MM-DD (optional)"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "search_todos",
-		Description: "Search and filter todos by query, project, status, and tags",
+		Description: "Search and filter todos by query, project, status, tags, and dates",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, args SearchTodosArgs) (*mcp.CallToolResult, any, error) {
 		cfg := sess.GetConfig()
 		brainPath, err := cfg.GetCurrentBrainPath()
@@ -170,12 +189,69 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		}
 
 		activeDir := filepath.Join(brainPath, "01_active")
-		allTodos, err := api.ParseAllTodos(activeDir, false)
+		allTodos, err := api.ParseAllTodos(activeDir, true)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to parse todos: %w", err)
 		}
 
 		results := api.SearchTodos(allTodos, args.Query, args.Project, args.Status, args.Tags)
+
+		// Apply temporal filters
+		if args.CreatedAfter != "" || args.CreatedBefore != "" || args.CompletedAfter != "" || args.CompletedBefore != "" {
+			results = api.FilterTodosByTemporal(results, args.CreatedAfter, args.CreatedBefore, args.CompletedAfter, args.CompletedBefore)
+		}
+
+		data, err := json.MarshalIndent(results, "", "  ")
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to marshal results: %w", err)
+		}
+
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: string(data)},
+			},
+		}, nil, nil
+	})
+
+	// search - unified search for todos and notes
+	type SearchArgs struct {
+		Query             string `json:"query,omitempty" jsonschema:"Search query (optional)"`
+		Project           string `json:"project,omitempty" jsonschema:"Filter by project name (optional)"`
+		IncludeTodos      bool   `json:"include_todos,omitempty" jsonschema:"Include todos in search (default: true)"`
+		IncludeNotes      bool   `json:"include_notes,omitempty" jsonschema:"Include notes in search (default: true)"`
+		SearchNoteContent bool   `json:"search_note_content,omitempty" jsonschema:"Search note content (not just titles)"`
+		CreatedAfter      string `json:"created_after,omitempty" jsonschema:"Filter by created date >= YYYY-MM-DD (optional)"`
+		CreatedBefore     string `json:"created_before,omitempty" jsonschema:"Filter by created date <= YYYY-MM-DD (optional)"`
+		CompletedAfter    string `json:"completed_after,omitempty" jsonschema:"Filter by completed date >= YYYY-MM-DD (optional)"`
+		CompletedBefore   string `json:"completed_before,omitempty" jsonschema:"Filter by completed date <= YYYY-MM-DD (optional)"`
+	}
+	mcp.AddTool(srv, &mcp.Tool{
+		Name:        "search",
+		Description: "Unified search across todos and notes with optional temporal filtering",
+	}, func(ctx context.Context, req *mcp.CallToolRequest, args SearchArgs) (*mcp.CallToolResult, any, error) {
+		cfg := sess.GetConfig()
+		brainPath, err := cfg.GetCurrentBrainPath()
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+		}
+
+		activeDir := filepath.Join(brainPath, "01_active")
+
+		results, err := api.UnifiedSearch(
+			activeDir,
+			args.Query,
+			args.Project,
+			args.IncludeTodos,
+			args.IncludeNotes,
+			args.SearchNoteContent,
+			args.CreatedAfter,
+			args.CreatedBefore,
+			args.CompletedAfter,
+			args.CompletedBefore,
+		)
+		if err != nil {
+			return nil, nil, fmt.Errorf("search failed: %w", err)
+		}
 
 		data, err := json.MarshalIndent(results, "", "  ")
 		if err != nil {

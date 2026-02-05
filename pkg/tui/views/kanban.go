@@ -174,8 +174,12 @@ func (k *KanbanViewModel) cardCapacity(screenHeight int) int {
 // This acts as the single source of truth for scrolling logic.
 func (k *KanbanViewModel) validateCursor() {
 	// 1. Bounds check column
-	if k.FocusedCol < 0 { k.FocusedCol = 0 }
-	if k.FocusedCol >= len(k.Columns) { k.FocusedCol = len(k.Columns) - 1 }
+	if k.FocusedCol < 0 {
+		k.FocusedCol = 0
+	}
+	if k.FocusedCol >= len(k.Columns) {
+		k.FocusedCol = len(k.Columns) - 1
+	}
 
 	col := &k.Columns[k.FocusedCol]
 	nItems := len(col.Items)
@@ -204,11 +208,11 @@ func (k *KanbanViewModel) validateCursor() {
 		if k.SelectedRow < k.ScrollOffset[k.FocusedCol] {
 			k.ScrollOffset[k.FocusedCol] = k.SelectedRow
 		}
-		
+
 		// Scroll Down if selected is below viewport
 		// If index 5 is selected, and we can see 3 items...
 		// 5 >= 0 + 3? Yes. Offset = 5 - 3 + 1 = 3. Visible: 3, 4, 5.
-		if k.SelectedRow >= k.ScrollOffset[k.FocusedCol] + maxVisible {
+		if k.SelectedRow >= k.ScrollOffset[k.FocusedCol]+maxVisible {
 			k.ScrollOffset[k.FocusedCol] = k.SelectedRow - maxVisible + 1
 		}
 	}
@@ -284,10 +288,10 @@ func (k *KanbanViewModel) renderColumn(colIdx int, width, height int, primaryCol
 		Width(width - 2) // Account for borders
 
 	header := headerStyle.Render(fmt.Sprintf("%s (%d)", col.Title, len(col.Items)))
-	
+
 	// 4. Render Body content
 	var bodyParts []string
-	
+
 	// "More Above" marker
 	if startIdx > 0 {
 		bodyParts = append(bodyParts, lipgloss.NewStyle().Foreground(mutedColor).Align(lipgloss.Center).Width(width-4).Render("↑"))
@@ -304,14 +308,14 @@ func (k *KanbanViewModel) renderColumn(colIdx int, width, height int, primaryCol
 			bodyParts = append(bodyParts, k.renderCard(col.Items[i], width-4, isSelected, primaryColor, mutedColor))
 		}
 	}
-	
+
 	// "More Below" marker
 	if endIdx < len(col.Items) {
 		bodyParts = append(bodyParts, lipgloss.NewStyle().Foreground(mutedColor).Align(lipgloss.Center).Width(width-4).Render("↓"))
 	}
 
 	content := lipgloss.JoinVertical(lipgloss.Left, bodyParts...)
-	
+
 	// 5. Combine everything
 	fullContent := lipgloss.JoinVertical(lipgloss.Left, header, "\n", content)
 
@@ -335,7 +339,7 @@ func (k *KanbanViewModel) renderCard(todo api.TodoItem, width int, selected bool
 
 	cardStyle := lipgloss.NewStyle().
 		Width(width).
-		Height(CardHeight - 2). // -2 for borders
+		Height(CardHeight-2). // -2 for borders
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(borderColor).
 		Padding(0, 1)
@@ -346,12 +350,14 @@ func (k *KanbanViewModel) renderCard(todo api.TodoItem, width int, selected bool
 
 	// Line 1: Priority + Content
 	var titleBuilder strings.Builder
-	
+
 	if todo.Priority != nil {
 		pColor := mutedColor
 		switch *todo.Priority {
-		case 1: pColor = lipgloss.Color("196") // Red
-		case 2: pColor = lipgloss.Color("208") // Orange
+		case 1:
+			pColor = lipgloss.Color("196") // Red
+		case 2:
+			pColor = lipgloss.Color("208") // Orange
 		}
 		titleBuilder.WriteString(lipgloss.NewStyle().Foreground(pColor).Bold(true).Render(fmt.Sprintf("P%d ", *todo.Priority)))
 	}
@@ -377,7 +383,7 @@ func (k *KanbanViewModel) renderCard(todo api.TodoItem, width int, selected bool
 	}
 
 	// Force exactly 3 lines using JoinVertical
-	innerContent := lipgloss.JoinVertical(lipgloss.Left, 
+	innerContent := lipgloss.JoinVertical(lipgloss.Left,
 		titleBuilder.String(),
 		project,
 		meta,
