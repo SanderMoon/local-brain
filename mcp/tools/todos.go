@@ -16,6 +16,7 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 	// update_todo - unified tool for updating todo status and metadata
 	type UpdateTodoArgs struct {
 		TodoID     string   `json:"todo_id" jsonschema:"6-character hex ID of the task"`
+		Content    string   `json:"content,omitempty" jsonschema:"New task text (updates the content while preserving metadata)"`
 		Status     string   `json:"status,omitempty" jsonschema:"New status (open, in-progress, blocked, done)"`
 		Priority   *int     `json:"priority,omitempty" jsonschema:"Priority (1=high, 2=medium, 3=low, null to clear)"`
 		DueDate    string   `json:"due_date,omitempty" jsonschema:"Due date in YYYY-MM-DD format, or empty string to clear"`
@@ -24,7 +25,7 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "update_todo",
-		Description: "Update todo status, priority, due date, or tags in one call",
+		Description: "Update todo content, status, priority, due date, or tags in one call",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, args UpdateTodoArgs) (*mcp.CallToolResult, any, error) {
 		// Validate inputs
 		if err := validation.ValidateTodoID(args.TodoID); err != nil {
@@ -60,6 +61,17 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 		}
 
 		var updates []string
+
+		// Update content first (if provided), as it changes the base text
+		if args.Content != "" {
+			if err := api.UpdateTodoContent(todo, args.Content); err != nil {
+				return nil, nil, fmt.Errorf("failed to update content: %w", err)
+			}
+			updates = append(updates, fmt.Sprintf("content=\"%s\"", args.Content))
+			// Reload after content change
+			todos, _ = api.ParseAllTodos(activeDir, true)
+			todo = api.FindTodoByID(todos, args.TodoID)
+		}
 
 		// Update status
 		if args.Status != "" {

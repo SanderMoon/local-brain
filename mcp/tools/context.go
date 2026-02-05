@@ -76,6 +76,8 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		CreatedBefore    string `json:"created_before,omitempty" jsonschema:"Filter by captured date <= YYYY-MM-DD (optional)"`
 		CompletedAfter   string `json:"completed_after,omitempty" jsonschema:"Filter by done date >= YYYY-MM-DD (optional)"`
 		CompletedBefore  string `json:"completed_before,omitempty" jsonschema:"Filter by done date <= YYYY-MM-DD (optional)"`
+		DueAfter         string `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
+		DueBefore        string `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "get_all_todos",
@@ -105,8 +107,8 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		}
 
 		// Apply temporal filters
-		if args.CreatedAfter != "" || args.CreatedBefore != "" || args.CompletedAfter != "" || args.CompletedBefore != "" {
-			todos = api.FilterTodosByTemporal(todos, args.CreatedAfter, args.CreatedBefore, args.CompletedAfter, args.CompletedBefore)
+		if args.CreatedAfter != "" || args.CreatedBefore != "" || args.CompletedAfter != "" || args.CompletedBefore != "" || args.DueAfter != "" || args.DueBefore != "" {
+			todos = api.FilterTodosByTemporal(todos, args.CreatedAfter, args.CreatedBefore, args.CompletedAfter, args.CompletedBefore, args.DueAfter, args.DueBefore)
 		}
 
 		data, err := json.MarshalIndent(todos, "", "  ")
@@ -177,6 +179,8 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		CreatedBefore   string   `json:"created_before,omitempty" jsonschema:"Filter by captured date <= YYYY-MM-DD (optional)"`
 		CompletedAfter  string   `json:"completed_after,omitempty" jsonschema:"Filter by done date >= YYYY-MM-DD (optional)"`
 		CompletedBefore string   `json:"completed_before,omitempty" jsonschema:"Filter by done date <= YYYY-MM-DD (optional)"`
+		DueAfter        string   `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
+		DueBefore       string   `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "search_todos",
@@ -197,8 +201,8 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		results := api.SearchTodos(allTodos, args.Query, args.Project, args.Status, args.Tags)
 
 		// Apply temporal filters
-		if args.CreatedAfter != "" || args.CreatedBefore != "" || args.CompletedAfter != "" || args.CompletedBefore != "" {
-			results = api.FilterTodosByTemporal(results, args.CreatedAfter, args.CreatedBefore, args.CompletedAfter, args.CompletedBefore)
+		if args.CreatedAfter != "" || args.CreatedBefore != "" || args.CompletedAfter != "" || args.CompletedBefore != "" || args.DueAfter != "" || args.DueBefore != "" {
+			results = api.FilterTodosByTemporal(results, args.CreatedAfter, args.CreatedBefore, args.CompletedAfter, args.CompletedBefore, args.DueAfter, args.DueBefore)
 		}
 
 		data, err := json.MarshalIndent(results, "", "  ")
@@ -224,6 +228,8 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		CreatedBefore     string `json:"created_before,omitempty" jsonschema:"Filter by created date <= YYYY-MM-DD (optional)"`
 		CompletedAfter    string `json:"completed_after,omitempty" jsonschema:"Filter by completed date >= YYYY-MM-DD (optional)"`
 		CompletedBefore   string `json:"completed_before,omitempty" jsonschema:"Filter by completed date <= YYYY-MM-DD (optional)"`
+		DueAfter          string `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
+		DueBefore         string `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "search",
@@ -248,6 +254,8 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 			args.CreatedBefore,
 			args.CompletedAfter,
 			args.CompletedBefore,
+			args.DueAfter,
+			args.DueBefore,
 		)
 		if err != nil {
 			return nil, nil, fmt.Errorf("search failed: %w", err)
@@ -265,30 +273,57 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		}, nil, nil
 	})
 
-	// switch_brain
-	type SwitchBrainArgs struct {
-		BrainName string `json:"brain_name" jsonschema:"Name of the brain to switch to"`
+	// set_context - unified tool for switching brain and/or project
+	type SetContextArgs struct {
+		BrainName   string `json:"brain_name,omitempty" jsonschema:"Name of the brain to switch to (optional)"`
+		ProjectName string `json:"project_name,omitempty" jsonschema:"Name of the project to focus (optional)"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
-		Name:        "switch_brain",
-		Description: "Switch to a different brain workspace",
-	}, func(ctx context.Context, req *mcp.CallToolRequest, args SwitchBrainArgs) (*mcp.CallToolResult, any, error) {
+		Name:        "set_context",
+		Description: "Switch brain and/or set focused project in one call",
+	}, func(ctx context.Context, req *mcp.CallToolRequest, args SetContextArgs) (*mcp.CallToolResult, any, error) {
+		// At least one must be provided
+		if args.BrainName == "" && args.ProjectName == "" {
+			return nil, nil, fmt.Errorf("must provide at least brain_name or project_name")
+		}
+
 		// Validate inputs
-		if err := validation.ValidateBrainName(args.BrainName); err != nil {
-			return nil, nil, err
+		if args.BrainName != "" {
+			if err := validation.ValidateBrainName(args.BrainName); err != nil {
+				return nil, nil, err
+			}
+		}
+		if args.ProjectName != "" {
+			if err := validation.ValidateProjectName(args.ProjectName); err != nil {
+				return nil, nil, err
+			}
 		}
 
 		cfg := sess.GetConfig()
+		var updates []string
 
-		if err := cfg.SetCurrentBrain(args.BrainName); err != nil {
-			return nil, nil, fmt.Errorf("failed to switch brain: %w", err)
+		// Switch brain if specified
+		if args.BrainName != "" {
+			if err := cfg.SetCurrentBrain(args.BrainName); err != nil {
+				return nil, nil, fmt.Errorf("failed to switch brain: %w", err)
+			}
+			updates = append(updates, fmt.Sprintf("brain=%s", args.BrainName))
 		}
 
+		// Set focused project if specified
+		if args.ProjectName != "" {
+			if err := cfg.SetFocusedProject(args.ProjectName); err != nil {
+				return nil, nil, fmt.Errorf("failed to set focused project: %w", err)
+			}
+			updates = append(updates, fmt.Sprintf("project=%s", args.ProjectName))
+		}
+
+		// Save config
 		if err := cfg.Save(); err != nil {
 			return nil, nil, fmt.Errorf("failed to save config: %w", err)
 		}
 
-		// Invalidate cache after brain switch
+		// Invalidate cache
 		sess.Invalidate()
 
 		// Refresh config in session
@@ -296,9 +331,11 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 			return nil, nil, fmt.Errorf("failed to refresh config: %w", err)
 		}
 
+		message := fmt.Sprintf("Context updated: %v", updates)
+
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Switched to brain: %s", args.BrainName)},
+				&mcp.TextContent{Text: message},
 			},
 		}, nil, nil
 	})

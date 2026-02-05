@@ -55,42 +55,5 @@ func RegisterProjectTools(srv *mcp.Server, sess *session.Session) error {
 		}, nil, nil
 	})
 
-	// set_focused_project
-	type SetFocusedProjectArgs struct {
-		ProjectName string `json:"project_name" jsonschema:"Project name to focus"`
-	}
-	mcp.AddTool(srv, &mcp.Tool{
-		Name:        "set_focused_project",
-		Description: "Set the focused project",
-	}, func(ctx context.Context, req *mcp.CallToolRequest, args SetFocusedProjectArgs) (*mcp.CallToolResult, any, error) {
-		// Validate inputs
-		if err := validation.ValidateProjectName(args.ProjectName); err != nil {
-			return nil, nil, err
-		}
-
-		cfg := sess.GetConfig()
-
-		if err := cfg.SetFocusedProject(args.ProjectName); err != nil {
-			return nil, nil, fmt.Errorf("failed to set focused project: %w", err)
-		}
-
-		if err := cfg.Save(); err != nil {
-			return nil, nil, fmt.Errorf("failed to save config: %w", err)
-		}
-
-		sess.Invalidate()
-
-		// Refresh config in session
-		if err := sess.RefreshConfig(); err != nil {
-			return nil, nil, fmt.Errorf("failed to refresh config: %w", err)
-		}
-
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Set focused project: %s", args.ProjectName)},
-			},
-		}, nil, nil
-	})
-
 	return nil
 }
