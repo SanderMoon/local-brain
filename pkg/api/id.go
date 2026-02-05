@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var idPattern = regexp.MustCompile(`#id:([a-f0-9]{6})`)
@@ -57,5 +58,6 @@ func AddIDToLine(line string) (string, string) {
 // RemoveIDFromContent removes the #id: tag from content for display
 // This is used when showing clean content to users
 func RemoveIDFromContent(content string) string {
-	return idPattern.ReplaceAllString(content, "")
+	cleaned := idPattern.ReplaceAllString(content, "")
+	return strings.TrimSpace(cleaned)
 }

@@ -584,6 +584,176 @@ func ListAllTags(todos []TodoItem) map[string]int {
 	return tagCounts
 }
 
+// UpdateTodoContent updates the text content of a todo while preserving all metadata
+// The new content should NOT include checkbox, metadata tags, or ID - those are preserved
+func UpdateTodoContent(todo *TodoItem, newContent string) error {
+	// Read file
+	content, err := os.ReadFile(todo.File)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	lines := strings.Split(string(content), "\n")
+
+	// Validate line number
+	if todo.Line < 1 || todo.Line > len(lines) {
+		return fmt.Errorf("invalid line number: %d", todo.Line)
+	}
+
+	// Get the current line (1-indexed to 0-indexed)
+	line := lines[todo.Line-1]
+
+	// Extract checkbox
+	checkboxPattern := regexp.MustCompile(`^(\s*)- \[([>xX \-])\] `)
+	matches := checkboxPattern.FindStringSubmatch(line)
+	if matches == nil {
+		return fmt.Errorf("line is not a valid todo item")
+	}
+
+	indent := matches[1]
+	checkboxSymbol := matches[2]
+
+	// Extract all metadata from original line (priority, due date, tags, ID, timestamps)
+	// We do this by removing the checkbox and content, leaving just the metadata
+	afterCheckbox := checkboxPattern.ReplaceAllString(line, "")
+
+	// Remove the actual content text to isolate metadata
+	// The content is everything up to the first # tag or the ID
+	contentAndMetadata := strings.TrimSpace(afterCheckbox)
+
+	// Extract all metadata tags (anything starting with #)
+	metadataPattern := regexp.MustCompile(`(#[^\s]+(\s|$))+`)
+	metadataMatches := metadataPattern.FindAllString(contentAndMetadata, -1)
+
+	var allMetadata string
+	if len(metadataMatches) > 0 {
+		allMetadata = " " + strings.Join(metadataMatches, "")
+	}
+
+	// Reconstruct line: checkbox + new content + metadata
+	newLine := fmt.Sprintf("%s- [%s] %s%s", indent, checkboxSymbol, newContent, allMetadata)
+	newLine = strings.TrimRight(newLine, " \t") // Clean up trailing whitespace
+
+	lines[todo.Line-1] = newLine
+
+	// Write back
+	newFileContent := strings.Join(lines, "\n")
+	return os.WriteFile(todo.File, []byte(newFileContent), 0644)
+}
+
+// TodoCreateRequest represents a todo to be created with optional metadata
+type TodoCreateRequest struct {
+	Content  string
+	Priority *int     // 1=high, 2=medium, 3=low, nil=no priority
+	DueDate  string   // YYYY-MM-DD format, empty=no due date
+	Tags     []string // Optional tags
+	Status   string   // open, in-progress, blocked (default: open)
+}
+
+// AppendTodoWithMetadata adds a new task with metadata to a project's todo.md file
+func AppendTodoWithMetadata(projectDir string, todo TodoCreateRequest) error {
+	todoFile := filepath.Join(projectDir, "todo.md")
+
+	// Ensure todo.md exists
+	if !fileutil.FileExists(todoFile) {
+		todoContent := `# Tasks
+
+## Active
+
+## Completed
+`
+		if err := os.WriteFile(todoFile, []byte(todoContent), 0644); err != nil {
+			return fmt.Errorf("failed to create todo.md: %w", err)
+		}
+	}
+
+	// Default status to open if not specified
+	status := todo.Status
+	if status == "" {
+		status = "open"
+	}
+
+	// Map status to checkbox symbol
+	var checkboxSymbol string
+	switch status {
+	case "open":
+		checkboxSymbol = " "
+	case "in-progress":
+		checkboxSymbol = ">"
+	case "blocked":
+		checkboxSymbol = "-"
+	case "done":
+		checkboxSymbol = "x"
+	default:
+		return fmt.Errorf("invalid status: %s", status)
+	}
+
+	// Build content with metadata tags
+	contentWithMetadata := todo.Content
+
+	// Add priority
+	if todo.Priority != nil {
+		contentWithMetadata = fmt.Sprintf("%s #p:%d", contentWithMetadata, *todo.Priority)
+	}
+
+	// Add due date
+	if todo.DueDate != "" {
+		contentWithMetadata = fmt.Sprintf("%s #due:%s", contentWithMetadata, todo.DueDate)
+	}
+
+	// Add tags
+	for _, tag := range todo.Tags {
+		contentWithMetadata = fmt.Sprintf("%s #%s", contentWithMetadata, tag)
+	}
+
+	// Create task line with checkbox
+	newTaskLine := fmt.Sprintf("- [%s] %s", checkboxSymbol, contentWithMetadata)
+
+	// Add ID
+	newTaskLine, _ = AddIDToLine(newTaskLine)
+
+	// Read existing content
+	fileContent, err := os.ReadFile(todoFile)
+	if err != nil {
+		return fmt.Errorf("failed to read todo.md: %w", err)
+	}
+
+	lines := strings.Split(string(fileContent), "\n")
+
+	// Find the "## Active" section and insert after it
+	activeIdx := -1
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "## Active" {
+			activeIdx = i
+			break
+		}
+	}
+
+	var newLines []string
+	if activeIdx == -1 {
+		// No Active section found, append to end
+		newLines = append(lines, newTaskLine)
+	} else {
+		// Insert after "## Active", after any empty lines
+		insertIdx := activeIdx + 1
+
+		// Skip empty lines immediately after "## Active"
+		for insertIdx < len(lines) && strings.TrimSpace(lines[insertIdx]) == "" {
+			insertIdx++
+		}
+
+		// Insert the new task
+		newLines = make([]string, 0, len(lines)+1)
+		newLines = append(newLines, lines[:insertIdx]...)
+		newLines = append(newLines, newTaskLine)
+		newLines = append(newLines, lines[insertIdx:]...)
+	}
+
+	// Write back atomically
+	newContent := strings.Join(newLines, "\n")
+	return fileutil.AtomicWriteFile(todoFile, []byte(newContent))
+}
+
 // AppendTodoToProject adds a new task to a project's todo.md file
 // The task is inserted under the "## Active" section with a new ID
 func AppendTodoToProject(projectDir, content string) error {

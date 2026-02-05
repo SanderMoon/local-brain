@@ -59,7 +59,7 @@ func TestFilterTodosByTemporal(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			filtered := FilterTodosByTemporal(todos, tc.createdAfter, tc.createdBefore, tc.completedAfter, tc.completedBefore)
+			filtered := FilterTodosByTemporal(todos, tc.createdAfter, tc.createdBefore, tc.completedAfter, tc.completedBefore, "", "")
 
 			if len(filtered) != tc.expectedCount {
 				t.Errorf("Expected %d results, got %d", tc.expectedCount, len(filtered))
@@ -110,7 +110,7 @@ func TestUnifiedSearch_TodosOnly(t *testing.T) {
 	}
 
 	// Search for todos only
-	results, err := UnifiedSearch(activeDir, "fix", "", true, false, false, "", "", "", "")
+	results, err := UnifiedSearch(activeDir, "fix", "", true, false, false, "", "", "", "", "", "")
 	if err != nil {
 		t.Fatalf("Search failed: %v", err)
 	}
@@ -158,7 +158,7 @@ This note contains important information about our product strategy.
 	}
 
 	// Search for notes only with title match
-	results, err := UnifiedSearch(activeDir, "meeting", "", false, true, false, "", "", "", "")
+	results, err := UnifiedSearch(activeDir, "meeting", "", false, true, false, "", "", "", "", "", "")
 	if err != nil {
 		t.Fatalf("Search failed: %v", err)
 	}

@@ -16,7 +16,7 @@ type UnifiedSearchResult struct {
 }
 
 // UnifiedSearch searches both todos and notes
-func UnifiedSearch(activeDir string, query string, project string, includeTodos bool, includeNotes bool, searchNoteContent bool, createdAfter string, createdBefore string, completedAfter string, completedBefore string) ([]UnifiedSearchResult, error) {
+func UnifiedSearch(activeDir string, query string, project string, includeTodos bool, includeNotes bool, searchNoteContent bool, createdAfter string, createdBefore string, completedAfter string, completedBefore string, dueAfter string, dueBefore string) ([]UnifiedSearchResult, error) {
 	var results []UnifiedSearchResult
 
 	// Default to both if neither specified
@@ -33,8 +33,8 @@ func UnifiedSearch(activeDir string, query string, project string, includeTodos 
 			filteredTodos := SearchTodos(allTodos, query, project, "", nil)
 
 			// Apply temporal filters
-			if createdAfter != "" || createdBefore != "" || completedAfter != "" || completedBefore != "" {
-				filteredTodos = filterTodosByTemporal(filteredTodos, createdAfter, createdBefore, completedAfter, completedBefore)
+			if createdAfter != "" || createdBefore != "" || completedAfter != "" || completedBefore != "" || dueAfter != "" || dueBefore != "" {
+				filteredTodos = filterTodosByTemporal(filteredTodos, createdAfter, createdBefore, completedAfter, completedBefore, dueAfter, dueBefore)
 			}
 
 			for i := range filteredTodos {
@@ -63,7 +63,7 @@ func UnifiedSearch(activeDir string, query string, project string, includeTodos 
 }
 
 // filterTodosByTemporal applies date range filters
-func filterTodosByTemporal(todos []TodoItem, createdAfter string, createdBefore string, completedAfter string, completedBefore string) []TodoItem {
+func filterTodosByTemporal(todos []TodoItem, createdAfter string, createdBefore string, completedAfter string, completedBefore string, dueAfter string, dueBefore string) []TodoItem {
 	var filtered []TodoItem
 
 	for _, todo := range todos {
@@ -93,6 +93,18 @@ func filterTodosByTemporal(todos []TodoItem, createdAfter string, createdBefore 
 			}
 		}
 
+		// Filter by due date - exclude if no date when filtering by dates
+		if dueAfter != "" && include {
+			if todo.DueDate == "" || todo.DueDate < dueAfter {
+				include = false
+			}
+		}
+		if dueBefore != "" && include {
+			if todo.DueDate == "" || todo.DueDate > dueBefore {
+				include = false
+			}
+		}
+
 		if include {
 			filtered = append(filtered, todo)
 		}
@@ -103,6 +115,6 @@ func filterTodosByTemporal(todos []TodoItem, createdAfter string, createdBefore 
 
 // FilterTodosByTemporal is a public helper for filtering todos by dates
 // Used by MCP tools and CLI
-func FilterTodosByTemporal(todos []TodoItem, createdAfter string, createdBefore string, completedAfter string, completedBefore string) []TodoItem {
-	return filterTodosByTemporal(todos, createdAfter, createdBefore, completedAfter, completedBefore)
+func FilterTodosByTemporal(todos []TodoItem, createdAfter string, createdBefore string, completedAfter string, completedBefore string, dueAfter string, dueBefore string) []TodoItem {
+	return filterTodosByTemporal(todos, createdAfter, createdBefore, completedAfter, completedBefore, dueAfter, dueBefore)
 }

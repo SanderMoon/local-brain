@@ -233,7 +233,7 @@ func TestRemoveIDFromContent(t *testing.T) {
 		{
 			name:     "ID at end",
 			content:  "Task content #id:ffffff",
-			expected: "Task content ",
+			expected: "Task content",
 		},
 		{
 			name:     "multiple spaces preserved",

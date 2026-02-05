@@ -1377,3 +1377,163 @@ func TestParseAllTodos_TemporalFields(t *testing.T) {
 		}
 	}
 }
+
+func TestUpdateTodoContent(t *testing.T) {
+	tmpDir := t.TempDir()
+	todoFile := filepath.Join(tmpDir, "todo.md")
+
+	// Create a todo file with various metadata
+	content := `# Tasks
+
+## Active
+
+- [ ] Original task content #p:1 #due:2026-02-10 #bug #id:abc123
+- [ ] Another task #p:2 #id:def456
+`
+
+	if err := os.WriteFile(todoFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	// Parse the todo
+	todos, err := parseTodoFile(todoFile, "test-project", false)
+	if err != nil {
+		t.Fatalf("Failed to parse todos: %v", err)
+	}
+
+	if len(todos) != 2 {
+		t.Fatalf("Expected 2 todos, got %d", len(todos))
+	}
+
+	// Update the content of the first todo
+	err = UpdateTodoContent(&todos[0], "Updated task description")
+	if err != nil {
+		t.Fatalf("Failed to update content: %v", err)
+	}
+
+	// Re-parse and verify
+	updatedTodos, err := parseTodoFile(todoFile, "test-project", false)
+	if err != nil {
+		t.Fatalf("Failed to re-parse todos: %v", err)
+	}
+
+	if updatedTodos[0].Content != "Updated task description" {
+		t.Errorf("Content not updated correctly. Got: %q", updatedTodos[0].Content)
+	}
+
+	// Verify metadata preserved
+	if updatedTodos[0].ID != "abc123" {
+		t.Errorf("ID changed! Expected abc123, got %s", updatedTodos[0].ID)
+	}
+	if *updatedTodos[0].Priority != 1 {
+		t.Errorf("Priority changed! Expected 1, got %d", *updatedTodos[0].Priority)
+	}
+	if updatedTodos[0].DueDate != "2026-02-10" {
+		t.Errorf("Due date changed! Expected 2026-02-10, got %s", updatedTodos[0].DueDate)
+	}
+	if len(updatedTodos[0].Tags) == 0 || updatedTodos[0].Tags[0] != "bug" {
+		t.Errorf("Tags changed! Got %v", updatedTodos[0].Tags)
+	}
+}
+
+func TestAppendTodoWithMetadata(t *testing.T) {
+	tmpDir := t.TempDir()
+	projectDir := tmpDir
+
+	// Create project directory
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		t.Fatalf("Failed to create project dir: %v", err)
+	}
+
+	priority := 1
+	todo := TodoCreateRequest{
+		Content:  "Fix critical bug",
+		Priority: &priority,
+		DueDate:  "2026-02-15",
+		Tags:     []string{"bug", "urgent"},
+		Status:   "in-progress",
+	}
+
+	err := AppendTodoWithMetadata(projectDir, todo)
+	if err != nil {
+		t.Fatalf("Failed to append todo with metadata: %v", err)
+	}
+
+	// Parse and verify
+	todos, err := parseTodoFile(filepath.Join(projectDir, "todo.md"), "test-project", false)
+	if err != nil {
+		t.Fatalf("Failed to parse todo file: %v", err)
+	}
+
+	if len(todos) != 1 {
+		t.Fatalf("Expected 1 todo, got %d", len(todos))
+	}
+
+	created := todos[0]
+
+	if created.Content != "Fix critical bug" {
+		t.Errorf("Content mismatch. Got: %q", created.Content)
+	}
+	if created.Status != "in-progress" {
+		t.Errorf("Status mismatch. Expected in-progress, got: %s", created.Status)
+	}
+	if created.Priority == nil || *created.Priority != 1 {
+		t.Errorf("Priority mismatch. Expected 1, got: %v", created.Priority)
+	}
+	if created.DueDate != "2026-02-15" {
+		t.Errorf("Due date mismatch. Expected 2026-02-15, got: %s", created.DueDate)
+	}
+	if len(created.Tags) != 2 {
+		t.Errorf("Expected 2 tags, got %d", len(created.Tags))
+	}
+	if created.ID == "" {
+		t.Errorf("ID was not generated")
+	}
+}
+
+func TestAppendTodoWithMetadata_MinimalFields(t *testing.T) {
+	tmpDir := t.TempDir()
+	projectDir := tmpDir
+
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		t.Fatalf("Failed to create project dir: %v", err)
+	}
+
+	// Create todo with just content (all metadata optional)
+	todo := TodoCreateRequest{
+		Content: "Simple task",
+	}
+
+	err := AppendTodoWithMetadata(projectDir, todo)
+	if err != nil {
+		t.Fatalf("Failed to append minimal todo: %v", err)
+	}
+
+	// Parse and verify
+	todos, err := parseTodoFile(filepath.Join(projectDir, "todo.md"), "test-project", false)
+	if err != nil {
+		t.Fatalf("Failed to parse todo file: %v", err)
+	}
+
+	if len(todos) != 1 {
+		t.Fatalf("Expected 1 todo, got %d", len(todos))
+	}
+
+	created := todos[0]
+
+	if created.Content != "Simple task" {
+		t.Errorf("Content mismatch. Got: %q", created.Content)
+	}
+	if created.Status != "open" {
+		t.Errorf("Status should default to open, got: %s", created.Status)
+	}
+	if created.Priority != nil {
+		t.Errorf("Priority should be nil, got: %v", created.Priority)
+	}
+	if created.DueDate != "" {
+		t.Errorf("Due date should be empty, got: %s", created.DueDate)
+	}
+	if len(created.Tags) != 0 {
+		t.Errorf("Tags should be empty, got %v", created.Tags)
+	}
+}
