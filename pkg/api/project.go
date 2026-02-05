@@ -445,3 +445,69 @@ func copyFile(src, dst string) error {
 
 	return nil
 }
+
+// ProjectContext provides complete project details in a single call
+// Optimized for MCP server to minimize round-trips
+type ProjectContext struct {
+	Name        string     `json:"name"`
+	Path        string     `json:"path"`
+	Description string     `json:"description"`
+	Focused     bool       `json:"focused"`
+	Todos       []TodoItem `json:"todos"`
+	LinkedRepos []string   `json:"linked_repos"`
+	NoteFiles   []NoteFile `json:"note_files"`
+}
+
+// GetProjectContext returns complete project context including todos, notes, repos, and description
+// projectPath: absolute path to the project directory
+// projectName: name of the project
+// focusedProject: name of the currently focused project (empty string if none)
+// includeCompleted: whether to include completed todos
+func GetProjectContext(projectPath, projectName, focusedProject string, includeCompleted bool) (*ProjectContext, error) {
+	// Check if project exists
+	if !fileutil.FileExists(projectPath) {
+		return nil, fmt.Errorf("project not found: %s", projectName)
+	}
+
+	// Get description
+	description, err := ReadProjectDescription(projectPath)
+	if err != nil {
+		// Non-fatal, continue with empty description
+		description = ""
+	}
+
+	// Get todos for this project
+	todoFile := filepath.Join(projectPath, "todo.md")
+	var todos []TodoItem
+	if fileutil.FileExists(todoFile) {
+		// Parse just this project's todos (not all projects)
+		projectTodos, err := parseTodoFile(todoFile, projectName, includeCompleted)
+		if err == nil {
+			todos = projectTodos
+		}
+	}
+
+	// Get linked repos
+	linkedRepos, err := GetLinkedRepos(projectPath)
+	if err != nil {
+		// Non-fatal, continue with empty list
+		linkedRepos = []string{}
+	}
+
+	// Get note files
+	noteFiles, err := ListNotes(projectPath)
+	if err != nil {
+		// Non-fatal, continue with empty list
+		noteFiles = []NoteFile{}
+	}
+
+	return &ProjectContext{
+		Name:        projectName,
+		Path:        projectPath,
+		Description: description,
+		Focused:     projectName == focusedProject,
+		Todos:       todos,
+		LinkedRepos: linkedRepos,
+		NoteFiles:   noteFiles,
+	}, nil
+}

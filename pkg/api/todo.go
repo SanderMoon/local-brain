@@ -15,16 +15,18 @@ import (
 
 // TodoItem represents a task in a todo.md file
 type TodoItem struct {
-	ID       string   `json:"id"`
-	File     string   `json:"file"`
-	Line     int      `json:"line"`
-	Status   string   `json:"status"` // "open", "in-progress", "blocked", or "done"
-	Content  string   `json:"content"`
-	Project  string   `json:"project"`
-	Priority *int     `json:"priority"` // 1=high, 2=medium, 3=low, nil=unprioritized
-	DueDate  string   `json:"due_date"` // YYYY-MM-DD format, empty if no due date
-	Tags     []string `json:"tags"`     // Freeform tags (e.g., "bug", "feature", "urgent")
-	RawLine  string   `json:"-"`        // Original line for ID generation
+	ID            string   `json:"id"`
+	File          string   `json:"file"`
+	Line          int      `json:"line"`
+	Status        string   `json:"status"` // "open", "in-progress", "blocked", or "done"
+	Content       string   `json:"content"`
+	Project       string   `json:"project"`
+	Priority      *int     `json:"priority"` // 1=high, 2=medium, 3=low, nil=unprioritized
+	DueDate       string   `json:"due_date"` // YYYY-MM-DD format, empty if no due date
+	Tags          []string `json:"tags"`     // Freeform tags (e.g., "bug", "feature", "urgent")
+	RawLine       string   `json:"-"`        // Original line for ID generation
+	CapturedDate  string   `json:"captured_date,omitempty"`  // YYYY-MM-DD from #captured:
+	CompletedDate string   `json:"completed_date,omitempty"` // YYYY-MM-DD from #done:
 }
 
 var (
@@ -113,21 +115,30 @@ func parseTodoFile(filePath, projectName string, includeCompleted bool) ([]TodoI
 			content, dueDate := markdown.ExtractDueDate(content)
 			content, tags := markdown.ExtractTags(content)
 
-			// Remove #id: tag from content for clean display
-			content = RemoveIDFromContent(content)
+		// Extract temporal metadata
+		content, capturedDate := markdown.ExtractTimestamp(content)
+		var completedDate string
+		if status == "done" {
+			content, completedDate = markdown.ExtractCompletedDate(content)
+		}
 
-			todos = append(todos, TodoItem{
-				ID:       id,
-				File:     filePath,
-				Line:     lineNum,
-				Status:   status,
-				Content:  content,
-				Project:  projectName,
-				Priority: priority,
-				DueDate:  dueDate,
-				Tags:     tags,
-				RawLine:  line,
-			})
+		// Remove #id: tag from content for clean display
+		content = RemoveIDFromContent(content)
+
+		todos = append(todos, TodoItem{
+			ID:            id,
+			File:          filePath,
+			Line:          lineNum,
+			Status:        status,
+			Content:       content,
+			Project:       projectName,
+			Priority:      priority,
+			DueDate:       dueDate,
+			Tags:          tags,
+			RawLine:       line,
+			CapturedDate:  capturedDate,
+			CompletedDate: completedDate,
+		})
 		}
 	}
 
@@ -156,6 +167,58 @@ func FindTodoByPattern(todos []TodoItem, pattern string) []TodoItem {
 	}
 
 	return matches
+}
+
+// SearchTodos filters todos by multiple criteria
+// This is optimized for MCP server use case with flexible filtering
+func SearchTodos(todos []TodoItem, query, project, status string, tags []string) []TodoItem {
+	var results []TodoItem
+
+	for _, todo := range todos {
+		// Filter by content query (case-insensitive substring match)
+		if query != "" {
+			if !strings.Contains(strings.ToLower(todo.Content), strings.ToLower(query)) {
+				continue
+			}
+		}
+
+		// Filter by project name
+		if project != "" {
+			if todo.Project != project {
+				continue
+			}
+		}
+
+		// Filter by status
+		if status != "" {
+			if todo.Status != status {
+				continue
+			}
+		}
+
+		// Filter by tags (OR logic - match any of the provided tags)
+		if len(tags) > 0 {
+			matched := false
+			for _, requiredTag := range tags {
+				for _, todoTag := range todo.Tags {
+					if strings.EqualFold(todoTag, requiredTag) {
+						matched = true
+						break
+					}
+				}
+				if matched {
+					break
+				}
+			}
+			if !matched {
+				continue
+			}
+		}
+
+		results = append(results, todo)
+	}
+
+	return results
 }
 
 // ToggleTodoStatus updates a todo's status in the file

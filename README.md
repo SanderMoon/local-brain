@@ -87,6 +87,7 @@ This keeps you in flow while maintaining organized projects.
 - **Batch Curation** - Process and organize during dedicated time blocks
 - **Local-First** - Plain text Markdown files, grep-able, version-controllable
 - **Developer-Friendly** - Integrates with git repos, supports JSON API for scripts
+- **AI Assistant Integration** - MCP server for Claude Desktop and other AI tools ([setup guide](docs/mcp-server.md))
 - **Privacy-First** - Everything lives locally in `~/brains/`, syncable via Syncthing/Dropbox
 
 ---
@@ -96,6 +97,7 @@ This keeps you in flow while maintaining organized projects.
 - **[🚀 Quickstart Guide](https://sandermoon.github.io/local-brain/)** - Get started in 3 minutes
 - **[📦 Installation](https://sandermoon.github.io/local-brain/installation/)** - All installation methods
 - **[📖 Command Reference](https://sandermoon.github.io/local-brain/commands/)** - Complete command documentation
+- **[🤖 MCP Server Setup](docs/mcp-server.md)** - AI assistant integration (Claude Desktop)
 - **[💻 Development Guide](https://sandermoon.github.io/local-brain/development/)** - Contributing and architecture
 
 ---

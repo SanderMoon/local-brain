@@ -134,6 +134,23 @@ func ExtractTimestamp(content string) (string, string) {
 	return cleanContent, timestamp
 }
 
+// ExtractCompletedDate extracts the #done:YYYY-MM-DD timestamp from content
+// Returns the content without timestamp and the timestamp string
+func ExtractCompletedDate(content string) (string, string) {
+	donePattern := regexp.MustCompile(`\s*#done:([0-9-]+)(?:\s|$)`)
+	matches := donePattern.FindStringSubmatch(content)
+
+	if matches == nil {
+		return content, ""
+	}
+
+	doneDate := matches[1]
+	cleanContent := donePattern.ReplaceAllString(content, "")
+	cleanContent = strings.TrimSpace(cleanContent)
+
+	return cleanContent, doneDate
+}
+
 // ExtractPriority extracts the #p:[1-3] priority tag from content
 // Returns the content without priority tag and the priority value (1=high, 2=medium, 3=low)
 // Returns nil priority if no valid tag is found

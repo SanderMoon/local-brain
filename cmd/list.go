@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -8,7 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var listShowPaths bool
+var (
+	listShowPaths bool
+	listJSONFlag  bool
+)
 
 var listCmd = &cobra.Command{
 	Use:   "list",
@@ -18,7 +22,8 @@ var listCmd = &cobra.Command{
 Lists brain names and optionally their file system paths.
 The currently active brain is marked with an asterisk (*).`,
 	Example: `  brain list           # Simple list
-  brain list --paths   # Include full paths`,
+  brain list --paths   # Include full paths
+  brain list --json    # JSON output`,
 	RunE: runList,
 }
 
@@ -26,6 +31,7 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 
 	listCmd.Flags().BoolVar(&listShowPaths, "paths", false, "Show full paths")
+	listCmd.Flags().BoolVar(&listJSONFlag, "json", false, "Output JSON format")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -35,7 +41,38 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	brains := cfg.ListBrains()
+	current := cfg.GetCurrentBrain()
 
+	// JSON output
+	if listJSONFlag {
+		type BrainInfo struct {
+			Name    string `json:"name"`
+			Path    string `json:"path"`
+			Current bool   `json:"current"`
+		}
+
+		var brainsJSON []BrainInfo
+		for _, brain := range brains {
+			path, err := cfg.GetBrainPath(brain)
+			if err != nil {
+				continue
+			}
+			brainsJSON = append(brainsJSON, BrainInfo{
+				Name:    brain,
+				Path:    path,
+				Current: brain == current,
+			})
+		}
+
+		data, err := json.MarshalIndent(brainsJSON, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal JSON: %w", err)
+		}
+		fmt.Println(string(data))
+		return nil
+	}
+
+	// Human-readable output
 	if len(brains) == 0 {
 		symlinkPath := config.GetSymlinkPath()
 
@@ -56,8 +93,6 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	// Sort brains alphabetically
 	sort.Strings(brains)
-
-	current := cfg.GetCurrentBrain()
 
 	fmt.Println("Configured brains:")
 	fmt.Println("")
