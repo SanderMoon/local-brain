@@ -33,8 +33,31 @@ builds:
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
 
+  - id: brain-mcp
+    main: ./mcp/main.go
+    binary: brain-mcp
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Ignore certain combinations
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+
 archives:
   - id: brain
+    builds:
+      - brain
+      - brain-mcp
     name_template: >-
       {{ .ProjectName }}_
       {{- .Version }}_
@@ -100,13 +123,25 @@ brews:
       2. Add the brain-prompt.sh to your shell config:
          echo 'source $(brew --prefix)/share/brain/brain-prompt.sh' >> ~/.zshrc
 
-      3. Optional enhancements:
+      3. Optional: Enable Claude Desktop integration
+         The MCP server (brain-mcp) is installed for Claude Desktop integration.
+         Add to ~/Library/Application Support/Claude/claude_desktop_config.json:
+         {
+           "mcpServers": {
+             "local-brain": {
+               "command": "#{bin}/brain-mcp"
+             }
+           }
+         }
+
+      4. Optional enhancements:
          brew install tmux bat syncthing jq
 
       For more information, visit: https://github.com/SanderMoon/local-brain
 
     install: |
       bin.install "brain"
+      bin.install "brain-mcp"
       # Install the shell prompt helper
       (share/"brain").install "lib/brain-prompt.sh"
 

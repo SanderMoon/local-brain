@@ -6,18 +6,48 @@ Model Context Protocol server that exposes Local Brain functionality to AI assis
 
 ### Installation
 
+**Via Homebrew (macOS, recommended):**
 ```bash
-# Build the MCP server
-cd mcp
-go build -o brain-mcp .
+# Install Local Brain (includes both CLI and MCP server)
+brew install sandermoon/tap/brain
 
-# Install to system path
-sudo cp brain-mcp /usr/local/bin/
+# brain-mcp is automatically installed to $(brew --prefix)/bin/brain-mcp
+```
+
+**Via Makefile (all platforms):**
+```bash
+# Install to ~/.local/bin (no sudo required, recommended)
+make dev-install-mcp
+
+# Or install system-wide to /usr/local/bin
+sudo make install-mcp
+
+# Or specify custom location
+make install-mcp INSTALL_DIR=~/.local/bin
+
+# Or install both CLI and MCP server
+make install-all
+```
+
+**Via Go (if you have Go installed):**
+```bash
+# Clone the repository
+git clone https://github.com/SanderMoon/local-brain.git
+cd local-brain
+
+# Build and install
+make build-mcp
+cp brain-mcp /usr/local/bin/  # or ~/.local/bin/
 ```
 
 ### Configuration
 
-Add to your Claude Desktop config at `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Claude Desktop config location depends on your OS:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+Add this configuration (adjust path based on your installation method):
 
 ```json
 {
@@ -28,6 +58,11 @@ Add to your Claude Desktop config at `~/Library/Application Support/Claude/claud
   }
 }
 ```
+
+**Path examples:**
+- Homebrew (macOS): `/opt/homebrew/bin/brain-mcp` or `/usr/local/bin/brain-mcp`
+- User install: `~/.local/bin/brain-mcp` (expand ~ to full path)
+- System install: `/usr/local/bin/brain-mcp`
 
 Restart Claude Desktop to activate.
 
@@ -199,5 +234,3 @@ Ask Claude: "Add a note about today's standup to project X"
 **Cache**: 30-second TTL for read operations, invalidated on mutations
 **Session**: Thread-safe with automatic config refresh
 **Version**: Uses Local Brain CLI version
-
-For implementation details, see the [plan file](../.claude/plans/happy-knitting-lark.md).

@@ -2,6 +2,8 @@
 
 # Build variables
 BINARY_NAME=brain
+MCP_BINARY_NAME=brain-mcp
+MCP_DIR=mcp
 VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT?=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 DATE?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
@@ -21,6 +23,15 @@ build:
 	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) .
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
 
+# Build the MCP server
+build-mcp:
+	@echo "Building $(MCP_BINARY_NAME)..."
+	cd $(MCP_DIR) && go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(MCP_BINARY_NAME) .
+	@echo "Build complete: $(BUILD_DIR)/$(MCP_BINARY_NAME)"
+
+# Build both CLI and MCP server
+build-all: build build-mcp
+
 # Install the binary
 install: build
 	@echo "Installing $(BINARY_NAME) to $(INSTALL_DIR)..."
@@ -33,12 +44,45 @@ install: build
 	@echo "Installation complete"
 	@echo "Add to your shell config: source $(LIB_DIR)/brain-prompt.sh"
 
+# Install the MCP server
+install-mcp: build-mcp
+	@echo "Installing $(MCP_BINARY_NAME) to $(INSTALL_DIR)..."
+	mkdir -p $(INSTALL_DIR)
+	cp $(BUILD_DIR)/$(MCP_BINARY_NAME) $(INSTALL_DIR)/
+	chmod 755 $(INSTALL_DIR)/$(MCP_BINARY_NAME)
+	@echo "Installation complete: $(INSTALL_DIR)/$(MCP_BINARY_NAME)"
+	@echo ""
+	@echo "Add to Claude Desktop config:"
+	@echo "  macOS: ~/Library/Application Support/Claude/claude_desktop_config.json"
+	@echo "  Linux: ~/.config/Claude/claude_desktop_config.json"
+	@echo ""
+	@echo "Config format:"
+	@echo '  {'
+	@echo '    "mcpServers": {'
+	@echo '      "local-brain": {'
+	@echo '        "command": "$(INSTALL_DIR)/$(MCP_BINARY_NAME)"'
+	@echo '      }'
+	@echo '    }'
+	@echo '  }'
+
+# Install both CLI and MCP server
+install-all: install install-mcp
+
 # Uninstall the binary
 uninstall:
 	@echo "Uninstalling $(BINARY_NAME)..."
 	rm -f $(INSTALL_DIR)/$(BINARY_NAME)
 	rm -rf $(LIB_DIR)
 	@echo "Uninstall complete"
+
+# Uninstall the MCP server
+uninstall-mcp:
+	@echo "Uninstalling $(MCP_BINARY_NAME)..."
+	rm -f $(INSTALL_DIR)/$(MCP_BINARY_NAME)
+	@echo "Uninstall complete"
+
+# Uninstall both CLI and MCP server
+uninstall-all: uninstall uninstall-mcp
 
 # Run unit tests (fast, no integration)
 test-unit:
@@ -89,8 +133,10 @@ clean:
 	@echo "Cleaning build artifacts..."
 	rm -f $(BUILD_DIR)/$(BINARY_NAME)
 	rm -f $(BUILD_DIR)/$(BINARY_NAME)-dev
+	rm -f $(BUILD_DIR)/$(MCP_BINARY_NAME)
 	rm -f coverage.out coverage.html
 	go clean
+	cd $(MCP_DIR) && go clean
 	@echo "Clean complete"
 
 # Format code
@@ -156,15 +202,34 @@ dev-install:
 	@echo "  Brains: ~/brains-dev/"
 	@echo "  Symlink: ~/brain-dev"
 
+# Quick local install for MCP server (for development)
+dev-install-mcp: build-mcp
+	@echo "Installing $(MCP_BINARY_NAME) for development..."
+	mkdir -p $(HOME)/.local/bin
+	cp $(BUILD_DIR)/$(MCP_BINARY_NAME) $(HOME)/.local/bin/
+	chmod +x $(HOME)/.local/bin/$(MCP_BINARY_NAME)
+	@echo "Installed to $(HOME)/.local/bin/$(MCP_BINARY_NAME)"
+	@echo "Make sure $(HOME)/.local/bin is in your PATH"
+	@echo ""
+	@echo "Add to Claude Desktop config:"
+	@echo '  "command": "$(HOME)/.local/bin/$(MCP_BINARY_NAME)"'
+
 # Show help
 help:
 	@echo "Local Brain - Makefile targets:"
 	@echo ""
 	@echo "Building:"
-	@echo "  make build          - Build the binary"
-	@echo "  make install        - Install to $(INSTALL_DIR)"
-	@echo "  make dev-install    - Install to ~/.local/bin (development)"
-	@echo "  make uninstall      - Remove from $(INSTALL_DIR)"
+	@echo "  make build          - Build the CLI binary"
+	@echo "  make build-mcp      - Build the MCP server binary"
+	@echo "  make build-all      - Build both CLI and MCP server"
+	@echo "  make install        - Install CLI to $(INSTALL_DIR)"
+	@echo "  make install-mcp    - Install MCP server to $(INSTALL_DIR)"
+	@echo "  make install-all    - Install both CLI and MCP server"
+	@echo "  make dev-install    - Install CLI to ~/.local/bin (development)"
+	@echo "  make dev-install-mcp - Install MCP server to ~/.local/bin (development)"
+	@echo "  make uninstall      - Remove CLI from $(INSTALL_DIR)"
+	@echo "  make uninstall-mcp  - Remove MCP server from $(INSTALL_DIR)"
+	@echo "  make uninstall-all  - Remove both CLI and MCP server"
 	@echo "  make completions    - Generate shell completions"
 	@echo ""
 	@echo "Distribution:"

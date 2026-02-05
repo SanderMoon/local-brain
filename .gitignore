@@ -38,10 +38,12 @@ go.work
 
 # Local Brain build artifacts
 brain
+brain-dev
+brain-mcp
 dist/
 completions/
 site/
 
 # Local configuration
 .envrc
-.envbrain-dev
+.env

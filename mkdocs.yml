@@ -39,6 +39,7 @@ nav:
   - 🚀 Quickstart: index.md
   - 📦 Installation: installation.md
   - 📖 Command Reference: commands.md
+  - 🤖 MCP Server: mcp-server.md
   - 💻 Development: development.md
 
 markdown_extensions:
