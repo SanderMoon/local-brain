@@ -1,8 +1,9 @@
-.PHONY: build install test test-unit test-integration test-compat test-all test-cover test-race clean release snapshot install-goreleaser completions
+.PHONY: build build-mcp build-mcp-dev build-all install install-mcp install-all dev-install dev-install-mcp uninstall uninstall-mcp uninstall-all test test-unit test-integration test-compat test-all test-cover test-race test-verbose clean fmt lint vet check completions release snapshot install-goreleaser help
 
 # Build variables
 BINARY_NAME=brain
 MCP_BINARY_NAME=brain-mcp
+MCP_DEV_BINARY_NAME=brain-mcp-dev
 MCP_DIR=mcp
 VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT?=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
@@ -28,6 +29,12 @@ build-mcp:
 	@echo "Building $(MCP_BINARY_NAME)..."
 	cd $(MCP_DIR) && go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(MCP_BINARY_NAME) .
 	@echo "Build complete: $(BUILD_DIR)/$(MCP_BINARY_NAME)"
+
+# Build the MCP server (dev variant — uses ~/brains-dev/ isolated workspace)
+build-mcp-dev:
+	@echo "Building $(MCP_DEV_BINARY_NAME)..."
+	cd $(MCP_DIR) && go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(MCP_DEV_BINARY_NAME) .
+	@echo "Build complete: $(BUILD_DIR)/$(MCP_DEV_BINARY_NAME)"
 
 # Build both CLI and MCP server
 build-all: build build-mcp
@@ -134,6 +141,7 @@ clean:
 	rm -f $(BUILD_DIR)/$(BINARY_NAME)
 	rm -f $(BUILD_DIR)/$(BINARY_NAME)-dev
 	rm -f $(BUILD_DIR)/$(MCP_BINARY_NAME)
+	rm -f $(BUILD_DIR)/$(MCP_DEV_BINARY_NAME)
 	rm -f coverage.out coverage.html
 	go clean
 	cd $(MCP_DIR) && go clean
@@ -186,33 +194,43 @@ snapshot: install-goreleaser build
 	@echo ""
 	@echo "Snapshot artifacts created in dist/"
 
-# Quick local install (for development)
-dev-install:
+# Quick local install (for development) — installs both CLI and MCP dev binaries
+dev-install: build-mcp-dev
 	@echo "Building $(BINARY_NAME)-dev..."
 	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-dev .
 	@echo "Installing for development..."
 	mkdir -p $(HOME)/.local/bin
 	cp $(BUILD_DIR)/$(BINARY_NAME)-dev $(HOME)/.local/bin/
 	chmod +x $(HOME)/.local/bin/$(BINARY_NAME)-dev
+	cp $(BUILD_DIR)/$(MCP_DEV_BINARY_NAME) $(HOME)/.local/bin/
+	chmod +x $(HOME)/.local/bin/$(MCP_DEV_BINARY_NAME)
 	@echo "Installed to $(HOME)/.local/bin/$(BINARY_NAME)-dev"
+	@echo "Installed to $(HOME)/.local/bin/$(MCP_DEV_BINARY_NAME)"
 	@echo "Make sure $(HOME)/.local/bin is in your PATH"
 	@echo ""
-	@echo "Dev mode uses separate paths:"
+	@echo "Dev mode uses separate isolated paths:"
 	@echo "  Config: ~/.config/brain-dev/"
 	@echo "  Brains: ~/brains-dev/"
 	@echo "  Symlink: ~/brain-dev"
+	@echo ""
+	@echo "To register the dev MCP server with Claude Code:"
+	@echo "  claude mcp add --transport stdio local-brain-dev $(HOME)/.local/bin/$(MCP_DEV_BINARY_NAME)"
 
-# Quick local install for MCP server (for development)
-dev-install-mcp: build-mcp
-	@echo "Installing $(MCP_BINARY_NAME) for development..."
+# Quick local install for MCP server (dev variant — uses ~/brains-dev/ isolated workspace)
+dev-install-mcp: build-mcp-dev
+	@echo "Installing $(MCP_DEV_BINARY_NAME) for development..."
 	mkdir -p $(HOME)/.local/bin
-	cp $(BUILD_DIR)/$(MCP_BINARY_NAME) $(HOME)/.local/bin/
-	chmod +x $(HOME)/.local/bin/$(MCP_BINARY_NAME)
-	@echo "Installed to $(HOME)/.local/bin/$(MCP_BINARY_NAME)"
+	cp $(BUILD_DIR)/$(MCP_DEV_BINARY_NAME) $(HOME)/.local/bin/
+	chmod +x $(HOME)/.local/bin/$(MCP_DEV_BINARY_NAME)
+	@echo "Installed to $(HOME)/.local/bin/$(MCP_DEV_BINARY_NAME)"
 	@echo "Make sure $(HOME)/.local/bin is in your PATH"
 	@echo ""
-	@echo "Add to Claude Desktop config:"
-	@echo '  "command": "$(HOME)/.local/bin/$(MCP_BINARY_NAME)"'
+	@echo "To register with Claude Code:"
+	@echo "  claude mcp add --transport stdio local-brain-dev $(HOME)/.local/bin/$(MCP_DEV_BINARY_NAME)"
+	@echo ""
+	@echo "Uses isolated dev paths:"
+	@echo "  Config: ~/.config/brain-dev/"
+	@echo "  Brains: ~/brains-dev/"
 
 # Show help
 help:
@@ -221,12 +239,13 @@ help:
 	@echo "Building:"
 	@echo "  make build          - Build the CLI binary"
 	@echo "  make build-mcp      - Build the MCP server binary"
+	@echo "  make build-mcp-dev  - Build the MCP server dev binary (uses ~/brains-dev/)"
 	@echo "  make build-all      - Build both CLI and MCP server"
 	@echo "  make install        - Install CLI to $(INSTALL_DIR)"
 	@echo "  make install-mcp    - Install MCP server to $(INSTALL_DIR)"
 	@echo "  make install-all    - Install both CLI and MCP server"
-	@echo "  make dev-install    - Install CLI to ~/.local/bin (development)"
-	@echo "  make dev-install-mcp - Install MCP server to ~/.local/bin (development)"
+	@echo "  make dev-install    - Install CLI + MCP dev binaries to ~/.local/bin"
+	@echo "  make dev-install-mcp - Install MCP dev binary to ~/.local/bin"
 	@echo "  make uninstall      - Remove CLI from $(INSTALL_DIR)"
 	@echo "  make uninstall-mcp  - Remove MCP server from $(INSTALL_DIR)"
 	@echo "  make uninstall-all  - Remove both CLI and MCP server"

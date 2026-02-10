@@ -1095,6 +1095,38 @@ brain go
 
 ---
 
+### `brain storm [--agent <name>]`
+
+**Description:** Open an AI agent in your brains root directory
+
+**Usage:**
+```bash
+brain storm                    # Launch Claude Code in ~/brains
+brain storm --agent aider      # Launch aider instead
+brain storm -a llm             # Short form
+```
+
+**Options:**
+- `--agent`, `-a` (string, default: `claude`) — CLI agent binary to launch
+
+**Notes:**
+- Changes working directory to `~/brains` (or `$BRAIN_ROOT` if set) before launching
+- The agent process replaces the current shell process (exec, not fork)
+- Create a `CLAUDE.md` in `~/brains` to give Claude Code standing instructions as your personal assistant; it is loaded automatically when Claude Code starts in that directory
+- Other agents (aider, llm, aichat, etc.) may require their own context configuration mechanism — see your agent's documentation
+- Requires the agent binary to be on `$PATH`
+
+**Examples:**
+```bash
+# Start a Claude Code session across all your brains
+brain storm
+
+# Use a different AI agent
+brain storm --agent aider
+```
+
+---
+
 ## Sync & Utilities
 
 ### `brain sync`

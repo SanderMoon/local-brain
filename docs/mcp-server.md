@@ -66,6 +66,27 @@ Add this configuration (adjust path based on your installation method):
 
 Restart Claude Desktop to activate.
 
+### Claude Code (Project-Specific)
+
+To add the Local Brain MCP server for a specific project in Claude Code:
+
+```bash
+claude mcp add --transport stdio local-brain /opt/homebrew/bin/brain-mcp
+```
+
+Run this from your project directory. The server is registered at the project level (stored in `.claude/mcp.json`) and Claude Code will have access to all Local Brain tools when working in that project.
+
+**Path examples** (adjust to your installation):
+- Homebrew (macOS ARM): `/opt/homebrew/bin/brain-mcp`
+- Homebrew (macOS Intel): `/usr/local/bin/brain-mcp`
+- User install: `/Users/<you>/.local/bin/brain-mcp`
+
+**Using Local Brain as a personal AI assistant:**
+
+Create a `CLAUDE.md` file in your `~/brains` directory to give Claude Code standing instructions — your preferences, context to load automatically, how to handle tasks. When you run `brain storm` (see [Commands Reference](commands.md)), Claude Code reads this file automatically.
+
+> Other AI agents (aider, llm, aichat, etc.) may require a different mechanism to load context — typically a system prompt file or a project-level configuration file. See your agent's documentation for details.
+
 ## Available Tools (17)
 
 ### Context Retrieval & Search (7 tools)

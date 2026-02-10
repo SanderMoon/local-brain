@@ -73,6 +73,7 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		Query            string   `json:"query,omitempty" jsonschema:"Search query for todo content (case-insensitive, optional)"`
 		Project          string   `json:"project,omitempty" jsonschema:"Filter by specific project name (optional)"`
 		Status           string   `json:"status,omitempty" jsonschema:"Filter by status: open, in-progress, blocked, done (optional)"`
+		Priority         *int     `json:"priority,omitempty" jsonschema:"Filter by priority: 1=high, 2=medium, 3=low (optional)"`
 		Tags             []string `json:"tags,omitempty" jsonschema:"Filter by tags - OR logic, match any tag (optional)"`
 		IncludeCompleted bool     `json:"include_completed,omitempty" jsonschema:"Whether to include completed tasks (default: false)"`
 		CreatedAfter     string   `json:"created_after,omitempty" jsonschema:"Filter by captured date >= YYYY-MM-DD (optional)"`
@@ -118,6 +119,17 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		// Apply temporal filters
 		if args.CreatedAfter != "" || args.CreatedBefore != "" || args.CompletedAfter != "" || args.CompletedBefore != "" || args.DueAfter != "" || args.DueBefore != "" {
 			todos = api.FilterTodosByTemporal(todos, args.CreatedAfter, args.CreatedBefore, args.CompletedAfter, args.CompletedBefore, args.DueAfter, args.DueBefore)
+		}
+
+		// Apply priority filter
+		if args.Priority != nil {
+			var filtered []api.TodoItem
+			for _, todo := range todos {
+				if todo.Priority != nil && *todo.Priority == *args.Priority {
+					filtered = append(filtered, todo)
+				}
+			}
+			todos = filtered
 		}
 
 		data, err := json.MarshalIndent(todos, "", "  ")

@@ -8,15 +8,36 @@
   \/_____/   \/_/ /_/   \/_/\/_/   \/_/   \/_/ \/_/
 ```
 
-![Local Brain TUI](docs/images/tui-screenshot.png)
-
-> A minimalist, local-first project management system for developers who live in the terminal.
+> A local-first project management tool — with a CLI/TUI for humans and an MCP server for AI agents.
 
 [![Documentation](https://img.shields.io/badge/docs-sandermoon.github.io-blue)](https://sandermoon.github.io/local-brain/)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/SanderMoon/local-brain)](https://github.com/SanderMoon/local-brain)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Local Brain is a context manager for your workflow. It stitches together your notes, tasks, and code repositories into a cohesive, keyboard-driven environment.
+Local Brain keeps your projects, tasks, and notes in plain Markdown files on your own machine. Use it yourself via the CLI and TUI, or let an AI agent manage your projects through the built-in MCP server — or both.
+
+---
+
+## Two Interfaces, One System
+
+### Human Interface — CLI & TUI
+
+![Local Brain TUI](docs/images/tui-screenshot.png)
+
+- **Zero-friction capture** — `brain add "..."` takes under a second, no context switching
+- **Batch curation** — process and organize during dedicated time blocks with `brain refile` and `brain plan`
+- **Full CLI** — every operation is a command; scriptable and composable
+- **Optional TUI** — visual project and task overview with `brain tui`
+
+### AI Interface — MCP Server
+
+<!-- TODO: Add screenshot of chatting with Claude about projects/todos. Save to docs/images/claude-chat-screenshot.png -->
+![Claude chat with Local Brain](docs/images/claude-chat-screenshot.png)
+
+- **Efficient discovery** — tools like `get_brain_overview` return your full workspace in one call, instead of dozens of filesystem reads
+- **Full task management** — Claude can create, update, search, and organize your tasks and projects directly
+- **Personal assistant** — run `brain storm` to open Claude in your brains directory for an interactive session
+- **17 purpose-built tools** — designed to minimize LLM round-trips while giving complete access to your projects
 
 ---
 
@@ -39,72 +60,28 @@ go install github.com/SanderMoon/local-brain@latest
 brain init
 ```
 
-### Start Using
+### Use it your way
 
 ```bash
-# Capture thoughts instantly
+# Human path: capture → organize → act
 brain add "Fix authentication bug"
 brain add "Review Sarah's PR"
+brain refile                        # batch-move items to projects
+brain todo ls --priority 1          # see what matters today
 
-# Process and organize later
-brain refile
-
-# Weekly planning
-brain plan
-
-# Optional: Launch the TUI for visual overview
-brain tui
+# AI path: open Claude in your brains directory
+brain storm                         # launches Claude Code in ~/brains
 ```
-
-**CLI-First Design:** All features are accessible via CLI commands. The TUI is optional for visual project and task management.
 
 **[📖 Full Documentation →](https://sandermoon.github.io/local-brain/)**
 
 ---
 
-## Core Philosophy: Capture Fast, Curate Later
-
-Local Brain follows a two-phase workflow:
+## Core Workflow: Capture → Curate
 
 **Phase 1: Capture** (< 1 second)
 
-- No metadata, no decisions, no interruptions
-- Everything goes to your dump (`00_dump.md`)
-
-**Phase 2: Curate** (dedicated time blocks)
-
-- Batch process items with `brain refile`
-- Enrich tasks with `brain plan` (priorities, due dates, tags)
-
-This keeps you in flow while maintaining organized projects.
-
----
-
-## Features
-
-- **CLI-First Design** - Fast, scriptable commands for all operations. Optional TUI for visual overview.
-- **Zero-Friction Capture** - Add tasks in < 1 second without context switching
-- **Batch Curation** - Process and organize during dedicated time blocks
-- **Local-First** - Plain text Markdown files, grep-able, version-controllable
-- **Developer-Friendly** - Integrates with git repos, supports JSON API for scripts
-- **AI Assistant Integration** - MCP server for Claude Desktop and other AI tools ([setup guide](docs/mcp-server.md))
-- **Privacy-First** - Everything lives locally in `~/brains/`, syncable via Syncthing/Dropbox
-
----
-
-## Documentation
-
-- **[🚀 Quickstart Guide](https://sandermoon.github.io/local-brain/)** - Get started in 3 minutes
-- **[📦 Installation](https://sandermoon.github.io/local-brain/installation/)** - All installation methods
-- **[📖 Command Reference](https://sandermoon.github.io/local-brain/commands/)** - Complete command documentation
-- **[🤖 MCP Server Setup](docs/mcp-server.md)** - AI assistant integration (Claude Desktop)
-- **[💻 Development Guide](https://sandermoon.github.io/local-brain/development/)** - Contributing and architecture
-
----
-
-## Daily Workflow Example
-
-**Morning** (Capture):
+Dump everything to your inbox — no metadata, no decisions, no interruptions.
 
 ```bash
 brain add "Fix auth bug in login"
@@ -112,42 +89,37 @@ brain add "Review Sarah's PR"
 brain add "Update deployment docs"
 ```
 
-**End of Day** (Curate - Refile):
+**Phase 2: Curate** (dedicated time blocks)
+
+Organize, prioritize, and act on your items in batch.
 
 ```bash
-brain refile
-# Interactive prompts move items to projects:
-# - "Fix auth bug" → backend-api
-# - "Review Sarah's PR" → frontend
-# - "Update deployment docs" → backend-api
+brain refile      # move inbox items to projects
+brain plan        # add priorities, due dates, tags
+brain todo ls     # see your task list
 ```
 
-**Friday** (Curate - Plan):
-
-```bash
-brain plan
-# Add priorities, due dates, tags, states
-```
-
-**Throughout the Week**:
-
-```bash
-brain todo ls --status in-progress --priority 1
-brain todo ls --overdue
-brain todo done <id>
-```
+Or ask Claude — with the MCP server configured, it has full access to your projects and can handle the curation for you.
 
 ---
 
 ## Key Concepts
 
-**Brains**: Top-level workspaces (e.g., "Work", "Personal"). Only one active at a time, symlinked to `~/brain`.
+**Brains**: Top-level workspaces (e.g., "Work", "Personal"). Only one is active at a time, symlinked to `~/brain`.
 
-**Projects**: Focus areas within a brain (e.g., "website-redesign"). Each has `notes.md`, `todo.md`, and optional code repo links.
+**Projects**: Focus areas within a brain (e.g., "website-redesign"). Each has `notes.md`, `todo.md`, and optional git repo links.
 
 **Dump**: Your inbox (`00_dump.md`) for rapid capture. Process it regularly with `brain refile`.
 
-**[Learn more →](https://sandermoon.github.io/local-brain/)**
+---
+
+## Documentation
+
+- **[🚀 Quickstart Guide](https://sandermoon.github.io/local-brain/)** — Get started in 3 minutes
+- **[📦 Installation](https://sandermoon.github.io/local-brain/installation/)** — All installation methods
+- **[📖 Command Reference](https://sandermoon.github.io/local-brain/commands/)** — Complete command documentation
+- **[🤖 MCP Server Setup](docs/mcp-server.md)** — AI agent integration (Claude Desktop, Claude Code)
+- **[💻 Development Guide](https://sandermoon.github.io/local-brain/development/)** — Architecture and contributing
 
 ---
 
@@ -156,7 +128,6 @@ brain todo done <id>
 Contributions are welcome! See the [Development Guide](https://sandermoon.github.io/local-brain/development/) for setup, architecture, and contributing guidelines.
 
 ```bash
-# Quick setup for contributors
 git clone https://github.com/SanderMoon/local-brain.git
 cd local-brain
 make build
@@ -175,8 +146,4 @@ make test
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) file for details.
-
----
-
-**[📖 Read the Full Documentation](https://sandermoon.github.io/local-brain/)**
+MIT License — See [LICENSE](LICENSE) file for details.
