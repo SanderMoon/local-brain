@@ -40,6 +40,7 @@ go.work
 brain
 brain-dev
 brain-mcp
+brain-mcp-dev
 dist/
 completions/
 site/
