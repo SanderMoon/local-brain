@@ -436,6 +436,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#claude-code-project-specific" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Code (Project-Specific)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -702,6 +713,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#claude-code-project-specific" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Code (Project-Specific)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -944,6 +966,20 @@
 - User install: <code>~/.local/bin/brain-mcp</code> (expand ~ to full path)
 - System install: <code>/usr/local/bin/brain-mcp</code></p>
 <p>Restart Claude Desktop to activate.</p>
+<h3 id="claude-code-project-specific">Claude Code (Project-Specific)</h3>
+<p>To add the Local Brain MCP server for a specific project in Claude Code:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>claude<span class="w"> </span>mcp<span class="w"> </span>add<span class="w"> </span>--transport<span class="w"> </span>stdio<span class="w"> </span>local-brain<span class="w"> </span>/opt/homebrew/bin/brain-mcp
+</code></pre></div>
+<p>Run this from your project directory. The server is registered at the project level (stored in <code>.claude/mcp.json</code>) and Claude Code will have access to all Local Brain tools when working in that project.</p>
+<p><strong>Path examples</strong> (adjust to your installation):
+- Homebrew (macOS ARM): <code>/opt/homebrew/bin/brain-mcp</code>
+- Homebrew (macOS Intel): <code>/usr/local/bin/brain-mcp</code>
+- User install: <code>/Users/&lt;you&gt;/.local/bin/brain-mcp</code></p>
+<p><strong>Using Local Brain as a personal AI assistant:</strong></p>
+<p>Create a <code>CLAUDE.md</code> file in your <code>~/brains</code> directory to give Claude Code standing instructions — your preferences, context to load automatically, how to handle tasks. When you run <code>brain storm</code> (see <a href="../commands/">Commands Reference</a>), Claude Code reads this file automatically.</p>
+<blockquote>
+<p>Other AI agents (aider, llm, aichat, etc.) may require a different mechanism to load context — typically a system prompt file or a project-level configuration file. See your agent's documentation for details.</p>
+</blockquote>
 <h2 id="available-tools-17">Available Tools (17)</h2>
 <h3 id="context-retrieval-search-7-tools">Context Retrieval &amp; Search (7 tools)</h3>
 <p><strong><code>get_brain_overview</code></strong> - Complete workspace overview (brain name, focused project, all projects with stats, inbox count)</p>
@@ -1014,33 +1050,33 @@
 - <code>project_name</code> (string) - Project to focus</p>
 <h2 id="usage-examples">Usage Examples</h2>
 <h3 id="get-started">Get started</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Ask Claude: &quot;What am I working on?&quot;
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>→ Calls get_brain_overview
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Ask Claude: &quot;What am I working on?&quot;
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>→ Calls get_brain_overview
 </code></pre></div>
 <h3 id="process-inbox">Process inbox</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Ask Claude: &quot;Help me process my inbox&quot;
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>→ Calls get_dump_items
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>→ Asks where each item should go
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>→ Calls refile_item for each
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Ask Claude: &quot;Help me process my inbox&quot;
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>→ Calls get_dump_items
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>→ Asks where each item should go
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>→ Calls refile_item for each
 </code></pre></div>
 <h3 id="manage-tasks">Manage tasks</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Ask Claude: &quot;Show me all high priority tasks&quot;
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>→ Calls get_all_todos
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>→ Filters by priority
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>Ask Claude: &quot;Mark task abc123 as in-progress with high priority&quot;
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>→ Calls update_todo(todo_id: &quot;abc123&quot;, status: &quot;in-progress&quot;, priority: 1)
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>Ask Claude: &quot;What&#39;s overdue?&quot;
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>→ Calls get_all_todos
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>→ Filters by due date
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Ask Claude: &quot;Show me all high priority tasks&quot;
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>→ Calls get_all_todos
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>→ Filters by priority
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Ask Claude: &quot;Mark task abc123 as in-progress with high priority&quot;
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>→ Calls update_todo(todo_id: &quot;abc123&quot;, status: &quot;in-progress&quot;, priority: 1)
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>Ask Claude: &quot;What&#39;s overdue?&quot;
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>→ Calls get_all_todos
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>→ Filters by due date
 </code></pre></div>
 <h3 id="create-content">Create content</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Ask Claude: &quot;Add a task to my backend project: Fix auth bug&quot;
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>→ Calls create_todo_in_project(project_name: &quot;backend&quot;, content: &quot;Fix auth bug&quot;)
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>Ask Claude: &quot;Add a note about today&#39;s standup to project X&quot;
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>→ Calls create_project_note with meeting notes
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Ask Claude: &quot;Add a task to my backend project: Fix auth bug&quot;
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>→ Calls create_todo_in_project(project_name: &quot;backend&quot;, content: &quot;Fix auth bug&quot;)
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Ask Claude: &quot;Add a note about today&#39;s standup to project X&quot;
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>→ Calls create_project_note with meeting notes
 </code></pre></div>
 <h2 id="design-principles">Design Principles</h2>
 <p><strong>Efficiency</strong> - Batch operations minimize round-trips (e.g., <code>get_brain_overview</code> replaces 5+ separate calls)</p>
