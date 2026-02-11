@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sandermoonemans/local-brain/pkg/testutil"
 )
@@ -1488,6 +1489,117 @@ func TestAppendTodoWithMetadata(t *testing.T) {
 	}
 	if created.ID == "" {
 		t.Errorf("ID was not generated")
+	}
+}
+
+func TestSetTodoStatus_AddsDoneDate(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	tb.AddProject("done-date-test")
+	todoFile := filepath.Join(tb.ActiveDirPath, "done-date-test", "todo.md")
+
+	content := `# Done Date Test
+
+- [ ] Task without date
+`
+	tb.WriteFile(todoFile, content)
+
+	todos, err := ParseAllTodos(tb.ActiveDirPath, false)
+	if err != nil {
+		t.Fatalf("ParseAllTodos failed: %v", err)
+	}
+
+	task := &todos[0]
+	if err := SetTodoStatus(task, "done"); err != nil {
+		t.Fatalf("SetTodoStatus failed: %v", err)
+	}
+
+	// Verify the file contains #done: with today's date
+	today := time.Now().Format("2006-01-02")
+	updatedContent, _ := os.ReadFile(todoFile)
+	expected := "#done:" + today
+	if !strings.Contains(string(updatedContent), expected) {
+		t.Errorf("Expected %q in file. File content:\n%s", expected, updatedContent)
+	}
+	if !strings.Contains(string(updatedContent), "- [x]") {
+		t.Errorf("Expected [x] checkbox. File content:\n%s", updatedContent)
+	}
+
+	// Verify parsed CompletedDate
+	todosAll, err := ParseAllTodos(tb.ActiveDirPath, true)
+	if err != nil {
+		t.Fatalf("ParseAllTodos failed: %v", err)
+	}
+	if len(todosAll) != 1 {
+		t.Fatalf("Expected 1 todo, got %d", len(todosAll))
+	}
+	if todosAll[0].CompletedDate != today {
+		t.Errorf("Expected CompletedDate %q, got %q", today, todosAll[0].CompletedDate)
+	}
+}
+
+func TestSetTodoStatus_RemovesDoneDate(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	tb.AddProject("remove-done-date-test")
+	todoFile := filepath.Join(tb.ActiveDirPath, "remove-done-date-test", "todo.md")
+
+	content := `# Remove Done Date Test
+
+- [x] Completed task #done:2026-01-01
+`
+	tb.WriteFile(todoFile, content)
+
+	todos, err := ParseAllTodos(tb.ActiveDirPath, true)
+	if err != nil {
+		t.Fatalf("ParseAllTodos failed: %v", err)
+	}
+
+	task := &todos[0]
+	if err := SetTodoStatus(task, "open"); err != nil {
+		t.Fatalf("SetTodoStatus failed: %v", err)
+	}
+
+	updatedContent, _ := os.ReadFile(todoFile)
+	if strings.Contains(string(updatedContent), "#done:") {
+		t.Errorf("Expected #done: tag to be removed. File content:\n%s", updatedContent)
+	}
+	if !strings.Contains(string(updatedContent), "- [ ] Completed task") {
+		t.Errorf("Expected open checkbox and clean content. File content:\n%s", updatedContent)
+	}
+}
+
+func TestSetTodoStatus_IdempotentDone(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	tb.AddProject("idempotent-done-test")
+	todoFile := filepath.Join(tb.ActiveDirPath, "idempotent-done-test", "todo.md")
+
+	content := `# Idempotent Done Test
+
+- [x] Already done task #done:2026-01-01
+`
+	tb.WriteFile(todoFile, content)
+
+	todos, err := ParseAllTodos(tb.ActiveDirPath, true)
+	if err != nil {
+		t.Fatalf("ParseAllTodos failed: %v", err)
+	}
+
+	task := &todos[0]
+	if err := SetTodoStatus(task, "done"); err != nil {
+		t.Fatalf("SetTodoStatus failed: %v", err)
+	}
+
+	updatedContent, _ := os.ReadFile(todoFile)
+	// Should have exactly one #done: tag (the original one, not duplicated)
+	doneCount := strings.Count(string(updatedContent), "#done:")
+	if doneCount != 1 {
+		t.Errorf("Expected exactly 1 #done: tag, found %d. File content:\n%s", doneCount, updatedContent)
+	}
+	// The original date should be preserved
+	if !strings.Contains(string(updatedContent), "#done:2026-01-01") {
+		t.Errorf("Expected original #done: date preserved. File content:\n%s", updatedContent)
 	}
 }
 

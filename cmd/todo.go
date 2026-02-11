@@ -17,17 +17,19 @@ import (
 )
 
 var (
-	todoJSONFlag        bool
-	todoAllFlag         bool
-	todoPriorityFlag    int
-	todoNoPriorityFlag  bool
-	todoStatusFlag      string
-	todoTagFlag         []string
-	todoTagModeFlag     string
-	todoDueTodayFlag    bool
-	todoDueThisWeekFlag bool
-	todoOverdueFlag     bool
-	todoSortFlag        string
+	todoJSONFlag           bool
+	todoAllFlag            bool
+	todoPriorityFlag       int
+	todoNoPriorityFlag     bool
+	todoStatusFlag         string
+	todoTagFlag            []string
+	todoTagModeFlag        string
+	todoDueTodayFlag       bool
+	todoDueThisWeekFlag    bool
+	todoOverdueFlag        bool
+	todoSortFlag           string
+	todoCompletedAfterFlag  string
+	todoCompletedBeforeFlag string
 )
 
 var todoCmd = &cobra.Command{
@@ -115,6 +117,8 @@ func init() {
 	todoLsCmd.Flags().BoolVar(&todoDueThisWeekFlag, "due-this-week", false, "Show tasks due this week")
 	todoLsCmd.Flags().BoolVar(&todoOverdueFlag, "overdue", false, "Show overdue tasks")
 	todoLsCmd.Flags().StringVar(&todoSortFlag, "sort", "", "Sort by: priority, deadline, project, status")
+	todoLsCmd.Flags().StringVar(&todoCompletedAfterFlag, "completed-after", "", "Show tasks completed on or after YYYY-MM-DD (implies --all)")
+	todoLsCmd.Flags().StringVar(&todoCompletedBeforeFlag, "completed-before", "", "Show tasks completed on or before YYYY-MM-DD (implies --all)")
 }
 
 // sortTodosByPriority sorts todos with prioritized items first (P1, P2, P3), then unprioritized
@@ -519,6 +523,11 @@ func runTodoLs(cmd *cobra.Command, args []string) error {
 
 	activeDir := filepath.Join(brainPath, "01_active")
 
+	// Completion date filters require completed tasks to be included
+	if todoCompletedAfterFlag != "" || todoCompletedBeforeFlag != "" {
+		todoAllFlag = true
+	}
+
 	todos, err := api.ParseAllTodos(activeDir, todoAllFlag)
 	if err != nil {
 		return fmt.Errorf("failed to parse todos: %w", err)
@@ -526,6 +535,11 @@ func runTodoLs(cmd *cobra.Command, args []string) error {
 
 	// Apply filters
 	todos = filterTodos(todos)
+
+	// Apply completion date filters
+	if todoCompletedAfterFlag != "" || todoCompletedBeforeFlag != "" {
+		todos = api.FilterTodosByTemporal(todos, "", "", todoCompletedAfterFlag, todoCompletedBeforeFlag, "", "")
+	}
 
 	// Apply sorting
 	if todoSortFlag != "" {

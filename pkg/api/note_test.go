@@ -1,7 +1,9 @@
 package api
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -215,5 +217,45 @@ func TestListNotes_OnlyMarkdownFiles(t *testing.T) {
 	// Should only find .md files
 	if len(notes) != 2 {
 		t.Fatalf("Expected 2 notes, got %d", len(notes))
+	}
+}
+
+func TestUpdateNoteFile(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	projectDir := filepath.Join(tb.ActiveDirPath, "test-project")
+	notesDir := filepath.Join(projectDir, "notes")
+
+	// Create an initial note file
+	notePath := filepath.Join(notesDir, "2026-02-11-test-note.md")
+	initial := "# Test Note\n\nCreated: 2026-02-11\n\nOriginal content.\n"
+	tb.WriteFile(notePath, initial)
+
+	// Update it
+	updated := "# Test Note\n\nCreated: 2026-02-11\n\nUpdated content.\n"
+	if err := UpdateNoteFile(notePath, updated); err != nil {
+		t.Fatalf("UpdateNoteFile failed: %v", err)
+	}
+
+	// Verify new content
+	got, err := os.ReadFile(notePath)
+	if err != nil {
+		t.Fatalf("ReadFile failed: %v", err)
+	}
+	if string(got) != updated {
+		t.Errorf("Expected updated content, got:\n%s", got)
+	}
+	if strings.Contains(string(got), "Original content") {
+		t.Errorf("Old content still present after update")
+	}
+}
+
+func TestUpdateNoteFile_NotFound(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	notePath := filepath.Join(tb.ActiveDirPath, "nonexistent", "missing.md")
+	err := UpdateNoteFile(notePath, "some content")
+	if err == nil {
+		t.Error("Expected error for non-existent note, got nil")
 	}
 }

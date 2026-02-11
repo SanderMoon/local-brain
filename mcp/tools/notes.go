@@ -81,5 +81,34 @@ func RegisterNoteTools(srv *mcp.Server, sess *session.Session) error {
 		}, nil, nil
 	})
 
+	// update_note
+	type UpdateNoteArgs struct {
+		NotePath string `json:"note_path" jsonschema:"Full path to the note file"`
+		Content  string `json:"content" jsonschema:"New full content for the note file"`
+	}
+	mcp.AddTool(srv, &mcp.Tool{
+		Name:        "update_note",
+		Description: "Replace the full content of an existing note file",
+	}, func(ctx context.Context, req *mcp.CallToolRequest, args UpdateNoteArgs) (*mcp.CallToolResult, any, error) {
+		if err := validation.ValidateNonEmpty("note_path", args.NotePath); err != nil {
+			return nil, nil, err
+		}
+		if err := validation.ValidateNonEmpty("content", args.Content); err != nil {
+			return nil, nil, err
+		}
+
+		if err := api.UpdateNoteFile(args.NotePath, args.Content); err != nil {
+			return nil, nil, fmt.Errorf("failed to update note: %w", err)
+		}
+
+		sess.Invalidate()
+
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: fmt.Sprintf("Updated note: %s", filepath.Base(args.NotePath))},
+			},
+		}, nil, nil
+	})
+
 	return nil
 }

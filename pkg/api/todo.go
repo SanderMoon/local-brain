@@ -384,6 +384,19 @@ func SetTodoStatus(todo *TodoItem, newStatus string) error {
 
 	// Replace with new checkbox
 	newLine := checkboxPattern.ReplaceAllString(line, "${1}- ["+checkboxSymbol+"]")
+
+	// Manage #done: timestamp
+	doneTagPattern := regexp.MustCompile(`\s*#done:[0-9-]+`)
+	if newStatus == "done" {
+		if !doneTagPattern.MatchString(newLine) {
+			today := time.Now().Format("2006-01-02")
+			newLine = newLine + " #done:" + today
+		}
+	} else {
+		newLine = doneTagPattern.ReplaceAllString(newLine, "")
+		newLine = strings.TrimRight(newLine, " \t")
+	}
+
 	lines[todo.Line-1] = newLine
 
 	// Write back

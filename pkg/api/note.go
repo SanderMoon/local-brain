@@ -163,6 +163,14 @@ func ReadNoteFile(notePath string) (string, error) {
 	return string(content), nil
 }
 
+// UpdateNoteFile replaces the content of an existing note file atomically
+func UpdateNoteFile(notePath, content string) error {
+	if _, err := os.Stat(notePath); os.IsNotExist(err) {
+		return fmt.Errorf("note file not found: %s", notePath)
+	}
+	return fileutil.AtomicWriteFile(notePath, []byte(content))
+}
+
 // NoteSearchResult represents a note matching search criteria
 type NoteSearchResult struct {
 	NoteFile
