@@ -17,7 +17,7 @@ func RegisterProjectTools(srv *mcp.Server, sess *session.Session) error {
 	type CreateProjectArgs struct {
 		Name        string `json:"name" jsonschema:"Project name (alphanumeric, hyphens, underscores)"`
 		Description string `json:"description,omitempty" jsonschema:"Project description (optional)"`
-		Section     string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
+		Section     string `json:"section,omitempty" jsonschema:"PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "create_project",

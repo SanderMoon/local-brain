@@ -83,7 +83,7 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		CompletedBefore  string   `json:"completed_before,omitempty" jsonschema:"Filter by done date <= YYYY-MM-DD (optional)"`
 		DueAfter         string   `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
 		DueBefore        string   `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
-		Section          string   `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
+		Section          string   `json:"section,omitempty" jsonschema:"PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "query_todos",
@@ -149,7 +149,7 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		ProjectName        string `json:"project_name" jsonschema:"Name of the project"`
 		IncludeCompleted   bool   `json:"include_completed" jsonschema:"Whether to include completed tasks (default: false)"`
 		IncludeNoteContent string `json:"include_note_content,omitempty" jsonschema:"Note content: none|preview|full (default: preview)"`
-		Section            string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
+		Section            string `json:"section,omitempty" jsonschema:"PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "get_project_context",
@@ -205,7 +205,7 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		CompletedBefore   string `json:"completed_before,omitempty" jsonschema:"Filter by completed date <= YYYY-MM-DD (optional)"`
 		DueAfter          string `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
 		DueBefore         string `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
-		Section           string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
+		Section           string `json:"section,omitempty" jsonschema:"PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "search",
@@ -316,7 +316,7 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 
 	// get_daily_briefing - comprehensive start-of-day overview
 	type GetDailyBriefingArgs struct {
-		Section string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
+		Section string `json:"section,omitempty" jsonschema:"PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "get_daily_briefing",
