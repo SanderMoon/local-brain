@@ -985,6 +985,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Migration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#brain-migrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brain migrate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#global-options" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1747,6 +1775,34 @@
     <span class="md-ellipsis">
       
         brain sync
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Migration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#brain-migrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brain migrate
       
     </span>
   </a>
@@ -2659,6 +2715,55 @@
 - May integrate with Syncthing, Dropbox, etc.
 - Brain directories are plain files, easily syncable manually</p>
 <hr />
+<h2 id="migration">Migration</h2>
+<h3 id="brain-migrate"><code>brain migrate</code></h3>
+<p><strong>Description:</strong> Migrate brain files to portable markdown standards</p>
+<p><strong>Usage:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-63-1" name="__codelineno-63-1" href="#__codelineno-63-1"></a><span class="c1"># Dry-run (default) - show what would change</span>
+<a id="__codelineno-63-2" name="__codelineno-63-2" href="#__codelineno-63-2"></a>brain<span class="w"> </span>migrate
+<a id="__codelineno-63-3" name="__codelineno-63-3" href="#__codelineno-63-3"></a>
+<a id="__codelineno-63-4" name="__codelineno-63-4" href="#__codelineno-63-4"></a><span class="c1"># Apply changes</span>
+<a id="__codelineno-63-5" name="__codelineno-63-5" href="#__codelineno-63-5"></a>brain<span class="w"> </span>migrate<span class="w"> </span>--apply
+<a id="__codelineno-63-6" name="__codelineno-63-6" href="#__codelineno-63-6"></a>
+<a id="__codelineno-63-7" name="__codelineno-63-7" href="#__codelineno-63-7"></a><span class="c1"># Migrate only one project</span>
+<a id="__codelineno-63-8" name="__codelineno-63-8" href="#__codelineno-63-8"></a>brain<span class="w"> </span>migrate<span class="w"> </span>--project<span class="w"> </span>backend-api
+<a id="__codelineno-63-9" name="__codelineno-63-9" href="#__codelineno-63-9"></a>
+<a id="__codelineno-63-10" name="__codelineno-63-10" href="#__codelineno-63-10"></a><span class="c1"># Migrate a different PARA section</span>
+<a id="__codelineno-63-11" name="__codelineno-63-11" href="#__codelineno-63-11"></a>brain<span class="w"> </span>migrate<span class="w"> </span>--section<span class="w"> </span>02_areas
+</code></pre></div></p>
+<p><strong>Options:</strong>
+- <code>--apply</code> - Write changes (default is dry-run; no files are modified without this flag)
+- <code>--project &lt;name&gt;</code> - Migrate only the named project instead of all projects
+- <code>--section &lt;section&gt;</code> - PARA section to scan (default: <code>01_active</code>; valid values: <code>01_active</code>, <code>02_areas</code>, <code>03_resources</code>)</p>
+<p><strong>Operations performed:</strong>
+1. <strong>Notes frontmatter</strong> - Adds YAML frontmatter to note files that still use legacy <code># Title</code> + <code>Created: YYYY-MM-DD</code> body format
+2. <strong>Todos HTML comments</strong> - Moves inline <code>#id:</code>, <code>#captured:</code>, <code>#done:</code> system tags into <code>&lt;!-- id:... captured:... done:... --&gt;</code> HTML comments
+3. <strong>Notes index links</strong> - Appends missing relative markdown links to <code>notes.md</code> for files in <code>notes/</code> that are not yet indexed</p>
+<p><strong>Example output (dry-run):</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-64-1" name="__codelineno-64-1" href="#__codelineno-64-1"></a>[DRY RUN] No changes written. Use --apply to write changes.
+<a id="__codelineno-64-2" name="__codelineno-64-2" href="#__codelineno-64-2"></a>
+<a id="__codelineno-64-3" name="__codelineno-64-3" href="#__codelineno-64-3"></a>Project: backend-api
+<a id="__codelineno-64-4" name="__codelineno-64-4" href="#__codelineno-64-4"></a>  Notes: 2 change(s) (would add frontmatter x2)
+<a id="__codelineno-64-5" name="__codelineno-64-5" href="#__codelineno-64-5"></a>  Todos: 1 change(s) (would move 3 items to HTML comments)
+<a id="__codelineno-64-6" name="__codelineno-64-6" href="#__codelineno-64-6"></a>  Links: 1 change(s) (would add 2 links)
+<a id="__codelineno-64-7" name="__codelineno-64-7" href="#__codelineno-64-7"></a>
+<a id="__codelineno-64-8" name="__codelineno-64-8" href="#__codelineno-64-8"></a>Total: 2 notes, 1 todos, 1 links changed
+</code></pre></div></p>
+<p><strong>Example output (apply):</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-65-1" name="__codelineno-65-1" href="#__codelineno-65-1"></a>[APPLY] Writing changes...
+<a id="__codelineno-65-2" name="__codelineno-65-2" href="#__codelineno-65-2"></a>
+<a id="__codelineno-65-3" name="__codelineno-65-3" href="#__codelineno-65-3"></a>Project: backend-api
+<a id="__codelineno-65-4" name="__codelineno-65-4" href="#__codelineno-65-4"></a>  Notes: 2 change(s) (added frontmatter x2)
+<a id="__codelineno-65-5" name="__codelineno-65-5" href="#__codelineno-65-5"></a>  Todos: 1 change(s) (moved 3 items to HTML comments)
+<a id="__codelineno-65-6" name="__codelineno-65-6" href="#__codelineno-65-6"></a>  Links: 1 change(s) (added 2 links)
+<a id="__codelineno-65-7" name="__codelineno-65-7" href="#__codelineno-65-7"></a>
+<a id="__codelineno-65-8" name="__codelineno-65-8" href="#__codelineno-65-8"></a>Total: 2 notes, 1 todos, 1 links changed
+</code></pre></div></p>
+<p><strong>Notes:</strong>
+- Safe to run multiple times - idempotent (already-migrated files are skipped)
+- Dry-run is the default to prevent accidental changes
+- Uses atomic writes to prevent file corruption</p>
+<hr />
 <h2 id="global-options">Global Options</h2>
 <p>Available on all commands:</p>
 <ul>
@@ -2666,9 +2771,9 @@
 <li><code>--version</code> - Show version information</li>
 </ul>
 <p><strong>Examples:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-63-1" name="__codelineno-63-1" href="#__codelineno-63-1"></a>brain<span class="w"> </span>--help
-<a id="__codelineno-63-2" name="__codelineno-63-2" href="#__codelineno-63-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--help
-<a id="__codelineno-63-3" name="__codelineno-63-3" href="#__codelineno-63-3"></a>brain<span class="w"> </span>--version
+<div class="highlight"><pre><span></span><code><a id="__codelineno-66-1" name="__codelineno-66-1" href="#__codelineno-66-1"></a>brain<span class="w"> </span>--help
+<a id="__codelineno-66-2" name="__codelineno-66-2" href="#__codelineno-66-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--help
+<a id="__codelineno-66-3" name="__codelineno-66-3" href="#__codelineno-66-3"></a>brain<span class="w"> </span>--version
 </code></pre></div></p>
 <hr />
 <h2 id="task-states-reference">Task States Reference</h2>
@@ -2750,71 +2855,71 @@
 </tbody>
 </table>
 <p><strong>Example Task:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-64-1" name="__codelineno-64-1" href="#__codelineno-64-1"></a><span class="k">-</span><span class="w"> </span>[&gt;] Fix authentication bug <span class="ni">#p:1</span> <span class="ni">#due:2026</span>-02-15 <span class="ni">#bug</span> <span class="ni">#security</span> <span class="ni">#captured:2026</span>-01-29
+<div class="highlight"><pre><span></span><code><a id="__codelineno-67-1" name="__codelineno-67-1" href="#__codelineno-67-1"></a><span class="k">-</span><span class="w"> </span>[&gt;] Fix authentication bug <span class="ni">#p:1</span> <span class="ni">#due:2026</span>-02-15 <span class="ni">#bug</span> <span class="ni">#security</span> <span class="ni">#captured:2026</span>-01-29
 </code></pre></div></p>
 <hr />
 <h2 id="json-api-usage">JSON API Usage</h2>
 <p>Many commands support <code>--json</code> for programmatic access:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-65-1" name="__codelineno-65-1" href="#__codelineno-65-1"></a><span class="c1"># Get dump items with IDs</span>
-<a id="__codelineno-65-2" name="__codelineno-65-2" href="#__codelineno-65-2"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[0].id&#39;</span>
-<a id="__codelineno-65-3" name="__codelineno-65-3" href="#__codelineno-65-3"></a>
-<a id="__codelineno-65-4" name="__codelineno-65-4" href="#__codelineno-65-4"></a><span class="c1"># List projects</span>
-<a id="__codelineno-65-5" name="__codelineno-65-5" href="#__codelineno-65-5"></a>brain<span class="w"> </span>project<span class="w"> </span>list<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[] | select(.focused==true) | .name&#39;</span>
-<a id="__codelineno-65-6" name="__codelineno-65-6" href="#__codelineno-65-6"></a>
-<a id="__codelineno-65-7" name="__codelineno-65-7" href="#__codelineno-65-7"></a><span class="c1"># Filter tasks</span>
-<a id="__codelineno-65-8" name="__codelineno-65-8" href="#__codelineno-65-8"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--priority<span class="w"> </span><span class="m">1</span><span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[].content&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-68-1" name="__codelineno-68-1" href="#__codelineno-68-1"></a><span class="c1"># Get dump items with IDs</span>
+<a id="__codelineno-68-2" name="__codelineno-68-2" href="#__codelineno-68-2"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[0].id&#39;</span>
+<a id="__codelineno-68-3" name="__codelineno-68-3" href="#__codelineno-68-3"></a>
+<a id="__codelineno-68-4" name="__codelineno-68-4" href="#__codelineno-68-4"></a><span class="c1"># List projects</span>
+<a id="__codelineno-68-5" name="__codelineno-68-5" href="#__codelineno-68-5"></a>brain<span class="w"> </span>project<span class="w"> </span>list<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[] | select(.focused==true) | .name&#39;</span>
+<a id="__codelineno-68-6" name="__codelineno-68-6" href="#__codelineno-68-6"></a>
+<a id="__codelineno-68-7" name="__codelineno-68-7" href="#__codelineno-68-7"></a><span class="c1"># Filter tasks</span>
+<a id="__codelineno-68-8" name="__codelineno-68-8" href="#__codelineno-68-8"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--priority<span class="w"> </span><span class="m">1</span><span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[].content&#39;</span>
 </code></pre></div>
 <p><strong>Non-interactive Commands:</strong></p>
 <p>These commands support scripting without user interaction:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-66-1" name="__codelineno-66-1" href="#__codelineno-66-1"></a><span class="c1"># Refile by ID</span>
-<a id="__codelineno-66-2" name="__codelineno-66-2" href="#__codelineno-66-2"></a>brain<span class="w"> </span>refile<span class="w"> </span>abc123<span class="w"> </span>backend-api
-<a id="__codelineno-66-3" name="__codelineno-66-3" href="#__codelineno-66-3"></a>
-<a id="__codelineno-66-4" name="__codelineno-66-4" href="#__codelineno-66-4"></a><span class="c1"># Set task metadata</span>
-<a id="__codelineno-66-5" name="__codelineno-66-5" href="#__codelineno-66-5"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-66-6" name="__codelineno-66-6" href="#__codelineno-66-6"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span><span class="m">2026</span>-02-15
-<a id="__codelineno-66-7" name="__codelineno-66-7" href="#__codelineno-66-7"></a>brain<span class="w"> </span>todo<span class="w"> </span>tag<span class="w"> </span>abc123<span class="w"> </span>bug<span class="w"> </span>security
-<a id="__codelineno-66-8" name="__codelineno-66-8" href="#__codelineno-66-8"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span><span class="k">in</span>-progress
+<div class="highlight"><pre><span></span><code><a id="__codelineno-69-1" name="__codelineno-69-1" href="#__codelineno-69-1"></a><span class="c1"># Refile by ID</span>
+<a id="__codelineno-69-2" name="__codelineno-69-2" href="#__codelineno-69-2"></a>brain<span class="w"> </span>refile<span class="w"> </span>abc123<span class="w"> </span>backend-api
+<a id="__codelineno-69-3" name="__codelineno-69-3" href="#__codelineno-69-3"></a>
+<a id="__codelineno-69-4" name="__codelineno-69-4" href="#__codelineno-69-4"></a><span class="c1"># Set task metadata</span>
+<a id="__codelineno-69-5" name="__codelineno-69-5" href="#__codelineno-69-5"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-69-6" name="__codelineno-69-6" href="#__codelineno-69-6"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span><span class="m">2026</span>-02-15
+<a id="__codelineno-69-7" name="__codelineno-69-7" href="#__codelineno-69-7"></a>brain<span class="w"> </span>todo<span class="w"> </span>tag<span class="w"> </span>abc123<span class="w"> </span>bug<span class="w"> </span>security
+<a id="__codelineno-69-8" name="__codelineno-69-8" href="#__codelineno-69-8"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span><span class="k">in</span>-progress
 </code></pre></div>
 <p><strong>Example AI Agent Workflow:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-67-1" name="__codelineno-67-1" href="#__codelineno-67-1"></a><span class="ch">#!/bin/bash</span>
-<a id="__codelineno-67-2" name="__codelineno-67-2" href="#__codelineno-67-2"></a><span class="c1"># Get first dump item</span>
-<a id="__codelineno-67-3" name="__codelineno-67-3" href="#__codelineno-67-3"></a><span class="nv">ID</span><span class="o">=</span><span class="k">$(</span>brain<span class="w"> </span>dump<span class="w"> </span>ls<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.[0].id&#39;</span><span class="k">)</span>
-<a id="__codelineno-67-4" name="__codelineno-67-4" href="#__codelineno-67-4"></a>
-<a id="__codelineno-67-5" name="__codelineno-67-5" href="#__codelineno-67-5"></a><span class="c1"># Refile to focused project</span>
-<a id="__codelineno-67-6" name="__codelineno-67-6" href="#__codelineno-67-6"></a><span class="nv">PROJECT</span><span class="o">=</span><span class="k">$(</span>brain<span class="w"> </span>project<span class="w"> </span>current<span class="k">)</span>
-<a id="__codelineno-67-7" name="__codelineno-67-7" href="#__codelineno-67-7"></a>brain<span class="w"> </span>refile<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ID</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT</span><span class="s2">&quot;</span>
-<a id="__codelineno-67-8" name="__codelineno-67-8" href="#__codelineno-67-8"></a>
-<a id="__codelineno-67-9" name="__codelineno-67-9" href="#__codelineno-67-9"></a><span class="c1"># Set high priority</span>
-<a id="__codelineno-67-10" name="__codelineno-67-10" href="#__codelineno-67-10"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ID</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">1</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-70-1" name="__codelineno-70-1" href="#__codelineno-70-1"></a><span class="ch">#!/bin/bash</span>
+<a id="__codelineno-70-2" name="__codelineno-70-2" href="#__codelineno-70-2"></a><span class="c1"># Get first dump item</span>
+<a id="__codelineno-70-3" name="__codelineno-70-3" href="#__codelineno-70-3"></a><span class="nv">ID</span><span class="o">=</span><span class="k">$(</span>brain<span class="w"> </span>dump<span class="w"> </span>ls<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.[0].id&#39;</span><span class="k">)</span>
+<a id="__codelineno-70-4" name="__codelineno-70-4" href="#__codelineno-70-4"></a>
+<a id="__codelineno-70-5" name="__codelineno-70-5" href="#__codelineno-70-5"></a><span class="c1"># Refile to focused project</span>
+<a id="__codelineno-70-6" name="__codelineno-70-6" href="#__codelineno-70-6"></a><span class="nv">PROJECT</span><span class="o">=</span><span class="k">$(</span>brain<span class="w"> </span>project<span class="w"> </span>current<span class="k">)</span>
+<a id="__codelineno-70-7" name="__codelineno-70-7" href="#__codelineno-70-7"></a>brain<span class="w"> </span>refile<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ID</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT</span><span class="s2">&quot;</span>
+<a id="__codelineno-70-8" name="__codelineno-70-8" href="#__codelineno-70-8"></a>
+<a id="__codelineno-70-9" name="__codelineno-70-9" href="#__codelineno-70-9"></a><span class="c1"># Set high priority</span>
+<a id="__codelineno-70-10" name="__codelineno-70-10" href="#__codelineno-70-10"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ID</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">1</span>
 </code></pre></div></p>
 <hr />
 <h2 id="environment-variables">Environment Variables</h2>
 <p>Customize Local Brain behavior:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-68-1" name="__codelineno-68-1" href="#__codelineno-68-1"></a><span class="c1"># Root directory for all brains (default: ~/brains)</span>
-<a id="__codelineno-68-2" name="__codelineno-68-2" href="#__codelineno-68-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_ROOT</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Dropbox/Brains&quot;</span>
-<a id="__codelineno-68-3" name="__codelineno-68-3" href="#__codelineno-68-3"></a>
-<a id="__codelineno-68-4" name="__codelineno-68-4" href="#__codelineno-68-4"></a><span class="c1"># Active brain symlink location (default: ~/brain)</span>
-<a id="__codelineno-68-5" name="__codelineno-68-5" href="#__codelineno-68-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_SYMLINK</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/ActiveBrain&quot;</span>
-<a id="__codelineno-68-6" name="__codelineno-68-6" href="#__codelineno-68-6"></a>
-<a id="__codelineno-68-7" name="__codelineno-68-7" href="#__codelineno-68-7"></a><span class="c1"># Config directory (default: ~/.config/brain)</span>
-<a id="__codelineno-68-8" name="__codelineno-68-8" href="#__codelineno-68-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_CONFIG_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.config/brain&quot;</span>
-<a id="__codelineno-68-9" name="__codelineno-68-9" href="#__codelineno-68-9"></a>
-<a id="__codelineno-68-10" name="__codelineno-68-10" href="#__codelineno-68-10"></a><span class="c1"># Editor for notes (default: vi)</span>
-<a id="__codelineno-68-11" name="__codelineno-68-11" href="#__codelineno-68-11"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EDITOR</span><span class="o">=</span><span class="s2">&quot;nvim&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-71-1" name="__codelineno-71-1" href="#__codelineno-71-1"></a><span class="c1"># Root directory for all brains (default: ~/brains)</span>
+<a id="__codelineno-71-2" name="__codelineno-71-2" href="#__codelineno-71-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_ROOT</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Dropbox/Brains&quot;</span>
+<a id="__codelineno-71-3" name="__codelineno-71-3" href="#__codelineno-71-3"></a>
+<a id="__codelineno-71-4" name="__codelineno-71-4" href="#__codelineno-71-4"></a><span class="c1"># Active brain symlink location (default: ~/brain)</span>
+<a id="__codelineno-71-5" name="__codelineno-71-5" href="#__codelineno-71-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_SYMLINK</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/ActiveBrain&quot;</span>
+<a id="__codelineno-71-6" name="__codelineno-71-6" href="#__codelineno-71-6"></a>
+<a id="__codelineno-71-7" name="__codelineno-71-7" href="#__codelineno-71-7"></a><span class="c1"># Config directory (default: ~/.config/brain)</span>
+<a id="__codelineno-71-8" name="__codelineno-71-8" href="#__codelineno-71-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_CONFIG_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.config/brain&quot;</span>
+<a id="__codelineno-71-9" name="__codelineno-71-9" href="#__codelineno-71-9"></a>
+<a id="__codelineno-71-10" name="__codelineno-71-10" href="#__codelineno-71-10"></a><span class="c1"># Editor for notes (default: vi)</span>
+<a id="__codelineno-71-11" name="__codelineno-71-11" href="#__codelineno-71-11"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EDITOR</span><span class="o">=</span><span class="s2">&quot;nvim&quot;</span>
 </code></pre></div>
 <p>Add to <code>~/.bashrc</code> or <code>~/.zshrc</code> to make permanent.</p>
 <hr />
 <h2 id="tips-best-practices">Tips &amp; Best Practices</h2>
 <p><strong>Daily Workflow:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-69-1" name="__codelineno-69-1" href="#__codelineno-69-1"></a><span class="c1"># Morning: Quick captures throughout the day</span>
-<a id="__codelineno-69-2" name="__codelineno-69-2" href="#__codelineno-69-2"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Task 1&quot;</span>
-<a id="__codelineno-69-3" name="__codelineno-69-3" href="#__codelineno-69-3"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Task 2&quot;</span>
-<a id="__codelineno-69-4" name="__codelineno-69-4" href="#__codelineno-69-4"></a>
-<a id="__codelineno-69-5" name="__codelineno-69-5" href="#__codelineno-69-5"></a><span class="c1"># End of day: Process dump</span>
-<a id="__codelineno-69-6" name="__codelineno-69-6" href="#__codelineno-69-6"></a>brain<span class="w"> </span>refile
-<a id="__codelineno-69-7" name="__codelineno-69-7" href="#__codelineno-69-7"></a>
-<a id="__codelineno-69-8" name="__codelineno-69-8" href="#__codelineno-69-8"></a><span class="c1"># Weekly: Enrich tasks</span>
-<a id="__codelineno-69-9" name="__codelineno-69-9" href="#__codelineno-69-9"></a>brain<span class="w"> </span>plan
+<div class="highlight"><pre><span></span><code><a id="__codelineno-72-1" name="__codelineno-72-1" href="#__codelineno-72-1"></a><span class="c1"># Morning: Quick captures throughout the day</span>
+<a id="__codelineno-72-2" name="__codelineno-72-2" href="#__codelineno-72-2"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Task 1&quot;</span>
+<a id="__codelineno-72-3" name="__codelineno-72-3" href="#__codelineno-72-3"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Task 2&quot;</span>
+<a id="__codelineno-72-4" name="__codelineno-72-4" href="#__codelineno-72-4"></a>
+<a id="__codelineno-72-5" name="__codelineno-72-5" href="#__codelineno-72-5"></a><span class="c1"># End of day: Process dump</span>
+<a id="__codelineno-72-6" name="__codelineno-72-6" href="#__codelineno-72-6"></a>brain<span class="w"> </span>refile
+<a id="__codelineno-72-7" name="__codelineno-72-7" href="#__codelineno-72-7"></a>
+<a id="__codelineno-72-8" name="__codelineno-72-8" href="#__codelineno-72-8"></a><span class="c1"># Weekly: Enrich tasks</span>
+<a id="__codelineno-72-9" name="__codelineno-72-9" href="#__codelineno-72-9"></a>brain<span class="w"> </span>plan
 </code></pre></div></p>
 <p><strong>Keyboard-Driven Workflow:</strong>
 - Use shell aliases: <code>alias ba='brain add'</code>
