@@ -193,38 +193,92 @@ func ExtractCompletedDate(content string) (string, string) {
 	return cleanContent, doneDate
 }
 
-// ExtractPriority extracts the #p:[1-3] priority tag from content
+// ExtractPriority extracts the priority tag from content.
+// Tries new format p:[1-3] (no hash) first, then falls back to legacy #p:[1-3].
+// The no-hash format requires p: to appear at start of string or after whitespace (not after #).
 // Returns the content without priority tag and the priority value (1=high, 2=medium, 3=low)
 // Returns nil priority if no valid tag is found
 func ExtractPriority(content string) (string, *int) {
-	priorityPattern := regexp.MustCompile(`\s*#p:([1-3])(?:\s|$)`)
+	// Try new format p:[1-3] first (no hash prefix).
+	// Require p: to be at start of string or preceded by whitespace to avoid matching #p:.
+	priorityPattern := regexp.MustCompile(`(^|\s)p:([1-3])(\s|$)`)
 	matches := priorityPattern.FindStringSubmatch(content)
+	if matches != nil {
+		priorityStr := matches[2]
+		priority := int(priorityStr[0] - '0')
+		// Replace the full match but preserve any leading/trailing whitespace context.
+		cleanContent := priorityPattern.ReplaceAllStringFunc(content, func(m string) string {
+			// Preserve any surrounding whitespace that was part of the match.
+			leading := ""
+			trailing := ""
+			if len(m) > 0 && (m[0] == ' ' || m[0] == '\t' || m[0] == '\n') {
+				leading = string(m[0])
+			}
+			if len(m) > 0 && (m[len(m)-1] == ' ' || m[len(m)-1] == '\t' || m[len(m)-1] == '\n') {
+				trailing = string(m[len(m)-1])
+			}
+			return leading + trailing
+		})
+		cleanContent = strings.TrimSpace(cleanContent)
+		// Clean up multiple consecutive spaces that might have been introduced.
+		cleanContent = regexp.MustCompile(`  +`).ReplaceAllString(cleanContent, " ")
+		return cleanContent, &priority
+	}
 
+	// Fall back to legacy #p:[1-3] format
+	legacyPriorityPattern := regexp.MustCompile(`\s*#p:([1-3])(?:\s|$)`)
+	matches = legacyPriorityPattern.FindStringSubmatch(content)
 	if matches == nil {
 		return content, nil
 	}
 
 	priorityStr := matches[1]
 	priority := int(priorityStr[0] - '0')
-	cleanContent := priorityPattern.ReplaceAllString(content, " ")
+	cleanContent := legacyPriorityPattern.ReplaceAllString(content, " ")
 	cleanContent = strings.TrimSpace(cleanContent)
 
 	return cleanContent, &priority
 }
 
-// ExtractDueDate extracts the #due:YYYY-MM-DD tag from content
+// ExtractDueDate extracts the due date tag from content.
+// Tries new format due:YYYY-MM-DD (no hash) first, then falls back to legacy #due:YYYY-MM-DD.
+// The no-hash format requires due: to appear at start of string or after whitespace (not after #).
 // Returns the content without due date tag and the due date string (YYYY-MM-DD or whatever was in the tag)
 // Returns empty string if no valid tag is found
 func ExtractDueDate(content string) (string, string) {
-	dueDatePattern := regexp.MustCompile(`\s*#due:([^\s]+)(?:\s|$)`)
+	// Try new format due:... first (no hash prefix).
+	// Require due: to be at start of string or preceded by whitespace to avoid matching #due:.
+	dueDatePattern := regexp.MustCompile(`(^|\s)due:([^\s]+)(\s|$)`)
 	matches := dueDatePattern.FindStringSubmatch(content)
+	if matches != nil {
+		dueDate := matches[2]
+		// Replace the full match but preserve any surrounding whitespace context.
+		cleanContent := dueDatePattern.ReplaceAllStringFunc(content, func(m string) string {
+			leading := ""
+			trailing := ""
+			if len(m) > 0 && (m[0] == ' ' || m[0] == '\t' || m[0] == '\n') {
+				leading = string(m[0])
+			}
+			if len(m) > 0 && (m[len(m)-1] == ' ' || m[len(m)-1] == '\t' || m[len(m)-1] == '\n') {
+				trailing = string(m[len(m)-1])
+			}
+			return leading + trailing
+		})
+		cleanContent = strings.TrimSpace(cleanContent)
+		// Clean up multiple consecutive spaces that might have been introduced.
+		cleanContent = regexp.MustCompile(`  +`).ReplaceAllString(cleanContent, " ")
+		return cleanContent, dueDate
+	}
 
+	// Fall back to legacy #due:... format
+	legacyDueDatePattern := regexp.MustCompile(`\s*#due:([^\s]+)(?:\s|$)`)
+	matches = legacyDueDatePattern.FindStringSubmatch(content)
 	if matches == nil {
 		return content, ""
 	}
 
 	dueDate := matches[1]
-	cleanContent := dueDatePattern.ReplaceAllString(content, " ")
+	cleanContent := legacyDueDatePattern.ReplaceAllString(content, " ")
 	cleanContent = strings.TrimSpace(cleanContent)
 
 	return cleanContent, dueDate

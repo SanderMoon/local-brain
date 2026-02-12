@@ -585,7 +585,7 @@ func TestSetTodoPriority(t *testing.T) {
 
 	// Verify the file was updated
 	updatedContent, _ := os.ReadFile(todoFile)
-	if !strings.Contains(string(updatedContent), "Task without priority #p:1") {
+	if !strings.Contains(string(updatedContent), "Task without priority p:1") {
 		t.Errorf("Priority not set correctly. File content:\n%s", updatedContent)
 	}
 
@@ -599,11 +599,11 @@ func TestSetTodoPriority(t *testing.T) {
 
 	// Verify the priority was changed
 	updatedContent, _ = os.ReadFile(todoFile)
-	if !strings.Contains(string(updatedContent), "Task with priority #p:3") {
+	if !strings.Contains(string(updatedContent), "Task with priority p:3") {
 		t.Errorf("Priority not changed correctly. File content:\n%s", updatedContent)
 	}
 	// Old priority should be removed
-	if strings.Contains(string(updatedContent), "#p:2") {
+	if strings.Contains(string(updatedContent), "p:2") {
 		t.Errorf("Old priority tag not removed. File content:\n%s", updatedContent)
 	}
 
@@ -615,7 +615,7 @@ func TestSetTodoPriority(t *testing.T) {
 
 	// Verify the priority was cleared
 	updatedContent, _ = os.ReadFile(todoFile)
-	if strings.Contains(string(updatedContent), "#p:3") {
+	if strings.Contains(string(updatedContent), "p:3") {
 		t.Errorf("Priority not cleared. File content:\n%s", updatedContent)
 	}
 	if !strings.Contains(string(updatedContent), "- [ ] Task with priority") {
@@ -632,7 +632,7 @@ func TestSetTodoPriority(t *testing.T) {
 
 	// Verify the priority was set on completed task
 	updatedContent, _ = os.ReadFile(todoFile)
-	if !strings.Contains(string(updatedContent), "- [x] Completed task #p:2") {
+	if !strings.Contains(string(updatedContent), "- [x] Completed task p:2") {
 		t.Errorf("Priority not set on completed task. File content:\n%s", updatedContent)
 	}
 }
@@ -969,7 +969,7 @@ func TestSetTodoDueDate(t *testing.T) {
 
 	// Verify the file was updated
 	updatedContent, _ := os.ReadFile(todoFile)
-	if !strings.Contains(string(updatedContent), "Task without due date #due:2026-03-01") {
+	if !strings.Contains(string(updatedContent), "Task without due date due:2026-03-01") {
 		t.Errorf("Due date not set correctly. File content:\n%s", updatedContent)
 	}
 
@@ -982,11 +982,11 @@ func TestSetTodoDueDate(t *testing.T) {
 
 	// Verify the due date was changed
 	updatedContent, _ = os.ReadFile(todoFile)
-	if !strings.Contains(string(updatedContent), "Task with due date #due:2026-04-15") {
+	if !strings.Contains(string(updatedContent), "Task with due date due:2026-04-15") {
 		t.Errorf("Due date not changed correctly. File content:\n%s", updatedContent)
 	}
 	// Old due date should be removed
-	if strings.Contains(string(updatedContent), "#due:2026-02-15") {
+	if strings.Contains(string(updatedContent), "due:2026-02-15") {
 		t.Errorf("Old due date tag not removed. File content:\n%s", updatedContent)
 	}
 
@@ -998,7 +998,7 @@ func TestSetTodoDueDate(t *testing.T) {
 
 	// Verify the due date was cleared
 	updatedContent, _ = os.ReadFile(todoFile)
-	if strings.Contains(string(updatedContent), "#due:2026-04-15") {
+	if strings.Contains(string(updatedContent), "due:2026-04-15") {
 		t.Errorf("Due date not cleared. File content:\n%s", updatedContent)
 	}
 	if !strings.Contains(string(updatedContent), "- [ ] Task with due date") {
@@ -1014,7 +1014,7 @@ func TestSetTodoDueDate(t *testing.T) {
 
 	// Verify the due date was set on completed task
 	updatedContent, _ = os.ReadFile(todoFile)
-	if !strings.Contains(string(updatedContent), "- [x] Completed task #due:2026-05-01") {
+	if !strings.Contains(string(updatedContent), "- [x] Completed task due:2026-05-01") {
 		t.Errorf("Due date not set on completed task. File content:\n%s", updatedContent)
 	}
 }
@@ -1079,7 +1079,7 @@ func TestSetTodoDueDate_PreservesOtherMetadata(t *testing.T) {
 	if !strings.Contains(string(updatedContent), "#captured:2024-01-21") {
 		t.Errorf("Captured tag not preserved. File content:\n%s", updatedContent)
 	}
-	if !strings.Contains(string(updatedContent), "#due:2026-02-15") {
+	if !strings.Contains(string(updatedContent), "due:2026-02-15") {
 		t.Errorf("Due date not set correctly. File content:\n%s", updatedContent)
 	}
 }

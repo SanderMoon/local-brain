@@ -20,7 +20,8 @@ Use --apply to actually write the changes.
 Operations:
   1. Add YAML frontmatter to notes that only have 'Created:' body text
   2. Move system task metadata (#id:, #captured:, #done:) into HTML comments
-  3. Append missing relative links to notes.md index files
+  3. Convert legacy #p: and #due: tags to p: and due: (no hash prefix)
+  4. Append missing relative links to notes.md index files
 
 Safe to run multiple times - idempotent.`,
 	RunE: runMigrate,

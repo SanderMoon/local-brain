@@ -374,6 +374,125 @@ tags: []
 }
 
 // ---------------------------------------------------------------------------
+// MigratePriorityDueTags tests
+// ---------------------------------------------------------------------------
+
+func TestMigratePriorityDueTags_ConvertsHashTags(t *testing.T) {
+	tmpDir := t.TempDir()
+	todoPath := filepath.Join(tmpDir, "todo.md")
+
+	content := `# Tasks
+
+- [ ] Buy groceries #p:2 #due:2026-02-20 <!-- id:abc123 captured:2026-01-30 -->
+- [ ] Write tests #p:1 <!-- id:def456 captured:2026-01-31 -->
+- [ ] No priority or due date <!-- id:ghi789 captured:2026-02-01 -->
+`
+	if err := os.WriteFile(todoPath, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	result, err := MigratePriorityDueTags(todoPath, false)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if !result.Changed {
+		t.Error("Expected Changed=true")
+	}
+
+	// Verify file content
+	migrated, err := os.ReadFile(todoPath)
+	if err != nil {
+		t.Fatalf("Failed to read migrated file: %v", err)
+	}
+	migratedStr := string(migrated)
+
+	if strings.Contains(migratedStr, "#p:") {
+		t.Errorf("Legacy #p: tags should have been converted, got:\n%s", migratedStr)
+	}
+	if strings.Contains(migratedStr, "#due:") {
+		t.Errorf("Legacy #due: tags should have been converted, got:\n%s", migratedStr)
+	}
+	if !strings.Contains(migratedStr, "p:2") {
+		t.Errorf("Expected p:2 (no hash) in migrated content, got:\n%s", migratedStr)
+	}
+	if !strings.Contains(migratedStr, "due:2026-02-20") {
+		t.Errorf("Expected due:2026-02-20 (no hash) in migrated content, got:\n%s", migratedStr)
+	}
+	if !strings.Contains(migratedStr, "p:1") {
+		t.Errorf("Expected p:1 (no hash) in migrated content, got:\n%s", migratedStr)
+	}
+	// Line with no priority/due should be unchanged
+	if !strings.Contains(migratedStr, "- [ ] No priority or due date") {
+		t.Error("Line without priority/due should be preserved unchanged")
+	}
+}
+
+func TestMigratePriorityDueTags_Idempotent(t *testing.T) {
+	tmpDir := t.TempDir()
+	todoPath := filepath.Join(tmpDir, "todo.md")
+
+	// Already in no-hash format
+	content := `# Tasks
+
+- [ ] Buy groceries p:2 due:2026-02-20 <!-- id:abc123 captured:2026-01-30 -->
+- [ ] Write tests p:1 <!-- id:def456 captured:2026-01-31 -->
+`
+	if err := os.WriteFile(todoPath, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	result, err := MigratePriorityDueTags(todoPath, false)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if result.Changed {
+		t.Error("Expected Changed=false for already no-hash format todos")
+	}
+	if result.Change != "no legacy priority/due tags found" {
+		t.Errorf("Expected Change='no legacy priority/due tags found', got: %q", result.Change)
+	}
+
+	// File should be unchanged
+	read, _ := os.ReadFile(todoPath)
+	if string(read) != content {
+		t.Error("File should not have been modified (idempotent)")
+	}
+}
+
+func TestMigratePriorityDueTags_DryRun(t *testing.T) {
+	tmpDir := t.TempDir()
+	todoPath := filepath.Join(tmpDir, "todo.md")
+
+	original := `# Tasks
+
+- [ ] Task with hash tags #p:2 #due:2026-02-20 <!-- id:aabbcc captured:2026-02-10 -->
+`
+	if err := os.WriteFile(todoPath, []byte(original), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	result, err := MigratePriorityDueTags(todoPath, true /* dryRun */)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if !result.Changed {
+		t.Error("Expected Changed=true in dry run")
+	}
+	if !strings.Contains(result.Change, "would convert") {
+		t.Errorf("Expected Change to mention 'would convert', got: %q", result.Change)
+	}
+
+	// File must remain unchanged
+	read, _ := os.ReadFile(todoPath)
+	if string(read) != original {
+		t.Error("Dry run must not modify the file")
+	}
+}
+
+// ---------------------------------------------------------------------------
 // MigrateAllProjects tests
 // ---------------------------------------------------------------------------
 

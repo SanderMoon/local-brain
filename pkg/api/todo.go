@@ -324,14 +324,28 @@ func SetTodoPriority(todo *TodoItem, priority *int) error {
 		return fmt.Errorf("line is not a valid todo item")
 	}
 
-	// Remove any existing #p: tag from content
-	priorityPattern := regexp.MustCompile(`\s*#p:[1-3](?:\s|$)`)
-	taskContent = priorityPattern.ReplaceAllString(taskContent, "")
+	// Remove any existing priority tag from content (both new p: and legacy #p: formats)
+	// Legacy format: #p:[1-3]
+	legacyPriorityRemovePattern := regexp.MustCompile(`\s*#p:[1-3](?:\s|$)`)
+	taskContent = legacyPriorityRemovePattern.ReplaceAllString(taskContent, "")
+	// New format: p:[1-3] preceded by start-of-string or whitespace (not #)
+	newPriorityRemovePattern := regexp.MustCompile(`(^|\s)p:[1-3](\s|$)`)
+	taskContent = newPriorityRemovePattern.ReplaceAllStringFunc(taskContent, func(m string) string {
+		leading := ""
+		trailing := ""
+		if len(m) > 0 && (m[0] == ' ' || m[0] == '\t') {
+			leading = string(m[0])
+		}
+		if len(m) > 0 && (m[len(m)-1] == ' ' || m[len(m)-1] == '\t') {
+			trailing = string(m[len(m)-1])
+		}
+		return leading + trailing
+	})
 	taskContent = strings.TrimSpace(taskContent)
 
-	// Add new priority tag if provided
+	// Add new priority tag if provided (no hash prefix)
 	if priority != nil {
-		taskContent = fmt.Sprintf("%s #p:%d", taskContent, *priority)
+		taskContent = fmt.Sprintf("%s p:%d", taskContent, *priority)
 	}
 
 	// Reconstruct the line
@@ -510,14 +524,28 @@ func SetTodoDueDate(todo *TodoItem, dueDate string) error {
 		return fmt.Errorf("line is not a valid todo item")
 	}
 
-	// Remove any existing #due: tag from content
-	dueDatePattern := regexp.MustCompile(`\s*#due:[^\s]+(?:\s|$)`)
-	taskContent = dueDatePattern.ReplaceAllString(taskContent, "")
+	// Remove any existing due date tag from content (both new due: and legacy #due: formats)
+	// Legacy format: #due:...
+	legacyDueDateRemovePattern := regexp.MustCompile(`\s*#due:[^\s]+(?:\s|$)`)
+	taskContent = legacyDueDateRemovePattern.ReplaceAllString(taskContent, "")
+	// New format: due:... preceded by start-of-string or whitespace (not #)
+	newDueDateRemovePattern := regexp.MustCompile(`(^|\s)due:[^\s]+(\s|$)`)
+	taskContent = newDueDateRemovePattern.ReplaceAllStringFunc(taskContent, func(m string) string {
+		leading := ""
+		trailing := ""
+		if len(m) > 0 && (m[0] == ' ' || m[0] == '\t') {
+			leading = string(m[0])
+		}
+		if len(m) > 0 && (m[len(m)-1] == ' ' || m[len(m)-1] == '\t') {
+			trailing = string(m[len(m)-1])
+		}
+		return leading + trailing
+	})
 	taskContent = strings.TrimSpace(taskContent)
 
-	// Add new due date tag if provided
+	// Add new due date tag if provided (no hash prefix)
 	if dueDate != "" {
-		taskContent = fmt.Sprintf("%s #due:%s", taskContent, dueDate)
+		taskContent = fmt.Sprintf("%s due:%s", taskContent, dueDate)
 	}
 
 	// Reconstruct the line
@@ -759,14 +787,14 @@ func AppendTodoWithMetadata(projectDir string, todo TodoCreateRequest) error {
 	// Build content with metadata tags
 	contentWithMetadata := todo.Content
 
-	// Add priority
+	// Add priority (no hash prefix)
 	if todo.Priority != nil {
-		contentWithMetadata = fmt.Sprintf("%s #p:%d", contentWithMetadata, *todo.Priority)
+		contentWithMetadata = fmt.Sprintf("%s p:%d", contentWithMetadata, *todo.Priority)
 	}
 
-	// Add due date
+	// Add due date (no hash prefix)
 	if todo.DueDate != "" {
-		contentWithMetadata = fmt.Sprintf("%s #due:%s", contentWithMetadata, todo.DueDate)
+		contentWithMetadata = fmt.Sprintf("%s due:%s", contentWithMetadata, todo.DueDate)
 	}
 
 	// Add tags

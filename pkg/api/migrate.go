@@ -249,7 +249,64 @@ func MigrateNotesIndex(projectDir string, dryRun bool) (MigrateLinkResult, error
 	return MigrateLinkResult{File: notesIndexPath, Changed: true, Change: fmt.Sprintf("added %d links", len(unlinked))}, nil
 }
 
-// MigrateProject runs all three migration operations on a single project directory.
+// MigratePriorityDueTags converts legacy #p: and #due: inline tags to p: and due: (no hash prefix).
+// If dryRun is true, no file is written.
+func MigratePriorityDueTags(filePath string, dryRun bool) (MigrateTodoResult, error) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return MigrateTodoResult{File: filePath, Changed: false, Change: fmt.Sprintf("error: %v", err)}, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	count := 0
+	newLines := make([]string, len(lines))
+	copy(newLines, lines)
+
+	legacyPriority := regexp.MustCompile(`#p:([1-3])`)
+	legacyDue := regexp.MustCompile(`#due:`)
+
+	for i, line := range lines {
+		// Only process todo lines
+		if !todoLinePattern.MatchString(line) {
+			continue
+		}
+
+		hasLegacyPriority := legacyPriority.MatchString(line)
+		hasLegacyDue := legacyDue.MatchString(line)
+
+		if !hasLegacyPriority && !hasLegacyDue {
+			continue
+		}
+
+		updated := line
+		if hasLegacyPriority {
+			updated = legacyPriority.ReplaceAllString(updated, "p:$1")
+		}
+		if hasLegacyDue {
+			updated = strings.ReplaceAll(updated, "#due:", "due:")
+		}
+
+		newLines[i] = updated
+		count++
+	}
+
+	if count == 0 {
+		return MigrateTodoResult{File: filePath, Changed: false, Change: "no legacy priority/due tags found"}, nil
+	}
+
+	if dryRun {
+		return MigrateTodoResult{File: filePath, Changed: true, Change: fmt.Sprintf("would convert %d line(s) to no-hash format", count)}, nil
+	}
+
+	newContent := strings.Join(newLines, "\n")
+	if err := fileutil.AtomicWriteFile(filePath, []byte(newContent)); err != nil {
+		return MigrateTodoResult{File: filePath, Changed: false, Change: fmt.Sprintf("error: %v", err)}, err
+	}
+
+	return MigrateTodoResult{File: filePath, Changed: true, Change: fmt.Sprintf("converted %d line(s) to no-hash format", count)}, nil
+}
+
+// MigrateProject runs all migration operations on a single project directory.
 func MigrateProject(projectDir string, dryRun bool) (ProjectMigrateResult, error) {
 	projectName := filepath.Base(projectDir)
 	result := ProjectMigrateResult{ProjectName: projectName}
@@ -279,6 +336,13 @@ func MigrateProject(projectDir string, dryRun bool) (ProjectMigrateResult, error
 			todoResult.Change = fmt.Sprintf("error: %v", err)
 		}
 		result.Todos = append(result.Todos, todoResult)
+
+		// Convert legacy #p: and #due: tags to no-hash format
+		priorityDueResult, err := MigratePriorityDueTags(todoFile, dryRun)
+		if err != nil {
+			priorityDueResult.Change = fmt.Sprintf("error: %v", err)
+		}
+		result.Todos = append(result.Todos, priorityDueResult)
 	}
 
 	// Migrate notes.md index

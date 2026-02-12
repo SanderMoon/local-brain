@@ -349,6 +349,192 @@ func TestExtractTags(t *testing.T) {
 	}
 }
 
+func TestExtractPriority_NoHash(t *testing.T) {
+	tests := []struct {
+		name             string
+		input            string
+		expectedContent  string
+		expectedPriority *int
+	}{
+		{
+			name:             "high priority no hash",
+			input:            "Fix critical bug p:1",
+			expectedContent:  "Fix critical bug",
+			expectedPriority: intPtr(1),
+		},
+		{
+			name:             "medium priority no hash",
+			input:            "Review PR p:2",
+			expectedContent:  "Review PR",
+			expectedPriority: intPtr(2),
+		},
+		{
+			name:             "low priority no hash",
+			input:            "Update docs p:3",
+			expectedContent:  "Update docs",
+			expectedPriority: intPtr(3),
+		},
+		{
+			name:             "no-hash priority with due date",
+			input:            "Fix bug p:1 due:2026-02-20",
+			expectedContent:  "Fix bug due:2026-02-20",
+			expectedPriority: intPtr(1),
+		},
+		{
+			name:             "no-hash priority at start",
+			input:            "p:2 Important task",
+			expectedContent:  "Important task",
+			expectedPriority: intPtr(2),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			content, priority := ExtractPriority(tt.input)
+
+			if content != tt.expectedContent {
+				t.Errorf("Expected content '%s', got '%s'", tt.expectedContent, content)
+			}
+
+			if !equalIntPtr(priority, tt.expectedPriority) {
+				t.Errorf("Expected priority %v, got %v", formatIntPtr(tt.expectedPriority), formatIntPtr(priority))
+			}
+		})
+	}
+}
+
+func TestExtractPriority_LegacyHash(t *testing.T) {
+	tests := []struct {
+		name             string
+		input            string
+		expectedContent  string
+		expectedPriority *int
+	}{
+		{
+			name:             "legacy hash high priority",
+			input:            "Fix critical bug #p:1",
+			expectedContent:  "Fix critical bug",
+			expectedPriority: intPtr(1),
+		},
+		{
+			name:             "legacy hash medium priority",
+			input:            "Review PR #p:2",
+			expectedContent:  "Review PR",
+			expectedPriority: intPtr(2),
+		},
+		{
+			name:             "legacy hash low priority",
+			input:            "Update docs #p:3",
+			expectedContent:  "Update docs",
+			expectedPriority: intPtr(3),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			content, priority := ExtractPriority(tt.input)
+
+			if content != tt.expectedContent {
+				t.Errorf("Expected content '%s', got '%s'", tt.expectedContent, content)
+			}
+
+			if !equalIntPtr(priority, tt.expectedPriority) {
+				t.Errorf("Expected priority %v, got %v", formatIntPtr(tt.expectedPriority), formatIntPtr(priority))
+			}
+		})
+	}
+}
+
+func TestExtractDueDate_NoHash(t *testing.T) {
+	tests := []struct {
+		name            string
+		input           string
+		expectedContent string
+		expectedDueDate string
+	}{
+		{
+			name:            "no-hash due date at end",
+			input:           "Fix bug due:2026-02-15",
+			expectedContent: "Fix bug",
+			expectedDueDate: "2026-02-15",
+		},
+		{
+			name:            "no-hash due date at start",
+			input:           "due:2026-01-20 Task description",
+			expectedContent: "Task description",
+			expectedDueDate: "2026-01-20",
+		},
+		{
+			name:            "no-hash due date with priority",
+			input:           "Important task p:1 due:2026-03-01",
+			expectedContent: "Important task p:1",
+			expectedDueDate: "2026-03-01",
+		},
+		{
+			name:            "no-hash due date with extra spaces",
+			input:           "Task  due:2026-04-15  extra spaces",
+			expectedContent: "Task extra spaces",
+			expectedDueDate: "2026-04-15",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			content, dueDate := ExtractDueDate(tt.input)
+
+			if content != tt.expectedContent {
+				t.Errorf("Expected content '%s', got '%s'", tt.expectedContent, content)
+			}
+
+			if dueDate != tt.expectedDueDate {
+				t.Errorf("Expected due date '%s', got '%s'", tt.expectedDueDate, dueDate)
+			}
+		})
+	}
+}
+
+func TestExtractDueDate_LegacyHash(t *testing.T) {
+	tests := []struct {
+		name            string
+		input           string
+		expectedContent string
+		expectedDueDate string
+	}{
+		{
+			name:            "legacy hash due date at end",
+			input:           "Fix bug #due:2026-02-15",
+			expectedContent: "Fix bug",
+			expectedDueDate: "2026-02-15",
+		},
+		{
+			name:            "legacy hash due date at start",
+			input:           "#due:2026-01-20 Task description",
+			expectedContent: "Task description",
+			expectedDueDate: "2026-01-20",
+		},
+		{
+			name:            "legacy hash due date with priority",
+			input:           "Important task #p:1 #due:2026-03-01",
+			expectedContent: "Important task #p:1",
+			expectedDueDate: "2026-03-01",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			content, dueDate := ExtractDueDate(tt.input)
+
+			if content != tt.expectedContent {
+				t.Errorf("Expected content '%s', got '%s'", tt.expectedContent, content)
+			}
+
+			if dueDate != tt.expectedDueDate {
+				t.Errorf("Expected due date '%s', got '%s'", tt.expectedDueDate, dueDate)
+			}
+		})
+	}
+}
+
 func TestIsEmptyOrWhitespace(t *testing.T) {
 	tests := []struct {
 		input    string
