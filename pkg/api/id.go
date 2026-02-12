@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/sandermoonemans/local-brain/pkg/markdown"
 )
 
 var idPattern = regexp.MustCompile(`#id:([a-f0-9]{6})`)
@@ -30,10 +32,43 @@ func GenerateNewID() string {
 	return hex.EncodeToString(bytes)
 }
 
+// ExtractIDFromComment extracts the id field from an HTML comment <!-- id:abc123 ... -->
+// Returns empty string if no comment or no id field found.
+func ExtractIDFromComment(line string) string {
+	fields, _ := markdown.ExtractHTMLComment(line)
+	return fields["id"]
+}
+
+// BuildSystemComment builds an HTML comment string containing system-only metadata.
+// Fields with empty values are omitted. Returns empty string if all fields are empty.
+// Format: <!-- id:abc123 captured:2026-01-30 done:2026-02-15 -->
+func BuildSystemComment(id, capturedDate, doneDate string) string {
+	var parts []string
+	if id != "" {
+		parts = append(parts, "id:"+id)
+	}
+	if capturedDate != "" {
+		parts = append(parts, "captured:"+capturedDate)
+	}
+	if doneDate != "" {
+		parts = append(parts, "done:"+doneDate)
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return "<!-- " + strings.Join(parts, " ") + " -->"
+}
+
 // GetOrGenerateID gets existing ID from line or generates a new one
-// This ensures IDs are stable and don't change when content is modified
+// This ensures IDs are stable and don't change when content is modified.
+// Checks HTML comment format first, then falls back to inline #id: format.
 func GetOrGenerateID(line string) string {
-	// First, try to extract existing ID
+	// First, try to extract ID from HTML comment (new format)
+	if existingID := ExtractIDFromComment(line); existingID != "" {
+		return existingID
+	}
+
+	// Fall back to inline #id: format (legacy)
 	if existingID := ExtractID(line); existingID != "" {
 		return existingID
 	}

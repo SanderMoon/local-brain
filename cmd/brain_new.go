@@ -25,7 +25,8 @@ Structure created:
   ├── 01_active/
   ├── 02_areas/
   ├── 03_resources/
-  └── 99_archive/`,
+  ├── 99_archive/
+  └── _templates/`,
 	Example: `  brain new              # Creates ~/brains/default
   brain new work         # Creates ~/brains/work`,
 	Args: cobra.MaximumNArgs(1),
@@ -99,6 +100,7 @@ func runNew(cmd *cobra.Command, args []string) error {
 			filepath.Join(location, "02_areas"),
 			filepath.Join(location, "03_resources"),
 			filepath.Join(location, "99_archive"),
+			filepath.Join(location, "_templates"),
 		}
 
 		for _, dir := range dirs {
@@ -118,6 +120,60 @@ Quick capture landing zone. Process with ` + "`brain refile`" + `.
 			return fmt.Errorf("failed to create dump file: %w", err)
 		}
 
+		// Create template files
+		templatesDir := filepath.Join(location, "_templates")
+
+		newNoteContent := `---
+title: Note Title
+date: YYYY-MM-DD
+project: project-name
+tags: []
+---
+
+# Note Title
+
+Content here.
+`
+		if err := os.WriteFile(filepath.Join(templatesDir, "new-note.md"), []byte(newNoteContent), 0644); err != nil {
+			return fmt.Errorf("failed to create new-note template: %w", err)
+		}
+
+		newProjectContent := `# Project Name
+
+## Overview
+
+[Description]
+
+## Goals
+
+-
+
+## Notes
+`
+		if err := os.WriteFile(filepath.Join(templatesDir, "new-project.md"), []byte(newProjectContent), 0644); err != nil {
+			return fmt.Errorf("failed to create new-project template: %w", err)
+		}
+
+		dailyNoteContent := `---
+title: Daily Note - YYYY-MM-DD
+date: YYYY-MM-DD
+---
+
+# Daily Note - YYYY-MM-DD
+
+## Today's Focus
+
+-
+
+## Notes
+
+## Completed
+`
+		if err := os.WriteFile(filepath.Join(templatesDir, "daily-note.md"), []byte(dailyNoteContent), 0644); err != nil {
+			return fmt.Errorf("failed to create daily-note template: %w", err)
+		}
+
+		fmt.Println("OK: Created templates")
 		fmt.Println("OK: Created directory structure")
 	}
 

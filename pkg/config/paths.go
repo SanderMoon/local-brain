@@ -49,6 +49,35 @@ func GetProjectsPath(cfg *Config) (string, error) {
 	return filepath.Join(brainPath, "01_active"), nil
 }
 
+// ValidSections lists all valid PARA section names
+var ValidSections = []string{"01_active", "02_areas", "03_resources"}
+
+// ValidateSection returns an error if section is not a valid PARA section
+func ValidateSection(section string) error {
+	for _, s := range ValidSections {
+		if s == section {
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid section %q: must be one of %v", section, ValidSections)
+}
+
+// GetSectionPath returns the path to a specific PARA section directory.
+// If section is empty, defaults to "01_active".
+func GetSectionPath(cfg *Config, section string) (string, error) {
+	if section == "" {
+		section = "01_active"
+	}
+	if err := ValidateSection(section); err != nil {
+		return "", err
+	}
+	brainPath, err := cfg.GetCurrentBrainPath()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(brainPath, section), nil
+}
+
 // GetProjectPath returns the path to a specific project
 func GetProjectPath(cfg *Config, projectName string) (string, error) {
 	projectsPath, err := GetProjectsPath(cfg)

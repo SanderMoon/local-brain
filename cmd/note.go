@@ -15,6 +15,7 @@ import (
 )
 
 var noteJSONFlag bool
+var noteSectionFlag string
 
 var noteCmd = &cobra.Command{
 	Use:   "note",
@@ -59,6 +60,9 @@ func init() {
 	noteCmd.AddCommand(noteDeleteCmd)
 
 	noteLsCmd.Flags().BoolVar(&noteJSONFlag, "json", false, "Output JSON format")
+	noteCmd.Flags().StringVar(&noteSectionFlag, "section", "01_active", "PARA section (01_active, 02_areas, 03_resources)")
+	noteLsCmd.Flags().StringVar(&noteSectionFlag, "section", "01_active", "PARA section (01_active, 02_areas, 03_resources)")
+	noteDeleteCmd.Flags().StringVar(&noteSectionFlag, "section", "01_active", "PARA section (01_active, 02_areas, 03_resources)")
 }
 
 func runNoteLs(cmd *cobra.Command, args []string) error {
@@ -231,12 +235,12 @@ func getFocusedProjectDir() (string, error) {
 		return "", fmt.Errorf("no focused project. Set one with: brain project select <name>")
 	}
 
-	brainPath, err := cfg.GetCurrentBrainPath()
+	sectionDir, err := config.GetSectionPath(cfg, noteSectionFlag)
 	if err != nil {
-		return "", fmt.Errorf("failed to get brain path: %w", err)
+		return "", fmt.Errorf("failed to get section path: %w", err)
 	}
 
-	projectDir := filepath.Join(brainPath, "01_active", focused)
+	projectDir := filepath.Join(sectionDir, focused)
 
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
 		return "", fmt.Errorf("project directory not found: %s", projectDir)

@@ -89,10 +89,10 @@ func AddTaskToDump(dumpPath, content, timestamp string) error {
 		}
 		defer f.Close()
 
-		// Create task line with ID first, then timestamp at end
-		line := fmt.Sprintf("- [ ] %s", content)
-		line, _ = AddIDToLine(line)
-		line = fmt.Sprintf("%s #captured:%s\n", line, timestamp)
+		// Create task line with HTML comment containing id and captured date
+		newID := GenerateNewID()
+		comment := BuildSystemComment(newID, timestamp, "")
+		line := fmt.Sprintf("- [ ] %s %s\n", content, comment)
 
 		if _, err := f.WriteString(line); err != nil {
 			return fmt.Errorf("failed to write to dump: %w", err)
@@ -126,10 +126,10 @@ func AddNoteToDump(dumpPath, title string, contentLines []string, timestamp stri
 		}
 		defer f.Close()
 
-		// Write note header with ID first, then timestamp at end
-		header := fmt.Sprintf("[Note] %s", title)
-		header, _ = AddIDToLine(header)
-		header = fmt.Sprintf("%s #captured:%s\n", header, timestamp)
+		// Write note header with HTML comment containing id and captured date
+		newID := GenerateNewID()
+		comment := BuildSystemComment(newID, timestamp, "")
+		header := fmt.Sprintf("[Note] %s %s\n", title, comment)
 
 		if _, err := f.WriteString(header); err != nil {
 			return fmt.Errorf("failed to write note header: %w", err)

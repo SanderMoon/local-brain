@@ -290,3 +290,84 @@ func TestIDStability(t *testing.T) {
 
 	t.Logf("ID remained stable through all modifications: %s", id1)
 }
+
+func TestExtractIDFromComment(t *testing.T) {
+	tests := []struct {
+		name     string
+		line     string
+		expected string
+	}{
+		{
+			name:     "line with ID in HTML comment",
+			line:     "- [ ] Task content <!-- id:abc123 captured:2026-01-30 -->",
+			expected: "abc123",
+		},
+		{
+			name:     "line with ID and done in comment",
+			line:     "- [x] Done task <!-- id:def456 captured:2026-01-10 done:2026-02-01 -->",
+			expected: "def456",
+		},
+		{
+			name:     "line without HTML comment",
+			line:     "- [ ] Task content #captured:2026-01-30",
+			expected: "",
+		},
+		{
+			name:     "line with comment but no id field",
+			line:     "- [ ] Task content <!-- captured:2026-01-30 -->",
+			expected: "",
+		},
+		{
+			name:     "empty line",
+			line:     "",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ExtractIDFromComment(tt.line)
+			if result != tt.expected {
+				t.Errorf("ExtractIDFromComment(%q) = %q, want %q", tt.line, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestBuildSystemComment_AllFields(t *testing.T) {
+	comment := BuildSystemComment("abc123", "2026-01-30", "2026-02-15")
+	expected := "<!-- id:abc123 captured:2026-01-30 done:2026-02-15 -->"
+	if comment != expected {
+		t.Errorf("BuildSystemComment with all fields = %q, want %q", comment, expected)
+	}
+}
+
+func TestBuildSystemComment_EmptyFields(t *testing.T) {
+	comment := BuildSystemComment("", "", "")
+	if comment != "" {
+		t.Errorf("BuildSystemComment with empty fields = %q, want empty string", comment)
+	}
+}
+
+func TestBuildSystemComment_PartialFields(t *testing.T) {
+	// Only id
+	comment := BuildSystemComment("abc123", "", "")
+	expected := "<!-- id:abc123 -->"
+	if comment != expected {
+		t.Errorf("BuildSystemComment with id only = %q, want %q", comment, expected)
+	}
+
+	// id and captured
+	comment = BuildSystemComment("abc123", "2026-01-30", "")
+	expected = "<!-- id:abc123 captured:2026-01-30 -->"
+	if comment != expected {
+		t.Errorf("BuildSystemComment with id and captured = %q, want %q", comment, expected)
+	}
+
+	// id and done (no captured)
+	comment = BuildSystemComment("abc123", "", "2026-02-15")
+	expected = "<!-- id:abc123 done:2026-02-15 -->"
+	if comment != expected {
+		t.Errorf("BuildSystemComment with id and done = %q, want %q", comment, expected)
+	}
+}

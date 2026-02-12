@@ -13,6 +13,46 @@ import (
 	"github.com/sandermoonemans/local-brain/pkg/fileutil"
 )
 
+// parseFrontmatter parses a YAML frontmatter block from the start of content.
+// The frontmatter must be delimited by "---" on its own line.
+// Returns title, date, project fields and ok=true if frontmatter was found and parsed.
+// Returns ok=false if content doesn't start with "---" or has no closing "---".
+func parseFrontmatter(content string) (title, date, project string, ok bool) {
+	if !strings.HasPrefix(content, "---\n") && content != "---" {
+		return "", "", "", false
+	}
+
+	// Skip the opening "---\n"
+	rest := content[4:]
+
+	// Find the closing "---"
+	closingIdx := strings.Index(rest, "\n---\n")
+	if closingIdx == -1 {
+		// Check if "---" is at end of content
+		if strings.HasSuffix(rest, "\n---") {
+			closingIdx = len(rest) - 4
+		} else {
+			return "", "", "", false
+		}
+	}
+
+	// Extract the body up to (but not including) the closing "---"
+	// closingIdx points to the "\n" before "---", so +1 includes that newline
+	frontmatterBody := rest[:closingIdx+1]
+
+	for _, line := range strings.Split(frontmatterBody, "\n") {
+		if strings.HasPrefix(line, "title:") {
+			title = strings.TrimSpace(strings.TrimPrefix(line, "title:"))
+		} else if strings.HasPrefix(line, "date:") {
+			date = strings.TrimSpace(strings.TrimPrefix(line, "date:"))
+		} else if strings.HasPrefix(line, "project:") {
+			project = strings.TrimSpace(strings.TrimPrefix(line, "project:"))
+		}
+	}
+
+	return title, date, project, true
+}
+
 // NoteFile represents a note file in a project
 type NoteFile struct {
 	Filename string    `json:"filename"`
@@ -68,14 +108,27 @@ func parseNoteFile(filePath, projectName string) (NoteFile, error) {
 		return NoteFile{}, err
 	}
 
-	// Read first few lines to get title and created date
-	file, err := os.Open(filePath)
+	// Read full file content
+	rawBytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return NoteFile{}, err
 	}
-	defer file.Close()
+	rawContent := string(rawBytes)
 
-	scanner := bufio.NewScanner(file)
+	// Try frontmatter first
+	if fmTitle, fmDate, _, ok := parseFrontmatter(rawContent); ok {
+		return NoteFile{
+			Filename: filename,
+			Path:     filePath,
+			Title:    fmTitle,
+			Created:  fmDate,
+			Project:  projectName,
+			ModTime:  fileInfo.ModTime(),
+		}, nil
+	}
+
+	// Legacy fallback: scan line-by-line for "# Title" and "Created: YYYY-MM-DD"
+	scanner := bufio.NewScanner(strings.NewReader(rawContent))
 
 	// Read title (first line, should be "# Title")
 	title := ""
@@ -142,15 +195,63 @@ func CreateNoteFile(projectDir, title, content, timestamp string) (string, error
 		counter++
 	}
 
-	// Format note content
-	noteContent := fmt.Sprintf("# %s\n\nCreated: %s\n\n%s\n", title, timestamp, content)
+	// Format note content with YAML frontmatter
+	noteContent := fmt.Sprintf("---\ntitle: %s\ndate: %s\nproject: %s\ntags: []\n---\n\n# %s\n\n%s\n",
+		title, timestamp, filepath.Base(projectDir), title, content)
 
 	// Write note file
 	if err := os.WriteFile(filePath, []byte(noteContent), 0644); err != nil {
 		return "", fmt.Errorf("failed to write note file: %w", err)
 	}
 
+	// Best-effort: try to update notes.md index, but don't fail if it errors
+	_ = AppendNoteLink(projectDir, timestamp, title, filepath.Base(filePath))
+
 	return filePath, nil
+}
+
+// AppendNoteLink appends a relative markdown link to the project's notes.md index file.
+// It is idempotent: if the link already exists, the file is left unchanged.
+// The link is inserted as the first item inside the "## Notes" section, or the
+// section is created at the end of the file if it does not yet exist.
+func AppendNoteLink(projectDir, timestamp, title, filename string) error {
+	notesIndexPath := filepath.Join(projectDir, "notes.md")
+
+	// Read existing content; treat a missing file as empty.
+	var content string
+	rawBytes, err := os.ReadFile(notesIndexPath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to read notes.md: %w", err)
+		}
+		content = ""
+	} else {
+		content = string(rawBytes)
+	}
+
+	// Idempotency check.
+	if strings.Contains(content, "notes/"+filename) {
+		return nil
+	}
+
+	linkLine := fmt.Sprintf("- [%s %s](notes/%s)", timestamp, title, filename)
+
+	var newContent string
+	const section = "## Notes"
+	if idx := strings.Index(content, section+"\n"); idx != -1 {
+		// Insert the link right after "## Notes\n", before any existing entries.
+		insertAt := idx + len(section) + 1 // position right after the "\n"
+		// Skip a single blank line that immediately follows the header.
+		if insertAt < len(content) && content[insertAt] == '\n' {
+			insertAt++
+		}
+		newContent = content[:insertAt] + linkLine + "\n" + content[insertAt:]
+	} else {
+		// No "## Notes" section found: append it.
+		newContent = content + "\n" + section + "\n\n" + linkLine + "\n"
+	}
+
+	return fileutil.AtomicWriteFile(notesIndexPath, []byte(newContent))
 }
 
 // ReadNoteFile reads the complete content of a note file

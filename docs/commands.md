@@ -1145,6 +1145,68 @@ brain sync
 
 ---
 
+## Migration
+
+### `brain migrate`
+
+**Description:** Migrate brain files to portable markdown standards
+
+**Usage:**
+```bash
+# Dry-run (default) - show what would change
+brain migrate
+
+# Apply changes
+brain migrate --apply
+
+# Migrate only one project
+brain migrate --project backend-api
+
+# Migrate a different PARA section
+brain migrate --section 02_areas
+```
+
+**Options:**
+- `--apply` - Write changes (default is dry-run; no files are modified without this flag)
+- `--project <name>` - Migrate only the named project instead of all projects
+- `--section <section>` - PARA section to scan (default: `01_active`; valid values: `01_active`, `02_areas`, `03_resources`)
+
+**Operations performed:**
+1. **Notes frontmatter** - Adds YAML frontmatter to note files that still use legacy `# Title` + `Created: YYYY-MM-DD` body format
+2. **Todos HTML comments** - Moves inline `#id:`, `#captured:`, `#done:` system tags into `<!-- id:... captured:... done:... -->` HTML comments
+3. **Notes index links** - Appends missing relative markdown links to `notes.md` for files in `notes/` that are not yet indexed
+
+**Example output (dry-run):**
+```
+[DRY RUN] No changes written. Use --apply to write changes.
+
+Project: backend-api
+  Notes: 2 change(s) (would add frontmatter x2)
+  Todos: 1 change(s) (would move 3 items to HTML comments)
+  Links: 1 change(s) (would add 2 links)
+
+Total: 2 notes, 1 todos, 1 links changed
+```
+
+**Example output (apply):**
+```
+[APPLY] Writing changes...
+
+Project: backend-api
+  Notes: 2 change(s) (added frontmatter x2)
+  Todos: 1 change(s) (moved 3 items to HTML comments)
+  Links: 1 change(s) (added 2 links)
+
+Total: 2 notes, 1 todos, 1 links changed
+```
+
+**Notes:**
+- Safe to run multiple times - idempotent (already-migrated files are skipped)
+- Dry-run is the default to prevent accidental changes
+- Uses atomic writes to prevent file corruption
+
+---
+
 ## Global Options
 
 Available on all commands:

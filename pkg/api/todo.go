@@ -385,16 +385,62 @@ func SetTodoStatus(todo *TodoItem, newStatus string) error {
 	// Replace with new checkbox
 	newLine := checkboxPattern.ReplaceAllString(line, "${1}- ["+checkboxSymbol+"]")
 
-	// Manage #done: timestamp
-	doneTagPattern := regexp.MustCompile(`\s*#done:[0-9-]+`)
+	// Manage done date via HTML comment
 	if newStatus == "done" {
-		if !doneTagPattern.MatchString(newLine) {
-			today := time.Now().Format("2006-01-02")
-			newLine = newLine + " #done:" + today
+		// Extract existing comment fields to preserve id and captured date
+		fields, lineWithoutComment := markdown.ExtractHTMLComment(newLine)
+		id := fields["id"]
+		// Fall back to inline #id: if not in comment
+		if id == "" {
+			id = ExtractID(newLine)
+		}
+		capturedDate := fields["captured"]
+		// Fall back to inline #captured: if not in comment
+		if capturedDate == "" {
+			_, capturedDate = markdown.ExtractTimestamp(lineWithoutComment)
+		}
+		existingDone := fields["done"]
+		// Fall back to inline #done: for backward compatibility
+		if existingDone == "" {
+			inlineDonePattern := regexp.MustCompile(`#done:([0-9-]+)`)
+			if inlineMatch := inlineDonePattern.FindStringSubmatch(lineWithoutComment); len(inlineMatch) > 1 {
+				existingDone = inlineMatch[1]
+			}
+		}
+		// Remove any inline #done: tag from lineWithoutComment
+		doneTagPattern := regexp.MustCompile(`\s*#done:[0-9-]+`)
+		lineWithoutComment = doneTagPattern.ReplaceAllString(lineWithoutComment, "")
+		lineWithoutComment = strings.TrimRight(lineWithoutComment, " \t")
+		if existingDone == "" {
+			existingDone = time.Now().Format("2006-01-02")
+		}
+		newComment := BuildSystemComment(id, capturedDate, existingDone)
+		if newComment != "" {
+			newLine = lineWithoutComment + " " + newComment
+		} else {
+			newLine = lineWithoutComment
 		}
 	} else {
-		newLine = doneTagPattern.ReplaceAllString(newLine, "")
-		newLine = strings.TrimRight(newLine, " \t")
+		// Remove done date: extract comment, rebuild without done field
+		fields, lineWithoutComment := markdown.ExtractHTMLComment(newLine)
+		id := fields["id"]
+		if id == "" {
+			id = ExtractID(newLine)
+		}
+		capturedDate := fields["captured"]
+		if capturedDate == "" {
+			_, capturedDate = markdown.ExtractTimestamp(lineWithoutComment)
+		}
+		// Also remove any inline #done: tag
+		doneTagPattern := regexp.MustCompile(`\s*#done:[0-9-]+`)
+		lineWithoutComment = doneTagPattern.ReplaceAllString(lineWithoutComment, "")
+		lineWithoutComment = strings.TrimRight(lineWithoutComment, " \t")
+		newComment := BuildSystemComment(id, capturedDate, "")
+		if newComment != "" {
+			newLine = lineWithoutComment + " " + newComment
+		} else {
+			newLine = lineWithoutComment
+		}
 	}
 
 	lines[todo.Line-1] = newLine
@@ -626,9 +672,12 @@ func UpdateTodoContent(todo *TodoItem, newContent string) error {
 	indent := matches[1]
 	checkboxSymbol := matches[2]
 
+	// Extract HTML comment first (system metadata: id, captured, done)
+	htmlFields, lineWithoutHTMLComment := markdown.ExtractHTMLComment(line)
+
 	// Extract all metadata from original line (priority, due date, tags, ID, timestamps)
 	// We do this by removing the checkbox and content, leaving just the metadata
-	afterCheckbox := checkboxPattern.ReplaceAllString(line, "")
+	afterCheckbox := checkboxPattern.ReplaceAllString(lineWithoutHTMLComment, "")
 
 	// Remove the actual content text to isolate metadata
 	// The content is everything up to the first # tag or the ID
@@ -643,8 +692,14 @@ func UpdateTodoContent(todo *TodoItem, newContent string) error {
 		allMetadata = " " + strings.Join(metadataMatches, "")
 	}
 
-	// Reconstruct line: checkbox + new content + metadata
-	newLine := fmt.Sprintf("%s- [%s] %s%s", indent, checkboxSymbol, newContent, allMetadata)
+	// Rebuild HTML comment from extracted fields
+	var htmlComment string
+	if len(htmlFields) > 0 {
+		htmlComment = " " + BuildSystemComment(htmlFields["id"], htmlFields["captured"], htmlFields["done"])
+	}
+
+	// Reconstruct line: checkbox + new content + metadata + html comment
+	newLine := fmt.Sprintf("%s- [%s] %s%s%s", indent, checkboxSymbol, newContent, allMetadata, htmlComment)
 	newLine = strings.TrimRight(newLine, " \t") // Clean up trailing whitespace
 
 	lines[todo.Line-1] = newLine
@@ -722,8 +777,11 @@ func AppendTodoWithMetadata(projectDir string, todo TodoCreateRequest) error {
 	// Create task line with checkbox
 	newTaskLine := fmt.Sprintf("- [%s] %s", checkboxSymbol, contentWithMetadata)
 
-	// Add ID
-	newTaskLine, _ = AddIDToLine(newTaskLine)
+	// Add HTML comment with ID and captured date
+	newID := GenerateNewID()
+	today := time.Now().Format("2006-01-02")
+	comment := BuildSystemComment(newID, today, "")
+	newTaskLine = newTaskLine + " " + comment
 
 	// Read existing content
 	fileContent, err := os.ReadFile(todoFile)
@@ -793,9 +851,12 @@ func AppendTodoToProject(projectDir, content string) error {
 
 	lines := strings.Split(string(fileContent), "\n")
 
-	// Create new task line with ID
+	// Create new task line with HTML comment metadata
 	newTaskLine := fmt.Sprintf("- [ ] %s", content)
-	newTaskLine, _ = AddIDToLine(newTaskLine)
+	newID := GenerateNewID()
+	today := time.Now().Format("2006-01-02")
+	comment := BuildSystemComment(newID, today, "")
+	newTaskLine = newTaskLine + " " + comment
 
 	// Find the "## Active" section and insert after it
 	activeIdx := -1

@@ -7,6 +7,31 @@ import (
 	"strings"
 )
 
+// ExtractHTMLComment parses an HTML comment at the end of a line in the format
+// <!-- key:val key2:val2 -->
+// Returns a map of key->value and the line with the comment removed.
+// Returns empty map and original line if no comment found.
+func ExtractHTMLComment(line string) (map[string]string, string) {
+	// pattern: <!-- ... -->
+	// The comment may appear anywhere in the line but typically at the end
+	commentPattern := regexp.MustCompile(`<!--\s*(.*?)\s*-->`)
+	match := commentPattern.FindStringSubmatchIndex(line)
+	if match == nil {
+		return map[string]string{}, line
+	}
+
+	commentContent := line[match[2]:match[3]]
+	lineWithoutComment := strings.TrimSpace(line[:match[0]] + line[match[1]:])
+
+	// Parse key:value pairs from comment content
+	fields := make(map[string]string)
+	kvPattern := regexp.MustCompile(`(\w+):(\S+)`)
+	for _, kv := range kvPattern.FindAllStringSubmatch(commentContent, -1) {
+		fields[kv[1]] = kv[2]
+	}
+	return fields, lineWithoutComment
+}
+
 // ItemType represents the type of dump item
 type ItemType string
 
@@ -118,9 +143,17 @@ func ParseDumpFile(filePath string) ([]DumpItem, error) {
 	return items, nil
 }
 
-// ExtractTimestamp extracts the #captured:YYYY-MM-DD timestamp from content
-// Returns the content without timestamp and the timestamp string
+// ExtractTimestamp extracts the captured timestamp from content.
+// First tries HTML comment format <!-- captured:YYYY-MM-DD -->, then falls back to inline #captured:YYYY-MM-DD.
+// Returns the content without timestamp and the timestamp string.
 func ExtractTimestamp(content string) (string, string) {
+	// Try HTML comment format first
+	fields, lineWithoutComment := ExtractHTMLComment(content)
+	if capturedDate, ok := fields["captured"]; ok {
+		return lineWithoutComment, capturedDate
+	}
+
+	// Fall back to inline #captured: format
 	timestampPattern := regexp.MustCompile(`\s*#captured:([0-9-]+)(?:\s|$)`)
 	matches := timestampPattern.FindStringSubmatch(content)
 
@@ -135,9 +168,17 @@ func ExtractTimestamp(content string) (string, string) {
 	return cleanContent, timestamp
 }
 
-// ExtractCompletedDate extracts the #done:YYYY-MM-DD timestamp from content
-// Returns the content without timestamp and the timestamp string
+// ExtractCompletedDate extracts the done (completion) date from content.
+// First tries HTML comment format <!-- done:YYYY-MM-DD -->, then falls back to inline #done:YYYY-MM-DD.
+// Returns the content without the done date and the date string.
 func ExtractCompletedDate(content string) (string, string) {
+	// Try HTML comment format first
+	fields, lineWithoutComment := ExtractHTMLComment(content)
+	if doneDate, ok := fields["done"]; ok {
+		return lineWithoutComment, doneDate
+	}
+
+	// Fall back to inline #done: format
 	donePattern := regexp.MustCompile(`\s*#done:([0-9-]+)(?:\s|$)`)
 	matches := donePattern.FindStringSubmatch(content)
 

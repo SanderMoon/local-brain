@@ -3,12 +3,12 @@ package tools
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/sandermoonemans/local-brain/mcp/session"
 	"github.com/sandermoonemans/local-brain/mcp/validation"
 	"github.com/sandermoonemans/local-brain/pkg/api"
+	"github.com/sandermoonemans/local-brain/pkg/config"
 )
 
 // RegisterProjectTools registers project management tools
@@ -17,6 +17,7 @@ func RegisterProjectTools(srv *mcp.Server, sess *session.Session) error {
 	type CreateProjectArgs struct {
 		Name        string `json:"name" jsonschema:"Project name (alphanumeric, hyphens, underscores)"`
 		Description string `json:"description,omitempty" jsonschema:"Project description (optional)"`
+		Section     string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "create_project",
@@ -28,12 +29,11 @@ func RegisterProjectTools(srv *mcp.Server, sess *session.Session) error {
 		}
 
 		cfg := sess.GetConfig()
-		brainPath, err := cfg.GetCurrentBrainPath()
+		activeDir, err := config.GetSectionPath(cfg, args.Section)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
 		}
 
-		activeDir := filepath.Join(brainPath, "01_active")
 		projectPath, err := api.CreateProject(activeDir, args.Name)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create project: %w", err)

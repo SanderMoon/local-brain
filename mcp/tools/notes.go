@@ -10,6 +10,7 @@ import (
 	"github.com/sandermoonemans/local-brain/mcp/session"
 	"github.com/sandermoonemans/local-brain/mcp/validation"
 	"github.com/sandermoonemans/local-brain/pkg/api"
+	"github.com/sandermoonemans/local-brain/pkg/config"
 )
 
 // RegisterNoteTools registers note management tools
@@ -19,6 +20,7 @@ func RegisterNoteTools(srv *mcp.Server, sess *session.Session) error {
 		ProjectName string `json:"project_name" jsonschema:"Project name"`
 		Title       string `json:"title" jsonschema:"Note title"`
 		Content     string `json:"content" jsonschema:"Note content"`
+		Section     string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "create_project_note",
@@ -36,12 +38,12 @@ func RegisterNoteTools(srv *mcp.Server, sess *session.Session) error {
 		}
 
 		cfg := sess.GetConfig()
-		brainPath, err := cfg.GetCurrentBrainPath()
+		sectionDir, err := config.GetSectionPath(cfg, args.Section)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
 		}
 
-		projectDir := filepath.Join(brainPath, "01_active", args.ProjectName)
+		projectDir := filepath.Join(sectionDir, args.ProjectName)
 		timestamp := time.Now().Format("2006-01-02")
 
 		notePath, err := api.CreateNoteFile(projectDir, args.Title, args.Content, timestamp)

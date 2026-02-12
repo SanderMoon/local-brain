@@ -369,6 +369,92 @@ func TestIsEmptyOrWhitespace(t *testing.T) {
 	}
 }
 
+func TestExtractHTMLComment_Valid(t *testing.T) {
+	line := "- [ ] Task content <!-- id:abc123 captured:2026-01-30 -->"
+	fields, cleanLine := ExtractHTMLComment(line)
+
+	if fields["id"] != "abc123" {
+		t.Errorf("Expected id 'abc123', got '%s'", fields["id"])
+	}
+	if fields["captured"] != "2026-01-30" {
+		t.Errorf("Expected captured '2026-01-30', got '%s'", fields["captured"])
+	}
+	expected := "- [ ] Task content"
+	if cleanLine != expected {
+		t.Errorf("Expected clean line %q, got %q", expected, cleanLine)
+	}
+}
+
+func TestExtractHTMLComment_NoComment(t *testing.T) {
+	line := "- [ ] Task content #p:1 #due:2026-02-15"
+	fields, cleanLine := ExtractHTMLComment(line)
+
+	if len(fields) != 0 {
+		t.Errorf("Expected empty fields map, got %v", fields)
+	}
+	if cleanLine != line {
+		t.Errorf("Expected original line %q, got %q", line, cleanLine)
+	}
+}
+
+func TestExtractHTMLComment_MultipleFields(t *testing.T) {
+	line := "- [x] Done task <!-- id:def456 captured:2026-01-10 done:2026-02-01 -->"
+	fields, cleanLine := ExtractHTMLComment(line)
+
+	if fields["id"] != "def456" {
+		t.Errorf("Expected id 'def456', got '%s'", fields["id"])
+	}
+	if fields["captured"] != "2026-01-10" {
+		t.Errorf("Expected captured '2026-01-10', got '%s'", fields["captured"])
+	}
+	if fields["done"] != "2026-02-01" {
+		t.Errorf("Expected done '2026-02-01', got '%s'", fields["done"])
+	}
+	expected := "- [x] Done task"
+	if cleanLine != expected {
+		t.Errorf("Expected clean line %q, got %q", expected, cleanLine)
+	}
+}
+
+func TestExtractTimestamp_HTMLComment(t *testing.T) {
+	line := "Task content <!-- id:abc123 captured:2026-01-30 -->"
+	cleanContent, timestamp := ExtractTimestamp(line)
+
+	if timestamp != "2026-01-30" {
+		t.Errorf("Expected timestamp '2026-01-30', got '%s'", timestamp)
+	}
+	// The clean content should not contain the HTML comment
+	if cleanContent == line {
+		t.Errorf("Expected content to be cleaned, but got original line")
+	}
+}
+
+func TestExtractTimestamp_LegacyInline(t *testing.T) {
+	// Old format should still work
+	line := "Fix bug #captured:2024-01-21"
+	cleanContent, timestamp := ExtractTimestamp(line)
+
+	if timestamp != "2024-01-21" {
+		t.Errorf("Expected timestamp '2024-01-21', got '%s'", timestamp)
+	}
+	if cleanContent != "Fix bug" {
+		t.Errorf("Expected clean content 'Fix bug', got '%s'", cleanContent)
+	}
+}
+
+func TestExtractCompletedDate_HTMLComment(t *testing.T) {
+	line := "Done task <!-- id:abc123 captured:2026-01-10 done:2026-02-01 -->"
+	cleanContent, doneDate := ExtractCompletedDate(line)
+
+	if doneDate != "2026-02-01" {
+		t.Errorf("Expected done date '2026-02-01', got '%s'", doneDate)
+	}
+	// The clean content should not contain the HTML comment
+	if cleanContent == line {
+		t.Errorf("Expected content to be cleaned, but got original line")
+	}
+}
+
 // Helper functions for testing
 
 func intPtr(i int) *int {

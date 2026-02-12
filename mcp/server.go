@@ -54,6 +54,10 @@ func NewMCPServer() (*MCPServer, error) {
 		return nil, fmt.Errorf("failed to register project tools: %w", err)
 	}
 
+	if err := tools.RegisterDailyTools(srv, sess); err != nil {
+		return nil, fmt.Errorf("failed to register daily tools: %w", err)
+	}
+
 	return &MCPServer{
 		server:  srv,
 		session: sess,

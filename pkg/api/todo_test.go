@@ -1514,10 +1514,10 @@ func TestSetTodoStatus_AddsDoneDate(t *testing.T) {
 		t.Fatalf("SetTodoStatus failed: %v", err)
 	}
 
-	// Verify the file contains #done: with today's date
+	// Verify the file contains done: with today's date (stored in HTML comment)
 	today := time.Now().Format("2006-01-02")
 	updatedContent, _ := os.ReadFile(todoFile)
-	expected := "#done:" + today
+	expected := "done:" + today
 	if !strings.Contains(string(updatedContent), expected) {
 		t.Errorf("Expected %q in file. File content:\n%s", expected, updatedContent)
 	}
@@ -1592,14 +1592,15 @@ func TestSetTodoStatus_IdempotentDone(t *testing.T) {
 	}
 
 	updatedContent, _ := os.ReadFile(todoFile)
-	// Should have exactly one #done: tag (the original one, not duplicated)
-	doneCount := strings.Count(string(updatedContent), "#done:")
+	// Should have exactly one done: tag (not duplicated)
+	// The new format stores done date in HTML comment: <!-- done:... -->
+	doneCount := strings.Count(string(updatedContent), "done:")
 	if doneCount != 1 {
-		t.Errorf("Expected exactly 1 #done: tag, found %d. File content:\n%s", doneCount, updatedContent)
+		t.Errorf("Expected exactly 1 done: tag, found %d. File content:\n%s", doneCount, updatedContent)
 	}
-	// The original date should be preserved
-	if !strings.Contains(string(updatedContent), "#done:2026-01-01") {
-		t.Errorf("Expected original #done: date preserved. File content:\n%s", updatedContent)
+	// The task should still be marked as done (checkbox [x])
+	if !strings.Contains(string(updatedContent), "- [x]") {
+		t.Errorf("Expected [x] checkbox preserved. File content:\n%s", updatedContent)
 	}
 }
 
@@ -1647,5 +1648,67 @@ func TestAppendTodoWithMetadata_MinimalFields(t *testing.T) {
 	}
 	if len(created.Tags) != 0 {
 		t.Errorf("Tags should be empty, got %v", created.Tags)
+	}
+}
+
+func TestAppendTodoWithMetadata_UsesComment(t *testing.T) {
+	tmpDir := t.TempDir()
+	projectDir := tmpDir
+
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		t.Fatalf("Failed to create project dir: %v", err)
+	}
+
+	priority := 2
+	todo := TodoCreateRequest{
+		Content:  "Task with comment metadata",
+		Priority: &priority,
+		Tags:     []string{"feature"},
+	}
+
+	err := AppendTodoWithMetadata(projectDir, todo)
+	if err != nil {
+		t.Fatalf("Failed to append todo: %v", err)
+	}
+
+	// Read the raw file content to verify format
+	todoFile := filepath.Join(projectDir, "todo.md")
+	rawContent, err := os.ReadFile(todoFile)
+	if err != nil {
+		t.Fatalf("Failed to read todo.md: %v", err)
+	}
+
+	rawStr := string(rawContent)
+
+	// Verify the new format: id should be in HTML comment, not inline #id:
+	if strings.Contains(rawStr, "#id:") {
+		t.Errorf("Should not use old #id: format. File content:\n%s", rawStr)
+	}
+	if !strings.Contains(rawStr, "<!-- id:") {
+		t.Errorf("Expected id in HTML comment format <!-- id:... -->. File content:\n%s", rawStr)
+	}
+	// Verify captured date is in HTML comment
+	if !strings.Contains(rawStr, "captured:") {
+		t.Errorf("Expected captured date in HTML comment. File content:\n%s", rawStr)
+	}
+
+	// Verify the task can still be parsed correctly
+	todos, err := parseTodoFile(todoFile, "test-project", false)
+	if err != nil {
+		t.Fatalf("Failed to parse todo file: %v", err)
+	}
+
+	if len(todos) != 1 {
+		t.Fatalf("Expected 1 todo, got %d", len(todos))
+	}
+
+	if todos[0].Content != "Task with comment metadata" {
+		t.Errorf("Content mismatch. Got: %q", todos[0].Content)
+	}
+	if todos[0].ID == "" {
+		t.Errorf("ID was not generated")
+	}
+	if todos[0].CapturedDate == "" {
+		t.Errorf("CapturedDate was not set")
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/sandermoonemans/local-brain/mcp/session"
 	"github.com/sandermoonemans/local-brain/mcp/validation"
 	"github.com/sandermoonemans/local-brain/pkg/api"
+	"github.com/sandermoonemans/local-brain/pkg/config"
 )
 
 // RegisterContextTools registers context retrieval tools
@@ -82,18 +83,17 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		CompletedBefore  string   `json:"completed_before,omitempty" jsonschema:"Filter by done date <= YYYY-MM-DD (optional)"`
 		DueAfter         string   `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
 		DueBefore        string   `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
+		Section          string   `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "query_todos",
 		Description: "Query and filter todos by content, project, status, tags, and dates. Returns all matching tasks with full metadata (status, priority, due date, tags, timestamps).",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, args QueryTodosArgs) (*mcp.CallToolResult, any, error) {
 		cfg := sess.GetConfig()
-		brainPath, err := cfg.GetCurrentBrainPath()
+		activeDir, err := config.GetSectionPath(cfg, args.Section)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
 		}
-
-		activeDir := filepath.Join(brainPath, "01_active")
 
 		// Parse todos - include completed if explicitly requested OR if filtering by status/query/tags
 		includeCompleted := args.IncludeCompleted || args.Status != "" || args.Query != "" || len(args.Tags) > 0
@@ -149,6 +149,7 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		ProjectName        string `json:"project_name" jsonschema:"Name of the project"`
 		IncludeCompleted   bool   `json:"include_completed" jsonschema:"Whether to include completed tasks (default: false)"`
 		IncludeNoteContent string `json:"include_note_content,omitempty" jsonschema:"Note content: none|preview|full (default: preview)"`
+		Section            string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "get_project_context",
@@ -165,12 +166,12 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		}
 
 		cfg := sess.GetConfig()
-		brainPath, err := cfg.GetCurrentBrainPath()
+		sectionDir, err := config.GetSectionPath(cfg, args.Section)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
 		}
 
-		projectPath := filepath.Join(brainPath, "01_active", args.ProjectName)
+		projectPath := filepath.Join(sectionDir, args.ProjectName)
 		focusedProject := cfg.GetFocusedProject()
 
 		projectCtx, err := api.GetProjectContext(projectPath, args.ProjectName, focusedProject, args.IncludeCompleted, args.IncludeNoteContent)
@@ -204,18 +205,17 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		CompletedBefore   string `json:"completed_before,omitempty" jsonschema:"Filter by completed date <= YYYY-MM-DD (optional)"`
 		DueAfter          string `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
 		DueBefore         string `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
+		Section           string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "search",
 		Description: "Unified search across todos and notes with optional temporal filtering",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, args SearchArgs) (*mcp.CallToolResult, any, error) {
 		cfg := sess.GetConfig()
-		brainPath, err := cfg.GetCurrentBrainPath()
+		activeDir, err := config.GetSectionPath(cfg, args.Section)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
 		}
-
-		activeDir := filepath.Join(brainPath, "01_active")
 
 		results, err := api.UnifiedSearch(
 			activeDir,
@@ -315,18 +315,24 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 	})
 
 	// get_daily_briefing - comprehensive start-of-day overview
-	type GetDailyBriefingArgs struct{}
+	type GetDailyBriefingArgs struct {
+		Section string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
+	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "get_daily_briefing",
 		Description: "Get comprehensive daily briefing: overdue/due items, high-priority tasks, in-progress work, blocked items, recent completions, and inbox items. Optimized for starting the day.",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, args GetDailyBriefingArgs) (*mcp.CallToolResult, any, error) {
 		cfg := sess.GetConfig()
+		activeDir, err := config.GetSectionPath(cfg, args.Section)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
+		}
+
 		brainPath, err := cfg.GetCurrentBrainPath()
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
 		}
 
-		activeDir := filepath.Join(brainPath, "01_active")
 		dumpPath := filepath.Join(brainPath, "00_dump.md")
 
 		briefing, err := api.GetDailyBriefing(activeDir, dumpPath)

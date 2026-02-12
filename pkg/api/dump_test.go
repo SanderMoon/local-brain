@@ -176,12 +176,12 @@ func TestAddTaskToDump(t *testing.T) {
 		t.Errorf("Expected task in dump, got:\n%s", contentStr)
 	}
 
-	if !strings.Contains(contentStr, "#captured:2024-01-15") {
+	if !strings.Contains(contentStr, "captured:2024-01-15") {
 		t.Errorf("Expected timestamp in dump, got:\n%s", contentStr)
 	}
 
-	// Verify ID was added
-	if !strings.Contains(contentStr, "#id:") {
+	// Verify ID was added (stored in HTML comment: <!-- id:... -->)
+	if !strings.Contains(contentStr, "<!-- id:") {
 		t.Error("Expected #id: tag in task")
 	}
 }
@@ -250,7 +250,7 @@ func TestAddNoteToDump(t *testing.T) {
 		t.Errorf("Expected note header in dump, got:\n%s", contentStr)
 	}
 
-	if !strings.Contains(contentStr, "#captured:2024-01-15") {
+	if !strings.Contains(contentStr, "captured:2024-01-15") {
 		t.Errorf("Expected timestamp in dump, got:\n%s", contentStr)
 	}
 
@@ -262,8 +262,8 @@ func TestAddNoteToDump(t *testing.T) {
 		}
 	}
 
-	// Verify ID was added
-	if !strings.Contains(contentStr, "#id:") {
+	// Verify ID was added (stored in HTML comment: <!-- id:... -->)
+	if !strings.Contains(contentStr, "<!-- id:") {
 		t.Error("Expected #id: tag in note header")
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/sandermoonemans/local-brain/mcp/session"
 	"github.com/sandermoonemans/local-brain/mcp/validation"
 	"github.com/sandermoonemans/local-brain/pkg/api"
+	"github.com/sandermoonemans/local-brain/pkg/config"
 )
 
 // RegisterTodoTools registers todo management tools
@@ -26,6 +27,7 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 	}
 	type UpdateTodoArgs struct {
 		Updates []TodoUpdate `json:"updates" jsonschema:"Array of todo updates (supports single or multiple)"`
+		Section string       `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "update_todo",
@@ -54,12 +56,10 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 		}
 
 		cfg := sess.GetConfig()
-		brainPath, err := cfg.GetCurrentBrainPath()
+		activeDir, err := config.GetSectionPath(cfg, args.Section)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
 		}
-
-		activeDir := filepath.Join(brainPath, "01_active")
 
 		// Process all updates
 		var results []string
@@ -169,6 +169,7 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 	type CreateTodoInProjectArgs struct {
 		ProjectName string              `json:"project_name" jsonschema:"Project name"`
 		Todos       []TodoCreateRequest `json:"todos" jsonschema:"Array of todos to create (supports single or multiple)"`
+		Section     string              `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "create_todo_in_project",
@@ -201,12 +202,12 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 		}
 
 		cfg := sess.GetConfig()
-		brainPath, err := cfg.GetCurrentBrainPath()
+		sectionDir, err := config.GetSectionPath(cfg, args.Section)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
 		}
 
-		projectDir := filepath.Join(brainPath, "01_active", args.ProjectName)
+		projectDir := filepath.Join(sectionDir, args.ProjectName)
 
 		// Create all tasks
 		var created []string
@@ -257,7 +258,8 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 
 	// delete_todo (requires user confirmation via MCP)
 	type DeleteTodoArgs struct {
-		TodoID string `json:"todo_id" jsonschema:"6-character hex ID of the task to delete"`
+		TodoID  string `json:"todo_id" jsonschema:"6-character hex ID of the task to delete"`
+		Section string `json:"section,omitempty" jsonschema:"description=PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "delete_todo",
@@ -269,12 +271,11 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 		}
 
 		cfg := sess.GetConfig()
-		brainPath, err := cfg.GetCurrentBrainPath()
+		activeDir, err := config.GetSectionPath(cfg, args.Section)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
 		}
 
-		activeDir := filepath.Join(brainPath, "01_active")
 		todos, err := api.ParseAllTodos(activeDir, true)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to parse todos: %w", err)

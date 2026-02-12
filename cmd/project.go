@@ -18,6 +18,7 @@ import (
 )
 
 var projectJSONFlag bool
+var projectSectionFlag string
 
 var projectCmd = &cobra.Command{
 	Use:   "project",
@@ -130,6 +131,8 @@ func init() {
 	projectCmd.AddCommand(projectDescribeCmd)
 
 	projectListCmd.Flags().BoolVar(&projectJSONFlag, "json", false, "Output JSON format")
+	projectListCmd.Flags().StringVar(&projectSectionFlag, "section", "01_active", "PARA section (01_active, 02_areas, 03_resources)")
+	projectNewCmd.Flags().StringVar(&projectSectionFlag, "section", "01_active", "PARA section (01_active, 02_areas, 03_resources)")
 	projectDescribeCmd.Flags().BoolVar(&projectDescribeShowFlag, "show", false, "Display description instead of editing")
 	projectDescribeCmd.Flags().BoolVar(&projectJSONFlag, "json", false, "Output JSON format (with --show)")
 }
@@ -140,12 +143,11 @@ func runProjectList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	brainPath, err := cfg.GetCurrentBrainPath()
+	activeDir, err := config.GetSectionPath(cfg, projectSectionFlag)
 	if err != nil {
-		return fmt.Errorf("failed to get brain path: %w", err)
+		return fmt.Errorf("failed to get section path: %w", err)
 	}
 
-	activeDir := filepath.Join(brainPath, "01_active")
 	focusedProject := cfg.GetFocusedProject()
 
 	projects, err := api.ListProjects(activeDir, focusedProject)
@@ -206,12 +208,11 @@ func runProjectNew(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	brainPath, err := cfg.GetCurrentBrainPath()
+	activeDir, err := config.GetSectionPath(cfg, projectSectionFlag)
 	if err != nil {
-		return fmt.Errorf("failed to get brain path: %w", err)
+		return fmt.Errorf("failed to get section path: %w", err)
 	}
 
-	activeDir := filepath.Join(brainPath, "01_active")
 	projectDir := filepath.Join(activeDir, projectName)
 
 	if fileutil.FileExists(projectDir) {

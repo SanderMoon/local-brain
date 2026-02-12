@@ -259,3 +259,155 @@ func TestUpdateNoteFile_NotFound(t *testing.T) {
 		t.Error("Expected error for non-existent note, got nil")
 	}
 }
+
+func TestAppendNoteLink_NoNotesFile(t *testing.T) {
+	projectDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(projectDir, "notes"), 0755); err != nil {
+		t.Fatalf("Failed to create notes dir: %v", err)
+	}
+
+	err := AppendNoteLink(projectDir, "2026-02-11", "Weekly Update", "2026-02-11-weekly-update.md")
+	if err != nil {
+		t.Fatalf("AppendNoteLink failed: %v", err)
+	}
+
+	notesIndexPath := filepath.Join(projectDir, "notes.md")
+	content, err := os.ReadFile(notesIndexPath)
+	if err != nil {
+		t.Fatalf("notes.md not created: %v", err)
+	}
+
+	expected := "- [2026-02-11 Weekly Update](notes/2026-02-11-weekly-update.md)"
+	if !strings.Contains(string(content), expected) {
+		t.Errorf("Expected link %q in notes.md, got:\n%s", expected, content)
+	}
+}
+
+func TestAppendNoteLink_NoNotesSection(t *testing.T) {
+	projectDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(projectDir, "notes"), 0755); err != nil {
+		t.Fatalf("Failed to create notes dir: %v", err)
+	}
+
+	// Write a notes.md without a "## Notes" section
+	notesIndexPath := filepath.Join(projectDir, "notes.md")
+	initialContent := "# My Project Notes\n\nSome introductory text.\n"
+	if err := os.WriteFile(notesIndexPath, []byte(initialContent), 0644); err != nil {
+		t.Fatalf("Failed to write notes.md: %v", err)
+	}
+
+	err := AppendNoteLink(projectDir, "2026-02-11", "Weekly Update", "2026-02-11-weekly-update.md")
+	if err != nil {
+		t.Fatalf("AppendNoteLink failed: %v", err)
+	}
+
+	content, err := os.ReadFile(notesIndexPath)
+	if err != nil {
+		t.Fatalf("Failed to read notes.md: %v", err)
+	}
+	contentStr := string(content)
+
+	if !strings.Contains(contentStr, "## Notes") {
+		t.Error("Expected '## Notes' section to be added")
+	}
+
+	expected := "- [2026-02-11 Weekly Update](notes/2026-02-11-weekly-update.md)"
+	if !strings.Contains(contentStr, expected) {
+		t.Errorf("Expected link %q in notes.md, got:\n%s", expected, contentStr)
+	}
+}
+
+func TestAppendNoteLink_ExistingSection(t *testing.T) {
+	projectDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(projectDir, "notes"), 0755); err != nil {
+		t.Fatalf("Failed to create notes dir: %v", err)
+	}
+
+	notesIndexPath := filepath.Join(projectDir, "notes.md")
+	initialContent := "# My Project Notes\n\n## Notes\n\n- [2026-01-01 Old Note](notes/2026-01-01-old-note.md)\n"
+	if err := os.WriteFile(notesIndexPath, []byte(initialContent), 0644); err != nil {
+		t.Fatalf("Failed to write notes.md: %v", err)
+	}
+
+	err := AppendNoteLink(projectDir, "2026-02-11", "Weekly Update", "2026-02-11-weekly-update.md")
+	if err != nil {
+		t.Fatalf("AppendNoteLink failed: %v", err)
+	}
+
+	content, err := os.ReadFile(notesIndexPath)
+	if err != nil {
+		t.Fatalf("Failed to read notes.md: %v", err)
+	}
+	contentStr := string(content)
+
+	newLink := "- [2026-02-11 Weekly Update](notes/2026-02-11-weekly-update.md)"
+	oldLink := "- [2026-01-01 Old Note](notes/2026-01-01-old-note.md)"
+
+	if !strings.Contains(contentStr, newLink) {
+		t.Errorf("Expected new link %q in notes.md, got:\n%s", newLink, contentStr)
+	}
+	if !strings.Contains(contentStr, oldLink) {
+		t.Errorf("Expected old link %q still in notes.md, got:\n%s", oldLink, contentStr)
+	}
+
+	// New link should appear before the old link (newest first)
+	newIdx := strings.Index(contentStr, newLink)
+	oldIdx := strings.Index(contentStr, oldLink)
+	if newIdx > oldIdx {
+		t.Errorf("New link should appear before old link (newest first), got:\n%s", contentStr)
+	}
+}
+
+func TestAppendNoteLink_Idempotent(t *testing.T) {
+	projectDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(projectDir, "notes"), 0755); err != nil {
+		t.Fatalf("Failed to create notes dir: %v", err)
+	}
+
+	filename := "2026-02-11-weekly-update.md"
+	err := AppendNoteLink(projectDir, "2026-02-11", "Weekly Update", filename)
+	if err != nil {
+		t.Fatalf("First AppendNoteLink failed: %v", err)
+	}
+
+	err = AppendNoteLink(projectDir, "2026-02-11", "Weekly Update", filename)
+	if err != nil {
+		t.Fatalf("Second AppendNoteLink failed: %v", err)
+	}
+
+	notesIndexPath := filepath.Join(projectDir, "notes.md")
+	content, err := os.ReadFile(notesIndexPath)
+	if err != nil {
+		t.Fatalf("Failed to read notes.md: %v", err)
+	}
+	contentStr := string(content)
+
+	linkStr := "notes/" + filename
+	count := strings.Count(contentStr, linkStr)
+	if count != 1 {
+		t.Errorf("Expected exactly 1 occurrence of the link, got %d:\n%s", count, contentStr)
+	}
+}
+
+func TestCreateNoteFile_AppendsToNotesIndex(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+	projectPath := tb.AddProject("my-project")
+
+	filePath, err := CreateNoteFile(projectPath, "Weekly Update", "Content here", "2026-02-11")
+	if err != nil {
+		t.Fatalf("CreateNoteFile failed: %v", err)
+	}
+
+	notesIndexPath := filepath.Join(projectPath, "notes.md")
+	content, err := os.ReadFile(notesIndexPath)
+	if err != nil {
+		t.Fatalf("Failed to read notes.md: %v", err)
+	}
+	contentStr := string(content)
+
+	expectedFilename := filepath.Base(filePath)
+	expectedLink := "- [2026-02-11 Weekly Update](notes/" + expectedFilename + ")"
+	if !strings.Contains(contentStr, expectedLink) {
+		t.Errorf("Expected link %q in notes.md, got:\n%s", expectedLink, contentStr)
+	}
+}

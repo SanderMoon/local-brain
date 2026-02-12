@@ -35,7 +35,7 @@ func TestCreateNoteFile(t *testing.T) {
 	if !strings.Contains(contentStr, "# Test Note") {
 		t.Error("Title not found in note")
 	}
-	if !strings.Contains(contentStr, "Created: 2024-01-15") {
+	if !strings.Contains(contentStr, "date: 2024-01-15") {
 		t.Error("Created date not found in note")
 	}
 	if !strings.Contains(contentStr, "Note content here") {
@@ -121,8 +121,8 @@ func TestAppendTodoToProject(t *testing.T) {
 		t.Errorf("Task not found in todo.md:\n%s", contentStr)
 	}
 
-	// Verify ID was added
-	if !strings.Contains(contentStr, "#id:") {
+	// Verify ID was added (stored in HTML comment: <!-- id:... -->)
+	if !strings.Contains(contentStr, "<!-- id:") {
 		t.Error("ID not added to task")
 	}
 

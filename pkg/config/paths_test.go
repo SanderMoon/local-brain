@@ -104,6 +104,70 @@ https://github.com/user/repo2.git
 	}
 }
 
+func TestGetSectionPath_Valid(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+	cfg, _ := Load()
+
+	sections := []string{"01_active", "02_areas", "03_resources"}
+	for _, section := range sections {
+		t.Run(section, func(t *testing.T) {
+			sectionPath, err := GetSectionPath(cfg, section)
+			if err != nil {
+				t.Fatalf("GetSectionPath(%q) failed: %v", section, err)
+			}
+			expected := filepath.Join(tb.BrainPath, section)
+			if sectionPath != expected {
+				t.Errorf("Expected %q, got %q", expected, sectionPath)
+			}
+		})
+	}
+}
+
+func TestGetSectionPath_DefaultsToActive(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+	cfg, _ := Load()
+
+	sectionPath, err := GetSectionPath(cfg, "")
+	if err != nil {
+		t.Fatalf("GetSectionPath(\"\") failed: %v", err)
+	}
+
+	expected := filepath.Join(tb.BrainPath, "01_active")
+	if sectionPath != expected {
+		t.Errorf("Expected %q, got %q", expected, sectionPath)
+	}
+}
+
+func TestGetSectionPath_Invalid(t *testing.T) {
+	testutil.SetupTestBrain(t)
+	cfg, _ := Load()
+
+	_, err := GetSectionPath(cfg, "99_archive")
+	if err == nil {
+		t.Fatal("Expected error for invalid section, got nil")
+	}
+}
+
+func TestValidateSection(t *testing.T) {
+	valid := []string{"01_active", "02_areas", "03_resources"}
+	for _, section := range valid {
+		t.Run("valid_"+section, func(t *testing.T) {
+			if err := ValidateSection(section); err != nil {
+				t.Errorf("ValidateSection(%q) returned unexpected error: %v", section, err)
+			}
+		})
+	}
+
+	invalid := []string{"", "99_archive", "04_projects", "active", "01active"}
+	for _, section := range invalid {
+		t.Run("invalid_"+section, func(t *testing.T) {
+			if err := ValidateSection(section); err == nil {
+				t.Errorf("ValidateSection(%q) expected error, got nil", section)
+			}
+		})
+	}
+}
+
 func TestExtractRepoName(t *testing.T) {
 	tests := []struct {
 		input    string
