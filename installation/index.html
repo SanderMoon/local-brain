@@ -772,6 +772,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#agent-skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Skills
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Skills">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install Skills
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bundled-skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bundled Skills
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#makefile-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Makefile Target
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1332,6 +1393,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#agent-skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Skills
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Skills">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install Skills
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bundled-skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bundled Skills
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#makefile-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Makefile Target
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1637,6 +1759,68 @@
 <a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>rm<span class="w"> </span>~/brain<span class="w">  </span><span class="c1"># Removes symlink</span>
 </code></pre></div>
 <p><strong>Warning:</strong> This permanently deletes all your notes and tasks. Back up first if needed.</p>
+<hr />
+<h2 id="agent-skills">Agent Skills</h2>
+<p>Local Brain ships bundled AI agent skills that teach your coding agent
+context-aware workflows (e.g. daily planning). Skills follow the
+<a href="https://agentskills.io">Agent Skills open standard</a> and work with
+Claude Code, Codex, Gemini CLI, and OpenCode.</p>
+<h3 id="install-skills">Install Skills</h3>
+<p>After installing Local Brain, run:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>install
+</code></pre></div>
+<p>This installs all bundled skills to every <strong>detected</strong> AI agent
+(any agent whose config directory already exists on disk).</p>
+<p>To target a specific agent:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>--agent<span class="w"> </span>claude
+</code></pre></div>
+<h3 id="bundled-skills">Bundled Skills</h3>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>brain-daily</code></td>
+<td>Morning briefing and daily planning. "What should I work on today?"</td>
+</tr>
+<tr>
+<td><code>brain-setup</code></td>
+<td>First-time setup wizard — conversational onboarding for new users.</td>
+</tr>
+<tr>
+<td><code>brain-capture</code></td>
+<td>Quick capture of tasks, ideas, and notes with smart metadata inference.</td>
+</tr>
+<tr>
+<td><code>brain-triage</code></td>
+<td>Process inbox items systematically — refile, categorize, or discard.</td>
+</tr>
+<tr>
+<td><code>brain-plan</code></td>
+<td>Break project goals into concrete tasks with priorities and deadlines.</td>
+</tr>
+<tr>
+<td><code>brain-focus</code></td>
+<td>Deep work session on a single project with distraction capture.</td>
+</tr>
+<tr>
+<td><code>brain-review</code></td>
+<td>Weekly review of all projects, progress, and stale work.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="check-status">Check Status</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>status
+</code></pre></div>
+<p>Shows which skills are installed for each detected agent.</p>
+<h3 id="makefile-target">Makefile Target</h3>
+<p>If you build from source, you can install skills right after building:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>make<span class="w"> </span>install-skills
+</code></pre></div>
 <hr />
 <h2 id="next-steps">Next Steps</h2>
 <ul>
