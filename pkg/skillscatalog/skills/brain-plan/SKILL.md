@@ -59,15 +59,24 @@ Execute the plan:
 2. `create_todo_in_project` with the full task list, including priorities and due dates
 3. `set_context` to focus the new/existing project
 
-### Step 5 — Create a Plan Note
+### Step 5 — Document the Plan
 
-Call `create_project_note` with a planning summary:
+Create project notes that capture context beyond what fits in task titles. Tasks say *what*; notes say *why* and *how*.
+
+**Always create a planning note** via `create_project_note`:
 - Project goal (the "definition of done")
 - Key milestones or phases
-- Any decisions made during planning
-- Open questions or risks identified
+- Decisions made during planning and their rationale
+- Open questions, risks, or unknowns
 
-This note becomes a reference point for future reviews.
+**For larger features**, also create implementation notes for complex areas:
+- If the user describes technical approach, architecture, or design decisions — capture these in a separate note (e.g., "Architecture: auth flow", "Design: API schema")
+- If the user shares requirements, constraints, or feature requests from others — save the original context as a note, not just the distilled tasks
+- If there are multiple approaches discussed and one was chosen — document what was considered and why
+
+The goal is statefulness: when the user (or agent) returns to this project days or weeks later, the notes should provide enough context to pick up without re-explaining everything.
+
+**Rule of thumb:** If the planning conversation surfaces information that would be lost when the chat session ends, it belongs in a note.
 
 ### Step 6 — Close with Next Action
 
@@ -81,7 +90,9 @@ get_project_context(project) OR get_brain_overview()
   → collaborative planning conversation
   → create_project() (if new)
   → create_todo_in_project(project, [tasks with metadata])
-  → create_project_note(project, "Planning: [project]", summary)
+  → create_project_note(project, "Plan: [project]", planning summary)
+  → create_project_note(project, "Design: [topic]", implementation details) (if applicable)
+  → create_project_note(project, "Requirements: [topic]", feature context) (if applicable)
   → set_context(project_name: project)
 ```
 

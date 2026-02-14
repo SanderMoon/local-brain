@@ -373,16 +373,33 @@ rm ~/brain  # Removes symlink
 
 ---
 
-## Agent Skills
+## AI Agent Setup
 
-Local Brain ships bundled AI agent skills that teach your coding agent
-context-aware workflows (e.g. daily planning). Skills follow the
-[Agent Skills open standard](https://agentskills.io) and work with
-Claude Code, Codex, Gemini CLI, and OpenCode.
+Local Brain auto-detects installed AI agents (Claude Code, Codex, Gemini CLI,
+OpenCode) and can configure both the MCP server and skills for each.
+
+### Register the MCP Server
+
+```bash
+brain mcp install
+```
+
+This registers `brain-mcp` with every detected agent's MCP configuration.
+To target a specific agent: `brain mcp install --agent claude`.
+
+Check registration status:
+
+```bash
+brain mcp status
+```
 
 ### Install Skills
 
-After installing Local Brain, run:
+Skills follow the [Agent Skills open standard](https://agentskills.io) and
+teach your agent structured workflows — daily briefings, inbox triage,
+weekly reviews, project planning, and more.
+
+After registering the MCP server, install skills:
 
 ```bash
 brain skill install
@@ -408,6 +425,23 @@ brain skill install --agent claude
 | `brain-plan` | Break project goals into concrete tasks with priorities and deadlines. |
 | `brain-focus` | Deep work session on a single project with distraction capture. |
 | `brain-review` | Weekly review of all projects, progress, and stale work. |
+
+### Upgrade Skills After a Version Update
+
+When you update Local Brain (`brew upgrade brain` or build from source), new
+skill versions are embedded in the binary but **not** automatically pushed to
+your agents. To update:
+
+```bash
+brain skill upgrade
+```
+
+This overwrites installed SKILL.md files with the latest bundled versions.
+Skills that are not currently installed are skipped.
+
+> **Warning:** `brain skill upgrade` will overwrite any local edits you made to
+> installed SKILL.md files. If you customized a skill, back up your changes
+> first or keep them in a separate file alongside SKILL.md.
 
 ### Check Status
 

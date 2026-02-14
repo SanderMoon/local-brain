@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	skillAgentFlag string
-	skillForceFlag bool
+	skillAgentFlag   string
+	skillForceFlag   bool
+	upgradeAgentFlag string
 )
 
 var skillCmd = &cobra.Command{
@@ -46,6 +47,17 @@ var skillRemoveCmd = &cobra.Command{
 	RunE:  runSkillRemove,
 }
 
+var skillUpgradeCmd = &cobra.Command{
+	Use:   "upgrade",
+	Short: "Upgrade installed skills to the latest bundled version",
+	Long: `Upgrade all installed skills to match the versions bundled with this brain binary.
+
+This overwrites any local modifications you made to installed SKILL.md files.
+Skills that are not currently installed are skipped — use 'brain skill install'
+to add new skills first.`,
+	RunE: runSkillUpgrade,
+}
+
 var skillStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show installation status of bundled skills",
@@ -57,11 +69,13 @@ func init() {
 	skillCmd.AddCommand(skillListCmd)
 	skillCmd.AddCommand(skillInstallCmd)
 	skillCmd.AddCommand(skillRemoveCmd)
+	skillCmd.AddCommand(skillUpgradeCmd)
 	skillCmd.AddCommand(skillStatusCmd)
 
 	skillInstallCmd.Flags().StringVar(&skillAgentFlag, "agent", "all", "Target agent (claude, codex, gemini, opencode, all)")
 	skillInstallCmd.Flags().BoolVar(&skillForceFlag, "force", false, "Overwrite existing skill files")
 	skillRemoveCmd.Flags().StringVar(&skillAgentFlag, "agent", "all", "Target agent (claude, codex, gemini, opencode, all)")
+	skillUpgradeCmd.Flags().StringVar(&upgradeAgentFlag, "agent", "all", "Target agent (claude, codex, gemini, opencode, all)")
 }
 
 func runSkillList(cmd *cobra.Command, args []string) error {
@@ -143,6 +157,48 @@ func runSkillRemove(cmd *cobra.Command, args []string) error {
 		} else {
 			fmt.Fprintf(cmd.OutOrStdout(), "SKIP: %s not installed for %s\n", name, agent.Name)
 		}
+	}
+	return nil
+}
+
+func runSkillUpgrade(cmd *cobra.Command, args []string) error {
+	skills, err := skillscatalog.ListSkills()
+	if err != nil {
+		return err
+	}
+
+	agents, err := resolveAgents(upgradeAgentFlag)
+	if err != nil {
+		return err
+	}
+	if len(agents) == 0 {
+		fmt.Fprintln(cmd.OutOrStdout(), "No AI agents detected.")
+		return nil
+	}
+
+	var upgraded, skipped int
+	for _, agent := range agents {
+		for _, skill := range skills {
+			if !skillscatalog.IsInstalled(skill.Name, agent) {
+				continue
+			}
+			installed, err := skillscatalog.InstallSkill(skill, agent, true)
+			if err != nil {
+				return fmt.Errorf("upgrading %s for %s: %w", skill.Name, agent.Name, err)
+			}
+			if installed {
+				upgraded++
+				fmt.Fprintf(cmd.OutOrStdout(), "OK:   Upgraded %s → %s\n", skill.Name, agent.Name)
+			} else {
+				skipped++
+			}
+		}
+	}
+
+	if upgraded == 0 {
+		fmt.Fprintln(cmd.OutOrStdout(), "No installed skills found to upgrade. Run 'brain skill install' first.")
+	} else {
+		fmt.Fprintf(cmd.OutOrStdout(), "\nUpgraded %d skill(s). Note: any local modifications to SKILL.md files have been overwritten.\n", upgraded)
 	}
 	return nil
 }

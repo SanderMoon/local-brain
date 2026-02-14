@@ -29,15 +29,15 @@ Local Brain keeps your projects, tasks, and notes in plain Markdown files on you
 - **Full CLI** — every operation is a command; scriptable and composable
 - **Optional TUI** — visual project and task overview with `brain tui`
 
-### AI Interface — MCP Server
+### AI Interface — MCP Server + Agent Skills
 
 <!-- TODO: Add screenshot of chatting with Claude about projects/todos. Save to docs/images/claude-chat-screenshot.png -->
 ![Claude chat with Local Brain](docs/images/claude-chat-screenshot.png)
 
-- **Efficient discovery** — tools like `get_brain_overview` return your full workspace in one call, instead of dozens of filesystem reads
-- **Full task management** — Claude can create, update, search, and organize your tasks and projects directly
+- **18 purpose-built MCP tools** — designed to minimize LLM round-trips while giving complete access to your projects
+- **7 bundled [Agent Skills](https://agentskills.io)** — teach your AI agent *how* to be a project manager: daily briefings, inbox triage, weekly reviews, project planning, and more
 - **Personal assistant** — run `brain storm` to open Claude in your brains directory for an interactive session
-- **17 purpose-built tools** — designed to minimize LLM round-trips while giving complete access to your projects
+- **Works with any skills-compatible agent** — Claude Code, Codex, Gemini CLI, OpenCode
 
 ---
 
@@ -50,27 +50,38 @@ Local Brain keeps your projects, tasks, and notes in plain Markdown files on you
 brew tap SanderMoon/tap
 brew install brain
 
-# Or via Go
-go install github.com/SanderMoon/local-brain@latest
+# Or build from source
+git clone https://github.com/SanderMoon/local-brain.git && cd local-brain
+make install && make install-mcp
 ```
 
-### Initialize
+### Set up
 
 ```bash
-brain init
+brain init                   # create your first brain
 ```
 
-### Use it your way
+### Connect your AI agent
 
 ```bash
-# Human path: capture → organize → act
+brain mcp install            # register the MCP server with detected agents
+brain skill install          # install skills (daily briefing, triage, planning, ...)
+```
+
+This auto-detects your installed agents (Claude Code, Codex, Gemini CLI, OpenCode) and configures both the MCP server and skills for each. You can target a specific agent with `--agent claude`.
+
+### Use it
+
+```bash
+# CLI: capture → organize → act
 brain add "Fix authentication bug"
-brain add "Review Sarah's PR"
-brain refile                        # batch-move items to projects
+brain refile                        # move inbox items to projects
 brain todo ls --priority 1          # see what matters today
 
-# AI path: open Claude in your brains directory
-brain storm                         # launches Claude Code in ~/brains
+# AI: just talk to your agent
+# "Good morning"                    → daily briefing
+# "Process my inbox"                → guided triage
+# "Let's plan the website redesign" → project breakdown
 ```
 
 **[📖 Full Documentation →](https://sandermoon.github.io/local-brain/)**
@@ -99,7 +110,33 @@ brain plan        # add priorities, due dates, tags
 brain todo ls     # see your task list
 ```
 
-Or ask Claude — with the MCP server configured, it has full access to your projects and can handle the curation for you.
+Or let your AI agent handle it — with skills installed, just say "process my inbox" and it walks you through each item.
+
+---
+
+## Agent Skills
+
+Local Brain ships 7 bundled skills that follow the [Agent Skills open standard](https://agentskills.io). Skills teach your AI agent structured workflows — turning it from a generic chatbot into a capable project manager.
+
+| Skill | What it does |
+|-------|-------------|
+| `brain-daily` | Morning briefing — priorities, overdue tasks, blocked items |
+| `brain-setup` | First-time setup wizard — conversational onboarding |
+| `brain-capture` | Quick capture with smart metadata inference |
+| `brain-triage` | Systematic inbox processing — refile, categorize, discard |
+| `brain-plan` | Break goals into concrete tasks with priorities and deadlines |
+| `brain-focus` | Deep work session with distraction capture |
+| `brain-review` | Weekly review of progress, stale work, and priorities |
+
+```bash
+brain skill install          # install all skills to detected agents
+brain skill upgrade          # update skills after a brain version upgrade
+brain skill status           # check what's installed where
+```
+
+Together, these skills form a complete **Capture → Organize → Plan → Execute → Reflect** loop — inspired by GTD, adapted for AI-assisted workflows.
+
+> **Customizing skills:** Installed skills live as plain SKILL.md files in your agent's skills directory (e.g., `~/.claude/skills/`). You're free to edit them — but note that `brain skill upgrade` will overwrite your changes. To preserve customizations, either skip upgrading that skill or keep your edits in a separate file alongside SKILL.md.
 
 ---
 

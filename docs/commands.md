@@ -1207,6 +1207,97 @@ Total: 2 notes, 1 todos, 1 links changed
 
 ---
 
+## MCP Server Management
+
+Manage the brain-mcp server registration with AI coding agents. These commands
+auto-detect installed agents and configure them to use Local Brain's MCP server.
+
+### `brain mcp install [--agent <id>]`
+
+**Description:** Register brain-mcp with detected AI agents
+
+**Usage:**
+```bash
+# Register with all detected agents
+brain mcp install
+
+# Register with a specific agent
+brain mcp install --agent claude
+```
+
+**Options:**
+- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
+
+**Supported agents:**
+
+| ID | Name | Config written to |
+|----|------|------------------|
+| `claude` | Claude Code | `~/.claude.json` |
+| `codex` | Codex | `~/.codex/config.toml` |
+| `gemini` | Gemini CLI | `~/.gemini/settings.json` |
+| `opencode` | OpenCode | `~/.config/opencode/opencode.json` |
+
+**Notes:**
+- `--agent all` registers with all **detected** agents (those whose config directory exists)
+- `--agent <id>` registers with that specific agent
+- The server is registered as `local-brain` using stdio transport
+- Re-running is safe — already-registered agents are skipped
+- The binary path is auto-detected (next to `brain` in the same directory, or from PATH)
+
+**Output:**
+```
+OK:   Registered local-brain → Claude Code
+OK:   Registered local-brain → Gemini CLI
+SKIP: local-brain already registered for OpenCode
+
+Using binary: /opt/homebrew/bin/brain-mcp
+```
+
+---
+
+### `brain mcp remove [--agent <id>]`
+
+**Description:** Remove brain-mcp from AI agents
+
+**Usage:**
+```bash
+# Remove from all detected agents
+brain mcp remove
+
+# Remove from a specific agent
+brain mcp remove --agent claude
+```
+
+**Options:**
+- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
+
+---
+
+### `brain mcp status`
+
+**Description:** Show MCP registration status across all known agents
+
+**Usage:**
+```bash
+brain mcp status
+```
+
+**Output:**
+```
+Agent           MCP Server
+------------------------------
+Claude Code     registered
+Codex           -
+Gemini CLI      registered
+OpenCode        not registered
+```
+
+- `registered` — agent detected and MCP server is configured
+- `not registered` — agent detected but MCP server not configured
+- `-` — agent not detected (config directory does not exist)
+
+---
+
 ## Skill Management
 
 Bundled AI agent skills are SKILL.md files installed into AI coding agents
@@ -1271,6 +1362,37 @@ brain skill install --force
 ```
 OK:   Installed brain-daily → Claude Code (~/.claude/skills/brain-daily/)
 SKIP: brain-daily already installed for Codex (use --force to overwrite)
+```
+
+---
+
+### `brain skill upgrade [--agent <id>]`
+
+**Description:** Upgrade installed skills to the latest bundled version
+
+**Usage:**
+```bash
+# Upgrade all installed skills for all detected agents
+brain skill upgrade
+
+# Upgrade for a specific agent only
+brain skill upgrade --agent claude
+```
+
+**Options:**
+- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
+
+**Notes:**
+- Only upgrades skills that are **already installed** — new skills are not added. Use `brain skill install` to add new skills.
+- **Overwrites local modifications** to SKILL.md files. If you customized a skill, back up your changes first.
+- Run this after updating Local Brain (`brew upgrade brain` or building from source) to get the latest skill workflows.
+
+**Output:**
+```
+OK:   Upgraded brain-daily → Claude Code
+OK:   Upgraded brain-plan → Claude Code
+
+Upgraded 2 skill(s). Note: any local modifications to SKILL.md files have been overwritten.
 ```
 
 ---
