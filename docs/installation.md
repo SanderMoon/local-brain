@@ -373,6 +373,60 @@ rm ~/brain  # Removes symlink
 
 ---
 
+## Agent Skills
+
+Local Brain ships bundled AI agent skills that teach your coding agent
+context-aware workflows (e.g. daily planning). Skills follow the
+[Agent Skills open standard](https://agentskills.io) and work with
+Claude Code, Codex, Gemini CLI, and OpenCode.
+
+### Install Skills
+
+After installing Local Brain, run:
+
+```bash
+brain skill install
+```
+
+This installs all bundled skills to every **detected** AI agent
+(any agent whose config directory already exists on disk).
+
+To target a specific agent:
+
+```bash
+brain skill install --agent claude
+```
+
+### Bundled Skills
+
+| Skill | Description |
+|-------|-------------|
+| `brain-daily` | Morning briefing and daily planning. "What should I work on today?" |
+| `brain-setup` | First-time setup wizard — conversational onboarding for new users. |
+| `brain-capture` | Quick capture of tasks, ideas, and notes with smart metadata inference. |
+| `brain-triage` | Process inbox items systematically — refile, categorize, or discard. |
+| `brain-plan` | Break project goals into concrete tasks with priorities and deadlines. |
+| `brain-focus` | Deep work session on a single project with distraction capture. |
+| `brain-review` | Weekly review of all projects, progress, and stale work. |
+
+### Check Status
+
+```bash
+brain skill status
+```
+
+Shows which skills are installed for each detected agent.
+
+### Makefile Target
+
+If you build from source, you can install skills right after building:
+
+```bash
+make install-skills
+```
+
+---
+
 ## Next Steps
 
 - Return to the [Quickstart Guide](index.md) for usage examples

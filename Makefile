@@ -1,4 +1,4 @@
-.PHONY: build build-mcp build-mcp-dev build-all install install-mcp install-all dev-install dev-install-mcp uninstall uninstall-mcp uninstall-all test test-unit test-integration test-compat test-all test-cover test-race test-verbose clean fmt lint vet check completions release snapshot install-goreleaser help
+.PHONY: build build-mcp build-mcp-dev build-all install install-mcp install-all install-skills dev-install dev-install-mcp uninstall uninstall-mcp uninstall-all test test-unit test-integration test-compat test-all test-cover test-race test-verbose clean fmt lint vet check completions release snapshot install-goreleaser help
 
 # Build variables
 BINARY_NAME=brain
@@ -74,6 +74,10 @@ install-mcp: build-mcp
 
 # Install both CLI and MCP server
 install-all: install install-mcp
+
+# Install bundled skills to all detected AI agents
+install-skills: build ## Install bundled skills to all detected AI agents
+	@./brain skill install
 
 # Uninstall the binary
 uninstall:
@@ -244,6 +248,7 @@ help:
 	@echo "  make install        - Install CLI to $(INSTALL_DIR)"
 	@echo "  make install-mcp    - Install MCP server to $(INSTALL_DIR)"
 	@echo "  make install-all    - Install both CLI and MCP server"
+	@echo "  make install-skills - Install bundled skills to all detected AI agents"
 	@echo "  make dev-install    - Install CLI + MCP dev binaries to ~/.local/bin"
 	@echo "  make dev-install-mcp - Install MCP dev binary to ~/.local/bin"
 	@echo "  make uninstall      - Remove CLI from $(INSTALL_DIR)"

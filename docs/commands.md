@@ -1207,6 +1207,114 @@ Total: 2 notes, 1 todos, 1 links changed
 
 ---
 
+## Skill Management
+
+Bundled AI agent skills are SKILL.md files installed into AI coding agents
+(Claude Code, Codex, Gemini CLI, OpenCode). They teach agents context-aware
+workflows for your Local Brain workspace.
+
+### `brain skill list`
+
+**Description:** List all bundled skills
+
+**Usage:**
+```bash
+brain skill list
+```
+
+**Output:**
+```
+brain-daily          Run the morning brain briefing and plan the day. Use when starting work...
+```
+
+---
+
+### `brain skill install [name] [--agent <id>] [--force]`
+
+**Description:** Install skill(s) to detected AI agents
+
+**Usage:**
+```bash
+# Install all skills to all detected agents
+brain skill install
+
+# Install all skills to a specific agent
+brain skill install --agent claude
+
+# Install a single skill
+brain skill install brain-daily --agent claude
+
+# Overwrite existing skill files
+brain skill install --force
+```
+
+**Options:**
+- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
+- `--force` - Overwrite existing skill files (default: skip existing)
+
+**Supported agents:**
+
+| ID | Name | Skills directory |
+|----|------|-----------------|
+| `claude` | Claude Code | `~/.claude/skills/` |
+| `opencode` | OpenCode | `~/.config/opencode/skills/` |
+| `codex` | Codex | `~/.codex/skills/` |
+| `gemini` | Gemini CLI | `~/.gemini/skills/` |
+
+**Notes:**
+- `--agent all` installs to all **detected** agents (those whose config directory exists)
+- `--agent <id>` installs to that agent even if it is not detected (for manual targeting)
+- Re-running without `--force` is safe — already-installed skills are skipped
+- OpenCode also reads `~/.claude/skills/` natively, so `--agent claude` benefits both
+
+**Output:**
+```
+OK:   Installed brain-daily → Claude Code (~/.claude/skills/brain-daily/)
+SKIP: brain-daily already installed for Codex (use --force to overwrite)
+```
+
+---
+
+### `brain skill remove <name> [--agent <id>]`
+
+**Description:** Remove a skill from AI agents
+
+**Usage:**
+```bash
+# Remove from all detected agents
+brain skill remove brain-daily
+
+# Remove from a specific agent
+brain skill remove brain-daily --agent claude
+```
+
+**Options:**
+- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
+
+---
+
+### `brain skill status`
+
+**Description:** Show installation status of all bundled skills across all known agents
+
+**Usage:**
+```bash
+brain skill status
+```
+
+**Output:**
+```
+Skill                Claude Code     Codex           Gemini CLI      OpenCode
+------------------------------------------------------------------------
+brain-daily          installed       -               -               installed
+```
+
+- `installed` — agent detected and skill is installed
+- `not installed` — agent detected but skill is absent
+- `-` — agent not detected (config directory does not exist)
+
+---
+
 ## Global Options
 
 Available on all commands:
