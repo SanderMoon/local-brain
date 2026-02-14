@@ -772,16 +772,27 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#agent-skills" class="md-nav__link">
+  <a href="#ai-agent-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Agent Skills
+        AI Agent Setup
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Agent Skills">
+    <nav class="md-nav" aria-label="AI Agent Setup">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#register-the-mcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Register the MCP Server
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#install-skills" class="md-nav__link">
@@ -799,6 +810,17 @@
     <span class="md-ellipsis">
       
         Bundled Skills
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upgrade-skills-after-a-version-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upgrade Skills After a Version Update
       
     </span>
   </a>
@@ -1393,16 +1415,27 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#agent-skills" class="md-nav__link">
+  <a href="#ai-agent-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Agent Skills
+        AI Agent Setup
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Agent Skills">
+    <nav class="md-nav" aria-label="AI Agent Setup">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#register-the-mcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Register the MCP Server
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#install-skills" class="md-nav__link">
@@ -1420,6 +1453,17 @@
     <span class="md-ellipsis">
       
         Bundled Skills
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upgrade-skills-after-a-version-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upgrade Skills After a Version Update
       
     </span>
   </a>
@@ -1760,19 +1804,28 @@
 </code></pre></div>
 <p><strong>Warning:</strong> This permanently deletes all your notes and tasks. Back up first if needed.</p>
 <hr />
-<h2 id="agent-skills">Agent Skills</h2>
-<p>Local Brain ships bundled AI agent skills that teach your coding agent
-context-aware workflows (e.g. daily planning). Skills follow the
-<a href="https://agentskills.io">Agent Skills open standard</a> and work with
-Claude Code, Codex, Gemini CLI, and OpenCode.</p>
+<h2 id="ai-agent-setup">AI Agent Setup</h2>
+<p>Local Brain auto-detects installed AI agents (Claude Code, Codex, Gemini CLI,
+OpenCode) and can configure both the MCP server and skills for each.</p>
+<h3 id="register-the-mcp-server">Register the MCP Server</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>install
+</code></pre></div>
+<p>This registers <code>brain-mcp</code> with every detected agent's MCP configuration.
+To target a specific agent: <code>brain mcp install --agent claude</code>.</p>
+<p>Check registration status:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>status
+</code></pre></div>
 <h3 id="install-skills">Install Skills</h3>
-<p>After installing Local Brain, run:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>install
+<p>Skills follow the <a href="https://agentskills.io">Agent Skills open standard</a> and
+teach your agent structured workflows — daily briefings, inbox triage,
+weekly reviews, project planning, and more.</p>
+<p>After registering the MCP server, install skills:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>install
 </code></pre></div>
 <p>This installs all bundled skills to every <strong>detected</strong> AI agent
 (any agent whose config directory already exists on disk).</p>
 <p>To target a specific agent:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>--agent<span class="w"> </span>claude
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>--agent<span class="w"> </span>claude
 </code></pre></div>
 <h3 id="bundled-skills">Bundled Skills</h3>
 <table>
@@ -1813,13 +1866,26 @@ Claude Code, Codex, Gemini CLI, and OpenCode.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="upgrade-skills-after-a-version-update">Upgrade Skills After a Version Update</h3>
+<p>When you update Local Brain (<code>brew upgrade brain</code> or build from source), new
+skill versions are embedded in the binary but <strong>not</strong> automatically pushed to
+your agents. To update:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>upgrade
+</code></pre></div>
+<p>This overwrites installed SKILL.md files with the latest bundled versions.
+Skills that are not currently installed are skipped.</p>
+<blockquote>
+<p><strong>Warning:</strong> <code>brain skill upgrade</code> will overwrite any local edits you made to
+installed SKILL.md files. If you customized a skill, back up your changes
+first or keep them in a separate file alongside SKILL.md.</p>
+</blockquote>
 <h3 id="check-status">Check Status</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>status
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>status
 </code></pre></div>
 <p>Shows which skills are installed for each detected agent.</p>
 <h3 id="makefile-target">Makefile Target</h3>
 <p>If you build from source, you can install skills right after building:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>make<span class="w"> </span>install-skills
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>make<span class="w"> </span>install-skills
 </code></pre></div>
 <hr />
 <h2 id="next-steps">Next Steps</h2>
