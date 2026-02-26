@@ -24,16 +24,13 @@ jobs:
           go-version: '1.25'
 
       - name: Set up SSH for AUR
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-
-      - name: Add AUR to known_hosts
         run: |
           mkdir -p ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur_key
+          chmod 600 ~/.ssh/aur_key
           ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts
           # Test the connection to debug in the logs
-          ssh -T aur@aur.archlinux.org || true
+          ssh -T -i ~/.ssh/aur_key -o IdentitiesOnly=yes aur@aur.archlinux.org || true
 
       - name: Run tests
         run: make test-all

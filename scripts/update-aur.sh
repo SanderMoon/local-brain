@@ -36,6 +36,9 @@ echo "Using temporary directory: $AUR_DIR"
 # Clean up on exit
 trap 'rm -rf "$AUR_DIR"' EXIT
 
+# Tell Git exactly which SSH key to use
+export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/aur_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+
 git clone ssh://aur@aur.archlinux.org/local-brain-bin.git "$AUR_DIR"
 
 cd "$AUR_DIR"
