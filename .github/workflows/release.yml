@@ -32,6 +32,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts
+          # Test the connection to debug in the logs
+          ssh -T aur@aur.archlinux.org || true
 
       - name: Run tests
         run: make test-all
