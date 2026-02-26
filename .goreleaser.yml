@@ -186,6 +186,7 @@ publishers:
     ids:
       - brain
     dir: "."
+    checksum: true
     cmd: ./scripts/update-aur.sh {{ .Version }}
 
 # Signing (optional - uncomment and configure if you want to sign releases)
