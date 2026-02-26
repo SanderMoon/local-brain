@@ -15,26 +15,60 @@ type UnifiedSearchResult struct {
 	Note *NoteSearchResult `json:"note,omitempty"`
 }
 
-// UnifiedSearch searches both todos and notes
-func UnifiedSearch(activeDir string, query string, project string, includeTodos bool, includeNotes bool, searchNoteContent bool, createdAfter string, createdBefore string, completedAfter string, completedBefore string, dueAfter string, dueBefore string) ([]UnifiedSearchResult, error) {
+// SearchOptions contains all parameters for UnifiedSearch
+type SearchOptions struct {
+	Query             string
+	Project           string
+	IncludeTodos      bool
+	IncludeNotes      bool
+	SearchNoteContent bool
+	// Todo-specific filters
+	Status           string
+	Priority         *int
+	Tags             []string
+	IncludeCompleted bool
+	// Temporal filters
+	CreatedAfter    string
+	CreatedBefore   string
+	CompletedAfter  string
+	CompletedBefore string
+	DueAfter        string
+	DueBefore       string
+}
+
+// UnifiedSearch searches both todos and notes with optional filtering
+func UnifiedSearch(activeDir string, opts SearchOptions) ([]UnifiedSearchResult, error) {
 	var results []UnifiedSearchResult
 
 	// Default to both if neither specified
-	if !includeTodos && !includeNotes {
-		includeTodos = true
-		includeNotes = true
+	if !opts.IncludeTodos && !opts.IncludeNotes {
+		opts.IncludeTodos = true
+		opts.IncludeNotes = true
 	}
 
 	// Search todos
-	if includeTodos {
-		allTodos, err := ParseAllTodos(activeDir, true)
+	if opts.IncludeTodos {
+		// Include completed if explicitly requested or if filtering by status/query/tags
+		includeCompleted := opts.IncludeCompleted || opts.Status != "" || opts.Query != "" || len(opts.Tags) > 0
+		allTodos, err := ParseAllTodos(activeDir, includeCompleted)
 		if err == nil {
-			// Apply filters
-			filteredTodos := SearchTodos(allTodos, query, project, "", nil)
+			// Apply content/status/tag filters
+			filteredTodos := SearchTodos(allTodos, opts.Query, opts.Project, opts.Status, opts.Tags)
 
 			// Apply temporal filters
-			if createdAfter != "" || createdBefore != "" || completedAfter != "" || completedBefore != "" || dueAfter != "" || dueBefore != "" {
-				filteredTodos = filterTodosByTemporal(filteredTodos, createdAfter, createdBefore, completedAfter, completedBefore, dueAfter, dueBefore)
+			if opts.CreatedAfter != "" || opts.CreatedBefore != "" || opts.CompletedAfter != "" || opts.CompletedBefore != "" || opts.DueAfter != "" || opts.DueBefore != "" {
+				filteredTodos = filterTodosByTemporal(filteredTodos, opts.CreatedAfter, opts.CreatedBefore, opts.CompletedAfter, opts.CompletedBefore, opts.DueAfter, opts.DueBefore)
+			}
+
+			// Apply priority filter
+			if opts.Priority != nil {
+				var priorityFiltered []TodoItem
+				for _, todo := range filteredTodos {
+					if todo.Priority != nil && *todo.Priority == *opts.Priority {
+						priorityFiltered = append(priorityFiltered, todo)
+					}
+				}
+				filteredTodos = priorityFiltered
 			}
 
 			for i := range filteredTodos {
@@ -47,8 +81,8 @@ func UnifiedSearch(activeDir string, query string, project string, includeTodos 
 	}
 
 	// Search notes
-	if includeNotes {
-		noteResults, err := SearchNotes(activeDir, query, project, searchNoteContent)
+	if opts.IncludeNotes {
+		noteResults, err := SearchNotes(activeDir, opts.Query, opts.Project, opts.SearchNoteContent)
 		if err == nil {
 			for i := range noteResults {
 				results = append(results, UnifiedSearchResult{

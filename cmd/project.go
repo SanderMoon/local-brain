@@ -522,14 +522,6 @@ func runProjectArchive(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get brain path: %w", err)
 	}
 
-	activeDir := filepath.Join(brainPath, "01_active")
-	archiveDir := filepath.Join(brainPath, "99_archive")
-	projectDir := filepath.Join(activeDir, projectName)
-
-	if !fileutil.FileExists(projectDir) {
-		return fmt.Errorf("project '%s' not found", projectName)
-	}
-
 	// Clear focus if archiving focused project
 	if projectName == cfg.GetFocusedProject() {
 		if err := cfg.SetFocusedProject(""); err != nil {
@@ -540,19 +532,8 @@ func runProjectArchive(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Create archive directory
-	if err := fileutil.EnsureDir(archiveDir); err != nil {
-		return fmt.Errorf("failed to create archive directory: %w", err)
-	}
-
-	// Create archive name with timestamp
-	timestamp := time.Now().Format("20060102")
-	archiveName := fmt.Sprintf("%s_%s", projectName, timestamp)
-	archivePath := filepath.Join(archiveDir, archiveName)
-
-	// Move project
-	if err := os.Rename(projectDir, archivePath); err != nil {
-		return fmt.Errorf("failed to archive project: %w", err)
+	if err := api.ArchiveProject(brainPath, projectName); err != nil {
+		return err
 	}
 
 	fmt.Printf("OK: Archived: %s\n", projectName)

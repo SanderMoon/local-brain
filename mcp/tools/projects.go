@@ -55,5 +55,46 @@ func RegisterProjectTools(srv *mcp.Server, sess *session.Session) error {
 		}, nil, nil
 	})
 
+	// archive_project
+	type ArchiveProjectArgs struct {
+		Name string `json:"name" jsonschema:"Name of the project to archive"`
+	}
+	mcp.AddTool(srv, &mcp.Tool{
+		Name:        "archive_project",
+		Description: "Archive a completed project (moves from active to archive with timestamp)",
+	}, func(ctx context.Context, req *mcp.CallToolRequest, args ArchiveProjectArgs) (*mcp.CallToolResult, any, error) {
+		if err := validation.ValidateProjectName(args.Name); err != nil {
+			return nil, nil, err
+		}
+
+		cfg := sess.GetConfig()
+		brainPath, err := cfg.GetCurrentBrainPath()
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to get brain path: %w", err)
+		}
+
+		// Clear focus if archiving the focused project
+		if args.Name == cfg.GetFocusedProject() {
+			if err := cfg.SetFocusedProject(""); err != nil {
+				return nil, nil, fmt.Errorf("failed to clear focus: %w", err)
+			}
+			if err := cfg.Save(); err != nil {
+				return nil, nil, fmt.Errorf("failed to save config: %w", err)
+			}
+		}
+
+		if err := api.ArchiveProject(brainPath, args.Name); err != nil {
+			return nil, nil, fmt.Errorf("failed to archive project: %w", err)
+		}
+
+		sess.Invalidate()
+
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: fmt.Sprintf("Archived project: %s", args.Name)},
+			},
+		}, nil, nil
+	})
+
 	return nil
 }

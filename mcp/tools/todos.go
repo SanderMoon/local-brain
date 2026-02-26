@@ -24,6 +24,7 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 		DueDate    string   `json:"due_date,omitempty" jsonschema:"Due date in YYYY-MM-DD format, or empty string to clear"`
 		AddTags    []string `json:"add_tags,omitempty" jsonschema:"Tags to add"`
 		RemoveTags []string `json:"remove_tags,omitempty" jsonschema:"Tags to remove"`
+		Delete     bool     `json:"delete,omitempty" jsonschema:"Set to true to permanently delete this todo"`
 	}
 	type UpdateTodoArgs struct {
 		Updates []TodoUpdate `json:"updates" jsonschema:"Array of todo updates (supports single or multiple)"`
@@ -31,7 +32,7 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "update_todo",
-		Description: "Update one or more todos - supports content, status, priority, due date, and tags (always pass updates as array, even for single todo)",
+		Description: "Update one or more todos - supports content, status, priority, due date, tags, and deletion (always pass updates as array, even for single todo)",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, args UpdateTodoArgs) (*mcp.CallToolResult, any, error) {
 		if len(args.Updates) == 0 {
 			return nil, nil, fmt.Errorf("updates array cannot be empty")
@@ -76,6 +77,15 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 			}
 
 			var changes []string
+
+			// Handle deletion
+			if update.Delete {
+				if err := api.DeleteTodoLine(todo); err != nil {
+					return nil, nil, fmt.Errorf("failed to delete todo %s: %w", update.TodoID, err)
+				}
+				results = append(results, fmt.Sprintf("%s: deleted \"%s\"", update.TodoID, todo.Content))
+				continue
+			}
 
 			// Update content first (if provided), as it changes the base text
 			if update.Content != "" {
@@ -252,49 +262,6 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
 				&mcp.TextContent{Text: message},
-			},
-		}, nil, nil
-	})
-
-	// delete_todo (requires user confirmation via MCP)
-	type DeleteTodoArgs struct {
-		TodoID  string `json:"todo_id" jsonschema:"6-character hex ID of the task to delete"`
-		Section string `json:"section,omitempty" jsonschema:"PARA section: 01_active (default), 02_areas, or 03_resources"`
-	}
-	mcp.AddTool(srv, &mcp.Tool{
-		Name:        "delete_todo",
-		Description: "Delete a task permanently (requires user confirmation)",
-	}, func(ctx context.Context, req *mcp.CallToolRequest, args DeleteTodoArgs) (*mcp.CallToolResult, any, error) {
-		// Validate inputs
-		if err := validation.ValidateTodoID(args.TodoID); err != nil {
-			return nil, nil, err
-		}
-
-		cfg := sess.GetConfig()
-		activeDir, err := config.GetSectionPath(cfg, args.Section)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
-		}
-
-		todos, err := api.ParseAllTodos(activeDir, true)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to parse todos: %w", err)
-		}
-
-		todo := api.FindTodoByID(todos, args.TodoID)
-		if todo == nil {
-			return nil, nil, validation.NewItemNotFoundError("todo", args.TodoID)
-		}
-
-		if err := api.DeleteTodoLine(todo); err != nil {
-			return nil, nil, fmt.Errorf("failed to delete todo: %w", err)
-		}
-
-		sess.Invalidate()
-
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Deleted task: %s", todo.Content)},
 			},
 		}, nil, nil
 	})

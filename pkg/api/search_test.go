@@ -110,7 +110,7 @@ func TestUnifiedSearch_TodosOnly(t *testing.T) {
 	}
 
 	// Search for todos only
-	results, err := UnifiedSearch(activeDir, "fix", "", true, false, false, "", "", "", "", "", "")
+	results, err := UnifiedSearch(activeDir, SearchOptions{Query: "fix", IncludeTodos: true})
 	if err != nil {
 		t.Fatalf("Search failed: %v", err)
 	}
@@ -158,7 +158,7 @@ This note contains important information about our product strategy.
 	}
 
 	// Search for notes only with title match
-	results, err := UnifiedSearch(activeDir, "meeting", "", false, true, false, "", "", "", "", "", "")
+	results, err := UnifiedSearch(activeDir, SearchOptions{Query: "meeting", IncludeNotes: true})
 	if err != nil {
 		t.Fatalf("Search failed: %v", err)
 	}

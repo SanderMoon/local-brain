@@ -69,81 +69,6 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		}, nil, nil
 	})
 
-	// query_todos - unified tool for retrieving and filtering todos
-	type QueryTodosArgs struct {
-		Query            string   `json:"query,omitempty" jsonschema:"Search query for todo content (case-insensitive, optional)"`
-		Project          string   `json:"project,omitempty" jsonschema:"Filter by specific project name (optional)"`
-		Status           string   `json:"status,omitempty" jsonschema:"Filter by status: open, in-progress, blocked, done (optional)"`
-		Priority         *int     `json:"priority,omitempty" jsonschema:"Filter by priority: 1=high, 2=medium, 3=low (optional)"`
-		Tags             []string `json:"tags,omitempty" jsonschema:"Filter by tags - OR logic, match any tag (optional)"`
-		IncludeCompleted bool     `json:"include_completed,omitempty" jsonschema:"Whether to include completed tasks (default: false)"`
-		CreatedAfter     string   `json:"created_after,omitempty" jsonschema:"Filter by captured date >= YYYY-MM-DD (optional)"`
-		CreatedBefore    string   `json:"created_before,omitempty" jsonschema:"Filter by captured date <= YYYY-MM-DD (optional)"`
-		CompletedAfter   string   `json:"completed_after,omitempty" jsonschema:"Filter by done date >= YYYY-MM-DD (optional)"`
-		CompletedBefore  string   `json:"completed_before,omitempty" jsonschema:"Filter by done date <= YYYY-MM-DD (optional)"`
-		DueAfter         string   `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
-		DueBefore        string   `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
-		Section          string   `json:"section,omitempty" jsonschema:"PARA section: 01_active (default), 02_areas, or 03_resources"`
-	}
-	mcp.AddTool(srv, &mcp.Tool{
-		Name:        "query_todos",
-		Description: "Query and filter todos by content, project, status, tags, and dates. Returns all matching tasks with full metadata (status, priority, due date, tags, timestamps).",
-	}, func(ctx context.Context, req *mcp.CallToolRequest, args QueryTodosArgs) (*mcp.CallToolResult, any, error) {
-		cfg := sess.GetConfig()
-		activeDir, err := config.GetSectionPath(cfg, args.Section)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
-		}
-
-		// Parse todos - include completed if explicitly requested OR if filtering by status/query/tags
-		includeCompleted := args.IncludeCompleted || args.Status != "" || args.Query != "" || len(args.Tags) > 0
-		todos, err := api.ParseAllTodos(activeDir, includeCompleted)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to parse todos: %w", err)
-		}
-
-		// Apply content/status/tag filters if provided
-		if args.Query != "" || args.Project != "" || args.Status != "" || len(args.Tags) > 0 {
-			todos = api.SearchTodos(todos, args.Query, args.Project, args.Status, args.Tags)
-		} else if args.Project != "" {
-			// Simple project filter when no search criteria
-			var filtered []api.TodoItem
-			for _, todo := range todos {
-				if todo.Project == args.Project {
-					filtered = append(filtered, todo)
-				}
-			}
-			todos = filtered
-		}
-
-		// Apply temporal filters
-		if args.CreatedAfter != "" || args.CreatedBefore != "" || args.CompletedAfter != "" || args.CompletedBefore != "" || args.DueAfter != "" || args.DueBefore != "" {
-			todos = api.FilterTodosByTemporal(todos, args.CreatedAfter, args.CreatedBefore, args.CompletedAfter, args.CompletedBefore, args.DueAfter, args.DueBefore)
-		}
-
-		// Apply priority filter
-		if args.Priority != nil {
-			var filtered []api.TodoItem
-			for _, todo := range todos {
-				if todo.Priority != nil && *todo.Priority == *args.Priority {
-					filtered = append(filtered, todo)
-				}
-			}
-			todos = filtered
-		}
-
-		data, err := json.MarshalIndent(todos, "", "  ")
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to marshal todos: %w", err)
-		}
-
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: string(data)},
-			},
-		}, nil, nil
-	})
-
 	// get_project_context
 	type GetProjectContextArgs struct {
 		ProjectName        string `json:"project_name" jsonschema:"Name of the project"`
@@ -192,20 +117,24 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 	})
 
 
-	// search - unified search for todos and notes
+	// search - unified search across todos and notes
 	type SearchArgs struct {
-		Query             string `json:"query,omitempty" jsonschema:"Search query (optional)"`
-		Project           string `json:"project,omitempty" jsonschema:"Filter by project name (optional)"`
-		IncludeTodos      bool   `json:"include_todos,omitempty" jsonschema:"Include todos in search (default: true)"`
-		IncludeNotes      bool   `json:"include_notes,omitempty" jsonschema:"Include notes in search (default: true)"`
-		SearchNoteContent bool   `json:"search_note_content,omitempty" jsonschema:"Search note content (not just titles)"`
-		CreatedAfter      string `json:"created_after,omitempty" jsonschema:"Filter by created date >= YYYY-MM-DD (optional)"`
-		CreatedBefore     string `json:"created_before,omitempty" jsonschema:"Filter by created date <= YYYY-MM-DD (optional)"`
-		CompletedAfter    string `json:"completed_after,omitempty" jsonschema:"Filter by completed date >= YYYY-MM-DD (optional)"`
-		CompletedBefore   string `json:"completed_before,omitempty" jsonschema:"Filter by completed date <= YYYY-MM-DD (optional)"`
-		DueAfter          string `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
-		DueBefore         string `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
-		Section           string `json:"section,omitempty" jsonschema:"PARA section: 01_active (default), 02_areas, or 03_resources"`
+		Query             string   `json:"query,omitempty" jsonschema:"Search query (optional)"`
+		Project           string   `json:"project,omitempty" jsonschema:"Filter by project name (optional)"`
+		IncludeTodos      bool     `json:"include_todos,omitempty" jsonschema:"Include todos in search (default: true)"`
+		IncludeNotes      bool     `json:"include_notes,omitempty" jsonschema:"Include notes in search (default: true)"`
+		SearchNoteContent bool     `json:"search_note_content,omitempty" jsonschema:"Search note content (not just titles)"`
+		Status            string   `json:"status,omitempty" jsonschema:"Filter todos by status: open, in-progress, blocked, done (optional)"`
+		Priority          *int     `json:"priority,omitempty" jsonschema:"Filter todos by priority: 1=high, 2=medium, 3=low (optional)"`
+		Tags              []string `json:"tags,omitempty" jsonschema:"Filter todos by tags - OR logic, match any tag (optional)"`
+		IncludeCompleted  bool     `json:"include_completed,omitempty" jsonschema:"Whether to include completed tasks (default: false)"`
+		CreatedAfter      string   `json:"created_after,omitempty" jsonschema:"Filter by created date >= YYYY-MM-DD (optional)"`
+		CreatedBefore     string   `json:"created_before,omitempty" jsonschema:"Filter by created date <= YYYY-MM-DD (optional)"`
+		CompletedAfter    string   `json:"completed_after,omitempty" jsonschema:"Filter by completed date >= YYYY-MM-DD (optional)"`
+		CompletedBefore   string   `json:"completed_before,omitempty" jsonschema:"Filter by completed date <= YYYY-MM-DD (optional)"`
+		DueAfter          string   `json:"due_after,omitempty" jsonschema:"Filter by due date >= YYYY-MM-DD (optional)"`
+		DueBefore         string   `json:"due_before,omitempty" jsonschema:"Filter by due date <= YYYY-MM-DD (optional)"`
+		Section           string   `json:"section,omitempty" jsonschema:"PARA section: 01_active (default), 02_areas, or 03_resources"`
 	}
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "search",
@@ -217,20 +146,23 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 			return nil, nil, fmt.Errorf("failed to get section path: %w", err)
 		}
 
-		results, err := api.UnifiedSearch(
-			activeDir,
-			args.Query,
-			args.Project,
-			args.IncludeTodos,
-			args.IncludeNotes,
-			args.SearchNoteContent,
-			args.CreatedAfter,
-			args.CreatedBefore,
-			args.CompletedAfter,
-			args.CompletedBefore,
-			args.DueAfter,
-			args.DueBefore,
-		)
+		results, err := api.UnifiedSearch(activeDir, api.SearchOptions{
+			Query:             args.Query,
+			Project:           args.Project,
+			IncludeTodos:      args.IncludeTodos,
+			IncludeNotes:      args.IncludeNotes,
+			SearchNoteContent: args.SearchNoteContent,
+			Status:            args.Status,
+			Priority:          args.Priority,
+			Tags:              args.Tags,
+			IncludeCompleted:  args.IncludeCompleted,
+			CreatedAfter:      args.CreatedAfter,
+			CreatedBefore:     args.CreatedBefore,
+			CompletedAfter:    args.CompletedAfter,
+			CompletedBefore:   args.CompletedBefore,
+			DueAfter:          args.DueAfter,
+			DueBefore:         args.DueBefore,
+		})
 		if err != nil {
 			return nil, nil, fmt.Errorf("search failed: %w", err)
 		}
