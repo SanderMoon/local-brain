@@ -183,10 +183,8 @@ release:
 # Update AUR after release
 publishers:
   - name: aur
-    ids:
-      - brain
-    dir: "."
     checksum: true
+    dir: "."
     cmd: ./scripts/update-aur.sh {{ .Version }}
 
 # Signing (optional - uncomment and configure if you want to sign releases)
