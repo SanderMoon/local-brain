@@ -180,6 +180,14 @@ release:
 
     Thanks to all contributors! 🎉
 
+# Update AUR after release
+publishers:
+  - name: aur
+    ids:
+      - brain
+    dir: "."
+    cmd: ./scripts/update-aur.sh {{ .Version }}
+
 # Signing (optional - uncomment and configure if you want to sign releases)
 # signs:
 #   - cmd: gpg
