@@ -46,15 +46,15 @@ cd "$AUR_DIR"
 git config user.name "SanderMoon (via GitHub Actions)"
 git config user.email "sander.moonemans@proton.me"
 
-# Update PKGBUILD
-sed -i "s/^pkgver=.*/pkgver=${PKG_VER}/" PKGBUILD
-sed -i "s/^sha256sums=.*/sha256sums=('${SHA256}')/" PKGBUILD
+# Update PKGBUILD (handles both pkgver= and pkgver =)
+sed -i "s/pkgver=.*/pkgver=${PKG_VER}/" PKGBUILD
+sed -i "s/sha256sums=.*/sha256sums=('${SHA256}')/" PKGBUILD
 
 # Update .SRCINFO manually since makepkg is not available on Ubuntu runners
-sed -i "s/pkgver = .*/pkgver = ${PKG_VER}/" .SRCINFO
-sed -i "s/sha256sums = .*/sha256sums = ${SHA256}/" .SRCINFO
-# Update the source URL in .SRCINFO which contains the version twice
-sed -i "s|source = .*|source = https://github.com/SanderMoon/local-brain/releases/download/v${PKG_VER}/local-brain_${PKG_VER}_Linux_x86_64.tar.gz|" .SRCINFO
+# Use [[:space:]]* to handle tabs or spaces at the start of the line
+sed -i "s/[[:space:]]*pkgver = .*/\tpkgver = ${PKG_VER}/" .SRCINFO
+sed -i "s/[[:space:]]*sha256sums = .*/\tsha256sums = ${SHA256}/" .SRCINFO
+sed -i "s|[[:space:]]*source = .*|\tsource = https://github.com/SanderMoon/local-brain/releases/download/v${PKG_VER}/local-brain_${PKG_VER}_Linux_x86_64.tar.gz|" .SRCINFO
 
 # Use a lock file to ensure only one push happens if called multiple times
 LOCKFILE="../../.aur-push.lock"
@@ -63,8 +63,9 @@ if ( set -o noclobber; echo "$$" > "$LOCKFILE") 2> /dev/null; then
     
     # Commit and push
     if git diff --quiet PKGBUILD .SRCINFO; then
-        echo "No changes to commit for AUR"
+        echo "No changes detected to commit for AUR"
     else
+        echo "Changes detected! Committing and pushing to AUR..."
         git add PKGBUILD .SRCINFO
         git commit -m "Update to v${PKG_VER}"
         git push origin master
