@@ -111,7 +111,7 @@ Create a `CLAUDE.md` file in your `~/brains` directory to give Claude Code stand
 **`search_todos`** - Filter todos by query, project, status, tags, and dates
 - `query` (string, optional) - Search term
 - `project` (string, optional) - Project filter
-- `status` (string, optional) - Status filter (open, in-progress, blocked, done)
+- `status` (string, optional) - Status filter (backlog, open, in-progress, blocked, done)
 - `tags` ([]string, optional) - Tag filter (OR logic)
 - `created_after` (string, optional) - Filter by capture date >= YYYY-MM-DD
 - `created_before` (string, optional) - Filter by capture date <= YYYY-MM-DD
@@ -146,7 +146,7 @@ Create a `CLAUDE.md` file in your `~/brains` directory to give Claude Code stand
 
 **`update_todo`** - Update todo status and/or metadata in one call
 - `todo_id` (string) - 6-character hex ID
-- `status` (string, optional) - open | in-progress | blocked | done
+- `status` (string, optional) - backlog | open | in-progress | blocked | done
 - `priority` (int, optional) - 1 (high), 2 (medium), 3 (low), null to clear
 - `due_date` (string, optional) - YYYY-MM-DD format or empty to clear
 - `add_tags` ([]string, optional) - Tags to add
@@ -247,7 +247,7 @@ Ask Claude: "Add a note about today's standup to project X"
 - Todo IDs must be 6-character lowercase hex (e.g., "abc123" not "ABC123")
 - Dates must be YYYY-MM-DD format (e.g., "2026-02-15")
 - Priority must be 1, 2, or 3
-- Status must be: open, in-progress, blocked, or done
+- Status must be: backlog, open, in-progress, blocked, or done
 
 ## Technical Details
 

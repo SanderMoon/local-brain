@@ -19,6 +19,12 @@ const (
 	// CardStride: Total vertical space a single card would occupy with spacing
 	// Note: Currently unused as spacing is not implemented in rendering
 	CardStride = CardHeight + CardSpacing
+
+	// CollapsedColumnWidth is the width of a collapsed backlog column
+	CollapsedColumnWidth = 14
+
+	// NumColumns is the total number of kanban columns
+	NumColumns = 5
 )
 
 // KanbanColumn represents a column in the kanban board
@@ -30,10 +36,11 @@ type KanbanColumn struct {
 
 // KanbanViewModel represents the kanban view state
 type KanbanViewModel struct {
-	Columns      [4]KanbanColumn
-	FocusedCol   int
-	SelectedRow  int
-	ScrollOffset [4]int // Scroll offset for each column
+	Columns           [NumColumns]KanbanColumn
+	FocusedCol        int
+	SelectedRow       int
+	ScrollOffset      [NumColumns]int // Scroll offset for each column
+	BacklogCollapsed  bool            // Whether the backlog column is collapsed
 
 	// Cache dimensions to prevent scrolling glitches
 	lastWidth  int
@@ -43,15 +50,28 @@ type KanbanViewModel struct {
 // NewKanbanViewModel creates a new kanban view model
 func NewKanbanViewModel() KanbanViewModel {
 	return KanbanViewModel{
-		Columns: [4]KanbanColumn{
+		Columns: [NumColumns]KanbanColumn{
+			{Title: "Backlog", Status: "backlog"},
 			{Title: "Open", Status: "open"},
 			{Title: "In Progress", Status: "in-progress"},
 			{Title: "Blocked", Status: "blocked"},
 			{Title: "Done", Status: "done"},
 		},
-		FocusedCol:  0,
-		SelectedRow: 0,
+		FocusedCol:       1, // Start focused on Open
+		SelectedRow:      0,
+		BacklogCollapsed: true, // Collapsed by default
 	}
+}
+
+// ToggleBacklog toggles the backlog column collapsed state
+func (k *KanbanViewModel) ToggleBacklog() {
+	k.BacklogCollapsed = !k.BacklogCollapsed
+	// If we just collapsed and were focused on backlog, move to Open
+	if k.BacklogCollapsed && k.FocusedCol == 0 {
+		k.FocusedCol = 1
+		k.SelectedRow = 0
+	}
+	k.validateCursor()
 }
 
 // UpdateTodos updates the kanban board with new todos
@@ -101,6 +121,10 @@ func (k *KanbanViewModel) UpdateTodos(todos []api.TodoItem) {
 
 // MoveLeft moves focus to the left column
 func (k *KanbanViewModel) MoveLeft() {
+	// Don't move left past Open when backlog is collapsed
+	if k.BacklogCollapsed && k.FocusedCol <= 1 {
+		return
+	}
 	if k.FocusedCol > 0 {
 		k.FocusedCol--
 		k.SelectedRow = 0 // Reset selection to top when switching columns
@@ -181,6 +205,11 @@ func (k *KanbanViewModel) validateCursor() {
 		k.FocusedCol = len(k.Columns) - 1
 	}
 
+	// Don't allow focus on collapsed backlog
+	if k.FocusedCol == 0 && k.BacklogCollapsed {
+		k.FocusedCol = 1
+	}
+
 	col := &k.Columns[k.FocusedCol]
 	nItems := len(col.Items)
 
@@ -210,8 +239,6 @@ func (k *KanbanViewModel) validateCursor() {
 		}
 
 		// Scroll Down if selected is below viewport
-		// If index 5 is selected, and we can see 3 items...
-		// 5 >= 0 + 3? Yes. Offset = 5 - 3 + 1 = 3. Visible: 3, 4, 5.
 		if k.SelectedRow >= k.ScrollOffset[k.FocusedCol]+maxVisible {
 			k.ScrollOffset[k.FocusedCol] = k.SelectedRow - maxVisible + 1
 		}
@@ -235,29 +262,81 @@ func (k *KanbanViewModel) Render(width, height int, primaryColor, mutedColor lip
 	// Ensure cursor is valid before drawing
 	k.validateCursor()
 
-	// Calculate column widths accounting for spacing between columns
-	// Reserve space for gaps (1 char between each of 4 columns = 3 chars)
-	availableWidth := width - 3
-	baseWidth := availableWidth / 4
-	remainder := availableWidth % 4
-
 	var renderedCols []string
-	for i := range k.Columns {
-		// Distribute remainder pixels to first N columns
-		colWidth := baseWidth
-		if i < remainder {
-			colWidth++
+
+	if k.BacklogCollapsed {
+		// Render collapsed backlog strip
+		renderedCols = append(renderedCols, k.renderCollapsedBacklog(height, primaryColor, mutedColor))
+		renderedCols = append(renderedCols, " ")
+
+		// Calculate remaining width for the 4 expanded columns
+		remainingWidth := width - CollapsedColumnWidth - 1 // -1 for spacing
+		gaps := 3                                          // 3 gaps between 4 columns
+		availableWidth := remainingWidth - gaps
+		baseWidth := availableWidth / 4
+		remainder := availableWidth % 4
+
+		for i := 1; i < NumColumns; i++ {
+			colWidth := baseWidth
+			if (i - 1) < remainder {
+				colWidth++
+			}
+			renderedCols = append(renderedCols, k.renderColumn(i, colWidth, height, primaryColor, mutedColor))
+			if i < NumColumns-1 {
+				renderedCols = append(renderedCols, " ")
+			}
 		}
+	} else {
+		// All 5 columns expanded
+		gaps := NumColumns - 1
+		availableWidth := width - gaps
+		baseWidth := availableWidth / NumColumns
+		remainder := availableWidth % NumColumns
 
-		renderedCols = append(renderedCols, k.renderColumn(i, colWidth, height, primaryColor, mutedColor))
-
-		// Add spacing between columns (except after last column)
-		if i < 3 {
-			renderedCols = append(renderedCols, " ")
+		for i := 0; i < NumColumns; i++ {
+			colWidth := baseWidth
+			if i < remainder {
+				colWidth++
+			}
+			renderedCols = append(renderedCols, k.renderColumn(i, colWidth, height, primaryColor, mutedColor))
+			if i < NumColumns-1 {
+				renderedCols = append(renderedCols, " ")
+			}
 		}
 	}
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, renderedCols...)
+}
+
+// renderCollapsedBacklog renders the backlog as a narrow collapsed strip
+func (k *KanbanViewModel) renderCollapsedBacklog(height int, primaryColor, mutedColor lipgloss.Color) string {
+	count := len(k.Columns[0].Items)
+
+	headerStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(mutedColor).
+		Width(CollapsedColumnWidth - 2). // Account for borders
+		Padding(0, 1)
+
+	header := headerStyle.Render(fmt.Sprintf("Backlog (%d)", count))
+
+	hint := lipgloss.NewStyle().
+		Foreground(mutedColor).
+		Italic(true).
+		Padding(0, 1).
+		Width(CollapsedColumnWidth - 2).
+		Render("B: expand")
+
+	content := lipgloss.JoinVertical(lipgloss.Left, header, "\n", hint)
+
+	baseStyle := lipgloss.NewStyle().
+		Width(CollapsedColumnWidth - 2).
+		Height(height - 2).
+		MaxHeight(height - 2).
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(mutedColor)
+
+	return baseStyle.Render(content)
 }
 
 // renderColumn renders a single kanban column

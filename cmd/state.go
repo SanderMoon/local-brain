@@ -17,7 +17,8 @@ var statusCmd = &cobra.Command{
 	Long: `Set the status of a task.
 
 Valid statuses:
-  open        - Open task (default)
+  backlog     - Not yet planned for active work
+  open        - Planned for current work cycle
   in-progress - Currently working on
   blocked     - Waiting on something
   done        - Completed
@@ -110,7 +111,7 @@ func runStatusInteractive(activeDir string) error {
 	// Loop until user cancels (Esc in FZF)
 	for {
 		// Select a todo (all non-completed tasks)
-		todo, err := selectTodoByStatus(activeDir, []string{"open", "in-progress", "blocked"}, "Select task to set status (Esc to exit)")
+		todo, err := selectTodoByStatus(activeDir, []string{"backlog", "open", "in-progress", "blocked"}, "Select task to set status (Esc to exit)")
 		if err != nil {
 			// Check if user cancelled (FZF returns error on Esc)
 			if err.Error() == "cancelled" || strings.Contains(err.Error(), "no matching tasks") {
@@ -151,7 +152,7 @@ func runStatusDirect(activeDir, query, statusArg string) error {
 	}
 
 	// Validate status
-	validStatuses := []string{"open", "in-progress", "blocked", "done"}
+	validStatuses := []string{"backlog", "open", "in-progress", "blocked", "done"}
 	statusArg = strings.ToLower(statusArg)
 	found := false
 	for _, s := range validStatuses {
@@ -162,7 +163,7 @@ func runStatusDirect(activeDir, query, statusArg string) error {
 	}
 
 	if !found {
-		return fmt.Errorf("invalid status: %s (must be: open, in-progress, blocked, done)", statusArg)
+		return fmt.Errorf("invalid status: %s (must be: backlog, open, in-progress, blocked, done)", statusArg)
 	}
 
 	// Set status
@@ -186,7 +187,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 0 {
 		// Interactive selection
-		todo, err = selectTodoByStatus(activeDir, []string{"open", "blocked"}, "Select task to start")
+		todo, err = selectTodoByStatus(activeDir, []string{"backlog", "open", "blocked"}, "Select task to start")
 		if err != nil {
 			return err
 		}
@@ -288,7 +289,7 @@ func promptAndSetStatus(todo *api.TodoItem) error {
 	// Show current status
 	fmt.Printf("Task: %s (%s)\n", todo.Content, todo.Project)
 	fmt.Printf("Current status: %s\n", todo.Status)
-	fmt.Print("Enter new status (open/in-progress/blocked/done): ")
+	fmt.Print("Enter new status (backlog/open/in-progress/blocked/done): ")
 
 	// Read input
 	reader := bufio.NewReader(os.Stdin)
@@ -304,7 +305,7 @@ func promptAndSetStatus(todo *api.TodoItem) error {
 	}
 
 	// Validate status
-	validStatuses := []string{"open", "in-progress", "blocked", "done"}
+	validStatuses := []string{"backlog", "open", "in-progress", "blocked", "done"}
 	found := false
 	for _, s := range validStatuses {
 		if s == input {
@@ -314,7 +315,7 @@ func promptAndSetStatus(todo *api.TodoItem) error {
 	}
 
 	if !found {
-		return fmt.Errorf("invalid status: %s (must be: open, in-progress, blocked, done)", input)
+		return fmt.Errorf("invalid status: %s (must be: backlog, open, in-progress, blocked, done)", input)
 	}
 
 	// Set status

@@ -19,9 +19,9 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 	type TodoUpdate struct {
 		TodoID     string   `json:"todo_id" jsonschema:"6-character hex ID of the task"`
 		Content    string   `json:"content,omitempty" jsonschema:"New task text (updates the content while preserving metadata)"`
-		Status     string   `json:"status,omitempty" jsonschema:"New status (open, in-progress, blocked, done)"`
+		Status     string   `json:"status,omitempty" jsonschema:"New status (backlog, open, in-progress, blocked, done)"`
 		Priority   *int     `json:"priority,omitempty" jsonschema:"Priority (1=high, 2=medium, 3=low, null to clear)"`
-		DueDate    string   `json:"due_date,omitempty" jsonschema:"Due date in YYYY-MM-DD format, or empty string to clear"`
+		DueDate    *string  `json:"due_date,omitempty" jsonschema:"Due date in YYYY-MM-DD format, or empty string to clear"`
 		AddTags    []string `json:"add_tags,omitempty" jsonschema:"Tags to add"`
 		RemoveTags []string `json:"remove_tags,omitempty" jsonschema:"Tags to remove"`
 		Delete     bool     `json:"delete,omitempty" jsonschema:"Set to true to permanently delete this todo"`
@@ -51,8 +51,10 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 			if err := validation.ValidatePriority(update.Priority); err != nil {
 				return nil, nil, fmt.Errorf("update[%d]: %w", i, err)
 			}
-			if err := validation.ValidateDueDate(update.DueDate); err != nil {
-				return nil, nil, fmt.Errorf("update[%d]: %w", i, err)
+			if update.DueDate != nil {
+				if err := validation.ValidateDueDate(*update.DueDate); err != nil {
+					return nil, nil, fmt.Errorf("update[%d]: %w", i, err)
+				}
 			}
 		}
 
@@ -119,11 +121,11 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 			}
 
 			// Update due date
-			if update.DueDate != "" {
-				if err := api.SetTodoDueDate(todo, update.DueDate); err != nil {
+			if update.DueDate != nil {
+				if err := api.SetTodoDueDate(todo, *update.DueDate); err != nil {
 					return nil, nil, fmt.Errorf("failed to set due date for %s: %w", update.TodoID, err)
 				}
-				changes = append(changes, fmt.Sprintf("due_date=%s", update.DueDate))
+				changes = append(changes, fmt.Sprintf("due_date=%s", *update.DueDate))
 				todos, _ = api.ParseAllTodos(activeDir, true)
 				todo = api.FindTodoByID(todos, update.TodoID)
 			}
@@ -174,7 +176,7 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 		Priority *int     `json:"priority,omitempty" jsonschema:"Priority: 1=high, 2=medium, 3=low (optional)"`
 		DueDate  string   `json:"due_date,omitempty" jsonschema:"Due date in YYYY-MM-DD format (optional)"`
 		Tags     []string `json:"tags,omitempty" jsonschema:"Tags (optional)"`
-		Status   string   `json:"status,omitempty" jsonschema:"Initial status: open, in-progress, blocked (optional, defaults to open)"`
+		Status   string   `json:"status,omitempty" jsonschema:"Initial status: backlog (default), open, in-progress, blocked (optional)"`
 	}
 	type CreateTodoInProjectArgs struct {
 		ProjectName string              `json:"project_name" jsonschema:"Project name"`
@@ -206,8 +208,8 @@ func RegisterTodoTools(srv *mcp.Server, sess *session.Session) error {
 					return nil, nil, fmt.Errorf("todo[%d]: %w", i, err)
 				}
 			}
-			if todo.Status != "" && todo.Status != "open" && todo.Status != "in-progress" && todo.Status != "blocked" {
-				return nil, nil, fmt.Errorf("todo[%d]: invalid status '%s' (must be: open, in-progress, blocked)", i, todo.Status)
+			if todo.Status != "" && todo.Status != "backlog" && todo.Status != "open" && todo.Status != "in-progress" && todo.Status != "blocked" {
+				return nil, nil, fmt.Errorf("todo[%d]: invalid status '%s' (must be: backlog, open, in-progress, blocked)", i, todo.Status)
 			}
 		}
 

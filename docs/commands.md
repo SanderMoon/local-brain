@@ -290,7 +290,7 @@ brain refile a1b2c3 backend-api
 Moves specific item by ID to a specific project.
 
 **Behavior:**
-- **Tasks** → Appended to project's `todo.md`
+- **Tasks** → Appended to project's `todo.md` with **backlog** status (`[~]`). Use `brain plan` to promote to open.
 - **Notes** → Created as separate markdown files in project's `notes/` directory
 
 **Examples:**
@@ -312,7 +312,7 @@ brain refile d4e5f6 personal
 
 ### `brain plan`
 
-**Description:** Interactive batch task planning
+**Description:** Plan your work: promote backlog tasks and set metadata
 
 **Usage:**
 ```bash
@@ -320,36 +320,20 @@ brain plan
 ```
 
 **Workflow:**
-1. Shows interactive task selection (fzf)
-2. For each selected task, prompts for:
+1. Shows backlog tasks first, then open/in-progress tasks (fzf multi-select)
+2. Tab to select multiple tasks, Enter to confirm
+3. For selected tasks, prompts for:
+   - **Status** (defaults to "open" when backlog items selected — promotes them)
    - **Priority** (1=high, 2=medium, 3=low)
    - **Due date** (YYYY-MM-DD, tomorrow, +3d, next-friday)
    - **Tags** (comma/space separated)
-   - **State** (open, in-progress, blocked)
-3. All fields optional - press Enter to skip
-4. Loops until cancelled (Esc)
+4. All fields optional - press Enter to skip (or accept defaults)
 
-**Examples:**
+**Typical Workflow:**
 ```
-Select task to plan (Esc to exit)
-Task: Fix authentication bug (backend-api)
---------------------------------------------------------------
-Current priority: none
-Current due date: none
-Current tags: none
-Current state: open
---------------------------------------------------------------
-Priority (1=high, 2=medium, 3=low, clear, or Enter to skip): 1
-✓ Set priority to 1 (high)
-
-Due date (YYYY-MM-DD, tomorrow, +3d, next-friday, clear, or Enter to skip): next-friday
-✓ Set due date to 2026-02-07
-
-Tags (comma or space separated, or Enter to skip): bug security
-✓ Added tags: #bug #security
-
-State (open, in-progress, blocked, or Enter to skip): in-progress
-✓ Set state to in-progress
+1. Capture:  brain add "task"           → goes to inbox
+2. Refile:   brain refile               → items land in backlog
+3. Plan:     brain plan                 → promote backlog → open, set priorities/dates
 ```
 
 **Natural Language Dates:**
@@ -359,8 +343,9 @@ State (open, in-progress, blocked, or Enter to skip): in-progress
 - `YYYY-MM-DD` - Explicit date
 
 **Notes:**
+- Primary use: promote backlog items to open (planned for the current work cycle)
 - Ideal for weekly planning sessions
-- Complements `brain add` for capture-curate workflow
+- Backlog items auto-promote to "open" when you press Enter at the status prompt
 - Existing tags shown as suggestions
 - Can clear metadata by entering `clear`
 
@@ -691,6 +676,7 @@ brain todo
 brain todo ls
 
 # Filter by status
+brain todo ls --status backlog
 brain todo ls --status in-progress
 brain todo ls --status blocked
 
@@ -725,7 +711,7 @@ brain todo ls --json
 - `--all` - Include completed tasks
 - `--priority <1-3>` - Filter by priority level
 - `--no-priority` - Show only unprioritized tasks
-- `--status <state>` - Filter by status (open, in-progress, blocked, done)
+- `--status <state>` - Filter by status (backlog, open, in-progress, blocked, done)
 - `--tag <tag>` - Filter by tag (can specify multiple)
 - `--tag-mode <and|or>` - Tag filter mode (default: or)
 - `--due-today` - Tasks due today
@@ -743,7 +729,7 @@ ghi789      [ ] Refactor API handlers (backend-api)
 **Format:**
 - `ID` - Unique task identifier
 - `[P1]` - Priority badge (1=high, 2=medium, 3=low)
-- `[>]` - Status checkbox (`[ ]`=open, `[>]`=in-progress, `[-]`=blocked, `[x]`=done)
+- `[>]` - Status checkbox (`[~]`=backlog, `[ ]`=open, `[>]`=in-progress, `[-]`=blocked, `[x]`=done)
 - Task content
 - Tags (with `#`)
 - `(project)` - Project name
@@ -865,6 +851,7 @@ brain todo unblock abc123
 
 **Usage:**
 ```bash
+brain todo status abc123 backlog
 brain todo status abc123 open
 brain todo status abc123 in-progress
 brain todo status abc123 blocked
@@ -872,7 +859,8 @@ brain todo status abc123 done
 ```
 
 **Valid States:**
-- `open` - Not started (`[ ]`)
+- `backlog` - Not yet planned for active work (`[~]`)
+- `open` - Planned for current work cycle (`[ ]`)
 - `in-progress` - Currently working (`[>]`)
 - `blocked` - Waiting on dependency (`[-]`)
 - `done` - Completed (`[x]`)

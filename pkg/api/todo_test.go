@@ -1637,8 +1637,8 @@ func TestAppendTodoWithMetadata_MinimalFields(t *testing.T) {
 	if created.Content != "Simple task" {
 		t.Errorf("Content mismatch. Got: %q", created.Content)
 	}
-	if created.Status != "open" {
-		t.Errorf("Status should default to open, got: %s", created.Status)
+	if created.Status != "backlog" {
+		t.Errorf("Status should default to backlog, got: %s", created.Status)
 	}
 	if created.Priority != nil {
 		t.Errorf("Priority should be nil, got: %v", created.Priority)

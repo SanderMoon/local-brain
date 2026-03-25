@@ -43,7 +43,8 @@ Present a concise, scannable summary. Do not dump raw data. Group by urgency:
 2. **Due today** — list with IDs
 3. **High priority** — P1 tasks without due dates
 4. **In progress** — what was already underway
-5. **Inbox** — count of quick-capture items waiting
+5. **Backlog** — count of items in backlog across projects (brief; this is for awareness, not action)
+6. **Inbox** — count of quick-capture items waiting
 
 Keep it to 10 items max; offer to drill into an area if there's more.
 
@@ -62,6 +63,7 @@ Based on the briefing:
 After the summary, offer natural next steps based on what the briefing revealed:
 
 - **Inbox items pending?** → "Want to do a quick triage?" (transitions to `brain-triage`)
+- **Backlog needs planning?** → "You have N items in backlog — want to promote some for this week?" (use `update_todo` to set status to "open")
 - **Clear top priority?** → "Want to focus on [project]?" (`set_context`)
 - **Want to log the plan?** → "I can create today's daily note." (`create_daily_note`)
 - **Tasks need updating?** → "Want to update any statuses or priorities?" (`update_todo`)

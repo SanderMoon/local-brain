@@ -251,8 +251,8 @@ func refileTask(item *markdown.DumpItem, projectDir string) error {
 
 	lines := strings.Split(string(content), "\n")
 
-	// Create task with stable ID
-	newTaskLine := fmt.Sprintf("- [ ] %s", item.Content)
+	// Create task with backlog status (refiled items start in backlog)
+	newTaskLine := fmt.Sprintf("- [~] %s", item.Content)
 	newTaskLine, _ = api.AddIDToLine(newTaskLine)
 
 	// Find the "## Active" section and insert after it

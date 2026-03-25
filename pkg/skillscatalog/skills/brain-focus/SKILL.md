@@ -40,6 +40,7 @@ Present a concise project dashboard:
 > In progress: [list]
 > Up next: [highest priority open tasks]
 > Blocked: [any blocked items]
+> Backlog: [count] (not shown in detail — these are unplanned)
 > Recent notes: [titles]
 
 ### Step 3 — Suggest Next Action

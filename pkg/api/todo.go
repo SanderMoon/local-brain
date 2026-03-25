@@ -18,7 +18,7 @@ type TodoItem struct {
 	ID            string   `json:"id"`
 	File          string   `json:"file"`
 	Line          int      `json:"line"`
-	Status        string   `json:"status"` // "open", "in-progress", "blocked", or "done"
+	Status        string   `json:"status"` // "backlog", "open", "in-progress", "blocked", or "done"
 	Content       string   `json:"content"`
 	Project       string   `json:"project"`
 	Priority      *int     `json:"priority"`                 // 1=high, 2=medium, 3=low, nil=unprioritized
@@ -30,6 +30,7 @@ type TodoItem struct {
 }
 
 var (
+	todoBacklogPattern    = regexp.MustCompile(`^\s*- \[~\] (.+)$`)
 	todoOpenPattern       = regexp.MustCompile(`^\s*- \[ \] (.+)$`)
 	todoInProgressPattern = regexp.MustCompile(`^\s*- \[>\] (.+)$`)
 	todoBlockedPattern    = regexp.MustCompile(`^\s*- \[-\] (.+)$`)
@@ -91,7 +92,9 @@ func parseTodoFile(filePath, projectName string, includeCompleted bool) ([]TodoI
 		var matches []string
 
 		// Check for all task states
-		if matches = todoOpenPattern.FindStringSubmatch(line); matches != nil {
+		if matches = todoBacklogPattern.FindStringSubmatch(line); matches != nil {
+			status = "backlog"
+		} else if matches = todoOpenPattern.FindStringSubmatch(line); matches != nil {
 			status = "open"
 		} else if matches = todoInProgressPattern.FindStringSubmatch(line); matches != nil {
 			status = "in-progress"
@@ -277,6 +280,17 @@ func DeleteTodoLine(todo *TodoItem) error {
 	return os.WriteFile(todo.File, []byte(newContent), 0644)
 }
 
+// extractCheckboxAndContent parses a todo line and returns the checkbox marker and task content.
+func extractCheckboxAndContent(line string) (string, string, error) {
+	checkboxes := []string{"- [~]", "- [ ]", "- [>]", "- [-]", "- [x]", "- [X]"}
+	for _, cb := range checkboxes {
+		if strings.Contains(line, cb) {
+			return cb, strings.TrimSpace(strings.TrimPrefix(line, cb)), nil
+		}
+	}
+	return "", "", fmt.Errorf("line is not a valid todo item")
+}
+
 // SetTodoPriority sets or clears the priority tag for a todo item
 // Priority should be 1 (high), 2 (medium), 3 (low), or nil (clear priority)
 func SetTodoPriority(todo *TodoItem, priority *int) error {
@@ -302,26 +316,9 @@ func SetTodoPriority(todo *TodoItem, priority *int) error {
 	line := lines[todo.Line-1]
 
 	// Parse the line to extract checkbox and content
-	var checkbox, taskContent string
-	if strings.Contains(line, "- [ ]") {
-		checkbox = "- [ ]"
-		taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [ ]"))
-	} else if strings.Contains(line, "- [>]") {
-		checkbox = "- [>]"
-		taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [>]"))
-	} else if strings.Contains(line, "- [-]") {
-		checkbox = "- [-]"
-		taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [-]"))
-	} else if strings.Contains(line, "- [x]") || strings.Contains(line, "- [X]") {
-		if strings.Contains(line, "- [x]") {
-			checkbox = "- [x]"
-			taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [x]"))
-		} else {
-			checkbox = "- [X]"
-			taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [X]"))
-		}
-	} else {
-		return fmt.Errorf("line is not a valid todo item")
+	checkbox, taskContent, err := extractCheckboxAndContent(line)
+	if err != nil {
+		return err
 	}
 
 	// Remove any existing priority tag from content (both new p: and legacy #p: formats)
@@ -362,6 +359,7 @@ func SetTodoPriority(todo *TodoItem, priority *int) error {
 func SetTodoStatus(todo *TodoItem, newStatus string) error {
 	// Validate status and get checkbox symbol (without brackets)
 	validStatuses := map[string]string{
+		"backlog":     "~",
 		"open":        " ",
 		"in-progress": ">",
 		"blocked":     "-",
@@ -370,7 +368,7 @@ func SetTodoStatus(todo *TodoItem, newStatus string) error {
 
 	checkboxSymbol, ok := validStatuses[newStatus]
 	if !ok {
-		return fmt.Errorf("invalid status: %s (must be: open, in-progress, blocked, done)", newStatus)
+		return fmt.Errorf("invalid status: %s (must be: backlog, open, in-progress, blocked, done)", newStatus)
 	}
 
 	// Read file
@@ -390,8 +388,8 @@ func SetTodoStatus(todo *TodoItem, newStatus string) error {
 	line := lines[todo.Line-1]
 
 	// Replace checkbox pattern in line
-	// Match any checkbox pattern: [ ], [>], [-], [x], [X]
-	checkboxPattern := regexp.MustCompile(`^(\s*)- \[[ >xX-]\]`)
+	// Match any checkbox pattern: [~], [ ], [>], [-], [x], [X]
+	checkboxPattern := regexp.MustCompile(`^(\s*)- \[[ ~>xX-]\]`)
 	if !checkboxPattern.MatchString(line) {
 		return fmt.Errorf("line is not a valid todo item")
 	}
@@ -502,26 +500,9 @@ func SetTodoDueDate(todo *TodoItem, dueDate string) error {
 	line := lines[todo.Line-1]
 
 	// Parse the line to extract checkbox and content
-	var checkbox, taskContent string
-	if strings.Contains(line, "- [ ]") {
-		checkbox = "- [ ]"
-		taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [ ]"))
-	} else if strings.Contains(line, "- [>]") {
-		checkbox = "- [>]"
-		taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [>]"))
-	} else if strings.Contains(line, "- [-]") {
-		checkbox = "- [-]"
-		taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [-]"))
-	} else if strings.Contains(line, "- [x]") || strings.Contains(line, "- [X]") {
-		if strings.Contains(line, "- [x]") {
-			checkbox = "- [x]"
-			taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [x]"))
-		} else {
-			checkbox = "- [X]"
-			taskContent = strings.TrimSpace(strings.TrimPrefix(line, "- [X]"))
-		}
-	} else {
-		return fmt.Errorf("line is not a valid todo item")
+	checkbox, taskContent, err := extractCheckboxAndContent(line)
+	if err != nil {
+		return err
 	}
 
 	// Remove any existing due date tag from content (both new due: and legacy #due: formats)
@@ -643,7 +624,7 @@ func RemoveTodoTags(todo *TodoItem, tagsToRemove []string) error {
 	line = strings.TrimSpace(line)
 
 	// Ensure checkbox remains at the start with proper spacing
-	checkboxPattern := regexp.MustCompile(`^(\s*)- \[[ >xX-]\]`)
+	checkboxPattern := regexp.MustCompile(`^(\s*)- \[[ ~>xX-]\]`)
 	if checkboxPattern.MatchString(line) {
 		// Line is already properly formatted
 	} else {
@@ -691,7 +672,7 @@ func UpdateTodoContent(todo *TodoItem, newContent string) error {
 	line := lines[todo.Line-1]
 
 	// Extract checkbox
-	checkboxPattern := regexp.MustCompile(`^(\s*)- \[([>xX \-])\] `)
+	checkboxPattern := regexp.MustCompile(`^(\s*)- \[([~>xX \-])\] `)
 	matches := checkboxPattern.FindStringSubmatch(line)
 	if matches == nil {
 		return fmt.Errorf("line is not a valid todo item")
@@ -743,7 +724,7 @@ type TodoCreateRequest struct {
 	Priority *int     // 1=high, 2=medium, 3=low, nil=no priority
 	DueDate  string   // YYYY-MM-DD format, empty=no due date
 	Tags     []string // Optional tags
-	Status   string   // open, in-progress, blocked (default: open)
+	Status   string   // backlog, open, in-progress, blocked (default: backlog)
 }
 
 // AppendTodoWithMetadata adds a new task with metadata to a project's todo.md file
@@ -763,15 +744,17 @@ func AppendTodoWithMetadata(projectDir string, todo TodoCreateRequest) error {
 		}
 	}
 
-	// Default status to open if not specified
+	// Default status to backlog if not specified
 	status := todo.Status
 	if status == "" {
-		status = "open"
+		status = "backlog"
 	}
 
 	// Map status to checkbox symbol
 	var checkboxSymbol string
 	switch status {
+	case "backlog":
+		checkboxSymbol = "~"
 	case "open":
 		checkboxSymbol = " "
 	case "in-progress":
@@ -879,8 +862,8 @@ func AppendTodoToProject(projectDir, content string) error {
 
 	lines := strings.Split(string(fileContent), "\n")
 
-	// Create new task line with HTML comment metadata
-	newTaskLine := fmt.Sprintf("- [ ] %s", content)
+	// Create new task line with backlog status and HTML comment metadata
+	newTaskLine := fmt.Sprintf("- [~] %s", content)
 	newID := GenerateNewID()
 	today := time.Now().Format("2006-01-02")
 	comment := BuildSystemComment(newID, today, "")

@@ -250,6 +250,9 @@ func (m Model) updateContent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				return m, cycleStatusBackwardCmd(*todo)
 			}
 			return m, nil
+		case "B": // Toggle backlog column visibility
+			m.kanbanView.ToggleBacklog()
+			return m, nil
 		case KeyEdit:
 			todo := m.kanbanView.GetSelectedTodo()
 			if todo != nil {
@@ -505,8 +508,8 @@ func setPriorityCmd(todo api.TodoItem, priorityStr string) tea.Cmd {
 // cycleStatusCmd cycles through todo statuses (forward)
 func cycleStatusCmd(todo api.TodoItem) tea.Cmd {
 	return func() tea.Msg {
-		statuses := []string{"open", "in-progress", "blocked", "done"}
-		nextStatus := "open"
+		statuses := []string{"backlog", "open", "in-progress", "blocked", "done"}
+		nextStatus := "backlog"
 
 		for i, status := range statuses {
 			if status == todo.Status {
@@ -527,7 +530,7 @@ func cycleStatusCmd(todo api.TodoItem) tea.Cmd {
 // cycleStatusBackwardCmd cycles through todo statuses (backward)
 func cycleStatusBackwardCmd(todo api.TodoItem) tea.Cmd {
 	return func() tea.Msg {
-		statuses := []string{"open", "in-progress", "blocked", "done"}
+		statuses := []string{"backlog", "open", "in-progress", "blocked", "done"}
 		prevStatus := "done"
 
 		for i, status := range statuses {
@@ -619,7 +622,7 @@ func (m Model) getKeyHints() string {
 	case ViewNotes:
 		return "↑↓: navigate | e: edit | p: toggle preview | tab: sidebar | 1-3: views | ?: help | q: quit"
 	case ViewTodosKanban:
-		return "↑↓←→: navigate | e: edit | m: move fwd | b: move back | c: completed | a: all projects | ?: help"
+		return "↑↓←→: navigate | e: edit | m: move fwd | b: move back | B: backlog | c: completed | a: all | ?: help"
 	default:
 		return "tab: sidebar | 1-3: views | c: completed | a: all projects | ?: help | q: quit"
 	}

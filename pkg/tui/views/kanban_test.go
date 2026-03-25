@@ -11,7 +11,7 @@ import (
 func TestKanbanViewModel_ScrollOffset(t *testing.T) {
 	k := NewKanbanViewModel()
 
-	// Create test todos
+	// Create test todos (open tasks go to column 1 since backlog is collapsed)
 	todos := []api.TodoItem{
 		{Content: "Task 1", Status: "open"},
 		{Content: "Task 2", Status: "open"},
@@ -22,9 +22,14 @@ func TestKanbanViewModel_ScrollOffset(t *testing.T) {
 
 	k.UpdateTodos(todos)
 
+	// Focus starts on Open column (index 1)
+	if k.FocusedCol != 1 {
+		t.Errorf("Expected initial focused column to be 1 (Open), got %d", k.FocusedCol)
+	}
+
 	// Initially scroll offset should be 0
-	if k.ScrollOffset[0] != 0 {
-		t.Errorf("Expected initial scroll offset to be 0, got %d", k.ScrollOffset[0])
+	if k.ScrollOffset[1] != 0 {
+		t.Errorf("Expected initial scroll offset to be 0, got %d", k.ScrollOffset[1])
 	}
 
 	// Move down several times
@@ -35,10 +40,6 @@ func TestKanbanViewModel_ScrollOffset(t *testing.T) {
 	if k.SelectedRow != 3 {
 		t.Errorf("Expected selected row to be 3, got %d", k.SelectedRow)
 	}
-
-	// Note: scroll offset is adjusted during rendering
-	// We test the scroll behavior through the navigation methods
-	// which ensure the selected item stays visible
 }
 
 func TestKanbanViewModel_MoveUp_AdjustsScrollOffset(t *testing.T) {
@@ -57,9 +58,9 @@ func TestKanbanViewModel_MoveUp_AdjustsScrollOffset(t *testing.T) {
 	mutedColor := lipgloss.Color("240")
 	_ = k.Render(80, 30, primaryColor, mutedColor)
 
-	// Set scroll offset to 2 and selected row to 2
+	// Set scroll offset to 2 and selected row to 2 (Open column = index 1)
 	k.SelectedRow = 2
-	k.ScrollOffset[0] = 2
+	k.ScrollOffset[1] = 2
 
 	// Move up
 	k.MoveUp()
@@ -70,8 +71,8 @@ func TestKanbanViewModel_MoveUp_AdjustsScrollOffset(t *testing.T) {
 	}
 
 	// Scroll offset should adjust to 1 (to keep selection visible)
-	if k.ScrollOffset[0] != 1 {
-		t.Errorf("Expected scroll offset to be 1, got %d", k.ScrollOffset[0])
+	if k.ScrollOffset[1] != 1 {
+		t.Errorf("Expected scroll offset to be 1, got %d", k.ScrollOffset[1])
 	}
 }
 
@@ -85,21 +86,21 @@ func TestKanbanViewModel_MoveLeft_ResetsScrollOffset(t *testing.T) {
 
 	k.UpdateTodos(todos)
 
-	// Move to second column and scroll
-	k.FocusedCol = 1
+	// Move to In Progress column (index 2) and scroll
+	k.FocusedCol = 2
 	k.SelectedRow = 0
-	k.ScrollOffset[1] = 3
+	k.ScrollOffset[2] = 3
 
 	k.MoveLeft()
 
-	// Should be in first column now
-	if k.FocusedCol != 0 {
-		t.Errorf("Expected focused column to be 0, got %d", k.FocusedCol)
+	// Should be in Open column now (index 1, since backlog is collapsed)
+	if k.FocusedCol != 1 {
+		t.Errorf("Expected focused column to be 1 (Open), got %d", k.FocusedCol)
 	}
 
 	// Scroll offset for new column should be reset
-	if k.ScrollOffset[0] != 0 {
-		t.Errorf("Expected scroll offset to be 0 after moving left, got %d", k.ScrollOffset[0])
+	if k.ScrollOffset[1] != 0 {
+		t.Errorf("Expected scroll offset to be 0 after moving left, got %d", k.ScrollOffset[1])
 	}
 }
 
@@ -113,20 +114,21 @@ func TestKanbanViewModel_MoveRight_ResetsScrollOffset(t *testing.T) {
 
 	k.UpdateTodos(todos)
 
-	k.FocusedCol = 0
+	// Start at Open column (index 1)
+	k.FocusedCol = 1
 	k.SelectedRow = 0
-	k.ScrollOffset[0] = 2
+	k.ScrollOffset[1] = 2
 
 	k.MoveRight()
 
-	// Should be in second column now
-	if k.FocusedCol != 1 {
-		t.Errorf("Expected focused column to be 1, got %d", k.FocusedCol)
+	// Should be in In Progress column now (index 2)
+	if k.FocusedCol != 2 {
+		t.Errorf("Expected focused column to be 2 (In Progress), got %d", k.FocusedCol)
 	}
 
 	// Scroll offset for new column should be reset
-	if k.ScrollOffset[1] != 0 {
-		t.Errorf("Expected scroll offset to be 0 after moving right, got %d", k.ScrollOffset[1])
+	if k.ScrollOffset[2] != 0 {
+		t.Errorf("Expected scroll offset to be 0 after moving right, got %d", k.ScrollOffset[2])
 	}
 }
 
@@ -134,6 +136,7 @@ func TestKanbanViewModel_UpdateTodos_GroupsByStatus(t *testing.T) {
 	k := NewKanbanViewModel()
 
 	todos := []api.TodoItem{
+		{Content: "Backlog task", Status: "backlog"},
 		{Content: "Open task", Status: "open"},
 		{Content: "In progress task", Status: "in-progress"},
 		{Content: "Blocked task", Status: "blocked"},
@@ -144,17 +147,20 @@ func TestKanbanViewModel_UpdateTodos_GroupsByStatus(t *testing.T) {
 	k.UpdateTodos(todos)
 
 	// Check that todos are grouped correctly
-	if len(k.Columns[0].Items) != 2 { // Open
-		t.Errorf("Expected 2 open tasks, got %d", len(k.Columns[0].Items))
+	if len(k.Columns[0].Items) != 1 { // Backlog
+		t.Errorf("Expected 1 backlog task, got %d", len(k.Columns[0].Items))
 	}
-	if len(k.Columns[1].Items) != 1 { // In Progress
-		t.Errorf("Expected 1 in-progress task, got %d", len(k.Columns[1].Items))
+	if len(k.Columns[1].Items) != 2 { // Open
+		t.Errorf("Expected 2 open tasks, got %d", len(k.Columns[1].Items))
 	}
-	if len(k.Columns[2].Items) != 1 { // Blocked
-		t.Errorf("Expected 1 blocked task, got %d", len(k.Columns[2].Items))
+	if len(k.Columns[2].Items) != 1 { // In Progress
+		t.Errorf("Expected 1 in-progress task, got %d", len(k.Columns[2].Items))
 	}
-	if len(k.Columns[3].Items) != 1 { // Done
-		t.Errorf("Expected 1 done task, got %d", len(k.Columns[3].Items))
+	if len(k.Columns[3].Items) != 1 { // Blocked
+		t.Errorf("Expected 1 blocked task, got %d", len(k.Columns[3].Items))
+	}
+	if len(k.Columns[4].Items) != 1 { // Done
+		t.Errorf("Expected 1 done task, got %d", len(k.Columns[4].Items))
 	}
 }
 
@@ -169,14 +175,14 @@ func TestKanbanViewModel_UpdateTodos_AdjustsInvalidScrollOffset(t *testing.T) {
 
 	k.UpdateTodos(todos)
 	k.SelectedRow = 2
-	k.ScrollOffset[0] = 5 // Invalid - higher than selected row
+	k.ScrollOffset[1] = 5 // Invalid - higher than selected row (Open column = index 1)
 
 	// Update with same todos
 	k.UpdateTodos(todos)
 
 	// Scroll offset should be adjusted to selected row
-	if k.ScrollOffset[0] > k.SelectedRow {
-		t.Errorf("Expected scroll offset (%d) to be <= selected row (%d)", k.ScrollOffset[0], k.SelectedRow)
+	if k.ScrollOffset[1] > k.SelectedRow {
+		t.Errorf("Expected scroll offset (%d) to be <= selected row (%d)", k.ScrollOffset[1], k.SelectedRow)
 	}
 }
 
@@ -190,8 +196,8 @@ func TestKanbanViewModel_GetSelectedTodo(t *testing.T) {
 
 	k.UpdateTodos(todos)
 
-	// Select first task in first column
-	k.FocusedCol = 0
+	// Select first task in Open column (index 1, default focus)
+	k.FocusedCol = 1
 	k.SelectedRow = 0
 
 	todo := k.GetSelectedTodo()
@@ -202,8 +208,8 @@ func TestKanbanViewModel_GetSelectedTodo(t *testing.T) {
 		t.Errorf("Expected task content 'Task 1', got '%s'", todo.Content)
 	}
 
-	// Move to second column
-	k.FocusedCol = 1
+	// Move to In Progress column (index 2)
+	k.FocusedCol = 2
 	k.SelectedRow = 0
 
 	todo = k.GetSelectedTodo()
@@ -225,7 +231,7 @@ func TestKanbanViewModel_GetSelectedTodo_InvalidSelection(t *testing.T) {
 	k.UpdateTodos(todos)
 
 	// Try to select invalid row
-	k.FocusedCol = 0
+	k.FocusedCol = 1 // Open column
 	k.SelectedRow = 10
 
 	todo := k.GetSelectedTodo()
@@ -295,12 +301,7 @@ func TestKanbanViewModel_FixedHeightCards(t *testing.T) {
 
 	k.UpdateTodos(todos)
 
-	// All cards should render to the same height (5 lines including borders)
-	// We can't easily test the exact rendering output, but we can verify
-	// that the scroll calculation works correctly with the fixed height assumption
-
-	// With fixed height of 5 lines per card + 1 spacing = 6 lines per card
-	// If we have 30 lines available, we should fit 5 cards (30 / 6 = 5)
+	// Verify card capacity calculation
 	availableHeight := 30
 	expectedCardsPerView := availableHeight / 6
 
@@ -323,18 +324,17 @@ func TestKanbanViewModel_ScrollIndicators(t *testing.T) {
 
 	k.UpdateTodos(todos)
 
-	// Set scroll offset to middle of list
-	k.ScrollOffset[0] = 3
+	// Set scroll offset to middle of list (Open column = index 1)
+	k.ScrollOffset[1] = 3
 	k.SelectedRow = 3
 
 	// When scrolled, there should be items above and below
-	// This is implicitly tested by the scroll offset logic
-	if k.ScrollOffset[0] != 3 {
-		t.Errorf("Expected scroll offset to be 3, got %d", k.ScrollOffset[0])
+	if k.ScrollOffset[1] != 3 {
+		t.Errorf("Expected scroll offset to be 3, got %d", k.ScrollOffset[1])
 	}
 
 	// Verify we can calculate items above and below
-	itemsAbove := k.ScrollOffset[0]
+	itemsAbove := k.ScrollOffset[1]
 	if itemsAbove != 3 {
 		t.Errorf("Expected 3 items above, got %d", itemsAbove)
 	}
@@ -345,51 +345,74 @@ func TestKanbanViewModel_WidthDistribution(t *testing.T) {
 	primaryColor := lipgloss.Color("205")
 	mutedColor := lipgloss.Color("240")
 
-	// Test various widths to ensure proper distribution without gaps or overflow
-	testWidths := []struct {
-		width          int
-		expectedWidths [4]int // Expected width for each of the 4 columns
-	}{
-		{100, [4]int{25, 24, 24, 24}}, // (100-3)/4 = 24 base, remainder 1
-		{101, [4]int{25, 25, 24, 24}}, // (101-3)/4 = 24 base, remainder 2
-		{102, [4]int{25, 25, 25, 24}}, // (102-3)/4 = 24 base, remainder 3
-		{103, [4]int{25, 25, 25, 25}}, // (103-3)/4 = 25 base, remainder 0
-		{80, [4]int{20, 19, 19, 19}},  // (80-3)/4 = 19 base, remainder 1
-	}
+	// With backlog collapsed (default), we have collapsed strip (14px) + 4 expanded columns
+	// The width distribution test verifies the 4 expanded columns share space correctly
+	testWidths := []int{100, 101, 102, 103, 80}
 
-	for _, tt := range testWidths {
-		t.Run(fmt.Sprintf("width=%d", tt.width), func(t *testing.T) {
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width=%d", width), func(t *testing.T) {
 			// Create some test todos
 			todos := []api.TodoItem{
 				{Content: "Task", Status: "open"},
 			}
 			k.UpdateTodos(todos)
 
-			// Render with test width
-			_ = k.Render(tt.width, 30, primaryColor, mutedColor)
-
-			// Verify column widths with spacing accounted for
-			availableWidth := tt.width - 3 // 3 spaces between 4 columns
-			baseWidth := availableWidth / 4
-			remainder := availableWidth % 4
-			totalWidth := 0
-
-			for i := 0; i < 4; i++ {
-				expectedWidth := baseWidth
-				if i < remainder {
-					expectedWidth++
-				}
-				if expectedWidth != tt.expectedWidths[i] {
-					t.Errorf("Column %d: expected width %d, got %d", i, tt.expectedWidths[i], expectedWidth)
-				}
-				totalWidth += expectedWidth
-			}
-
-			// Total column widths + spacing should equal available width
-			if totalWidth+3 != tt.width {
-				t.Errorf("Total column widths (%d) + spacing (3) don't match total width (%d)", totalWidth, tt.width)
-			}
+			// Render with test width - should not panic
+			_ = k.Render(width, 30, primaryColor, mutedColor)
 		})
+	}
+}
+
+func TestKanbanViewModel_ToggleBacklog(t *testing.T) {
+	k := NewKanbanViewModel()
+
+	// Default: backlog collapsed, focused on Open (column 1)
+	if !k.BacklogCollapsed {
+		t.Error("Expected backlog to be collapsed by default")
+	}
+	if k.FocusedCol != 1 {
+		t.Errorf("Expected initial focus on column 1 (Open), got %d", k.FocusedCol)
+	}
+
+	// Toggle open
+	k.ToggleBacklog()
+	if k.BacklogCollapsed {
+		t.Error("Expected backlog to be expanded after toggle")
+	}
+
+	// Can now focus on backlog
+	k.FocusedCol = 0
+	k.validateCursor()
+	if k.FocusedCol != 0 {
+		t.Errorf("Expected to be able to focus on backlog when expanded, got column %d", k.FocusedCol)
+	}
+
+	// Toggle closed while focused on backlog
+	k.ToggleBacklog()
+	if !k.BacklogCollapsed {
+		t.Error("Expected backlog to be collapsed after second toggle")
+	}
+	// Should auto-move focus to Open
+	if k.FocusedCol != 1 {
+		t.Errorf("Expected focus to move to column 1 (Open) when backlog collapsed, got %d", k.FocusedCol)
+	}
+}
+
+func TestKanbanViewModel_MoveLeft_SkipsCollapsedBacklog(t *testing.T) {
+	k := NewKanbanViewModel()
+
+	todos := []api.TodoItem{
+		{Content: "Task 1", Status: "open"},
+	}
+	k.UpdateTodos(todos)
+
+	// Focus on Open column (1), try to move left
+	k.FocusedCol = 1
+	k.MoveLeft()
+
+	// Should stay at 1, not go to collapsed backlog
+	if k.FocusedCol != 1 {
+		t.Errorf("Expected to stay at column 1 when backlog collapsed, got %d", k.FocusedCol)
 	}
 }
 

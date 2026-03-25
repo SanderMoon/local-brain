@@ -50,13 +50,14 @@ func ValidatePriority(p *int) error {
 // ValidateTodoStatus checks if status is one of the allowed values
 func ValidateTodoStatus(status string) error {
 	validStatuses := map[string]bool{
+		"backlog":     true,
 		"open":        true,
 		"in-progress": true,
 		"blocked":     true,
 		"done":        true,
 	}
 	if !validStatuses[status] {
-		return fmt.Errorf("invalid status: must be one of [open, in-progress, blocked, done], got: %s", status)
+		return fmt.Errorf("invalid status: must be one of [backlog, open, in-progress, blocked, done], got: %s", status)
 	}
 	return nil
 }

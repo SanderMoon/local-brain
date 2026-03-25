@@ -183,6 +183,8 @@ func formatPriorityBadge(priority *int) string {
 // formatStatusMark returns the checkbox mark for a task status
 func formatStatusMark(status string) string {
 	switch status {
+	case "backlog":
+		return "[~]"
 	case "open":
 		return "[ ]"
 	case "in-progress":

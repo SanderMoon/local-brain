@@ -57,6 +57,8 @@ For the confirmed tasks:
 Execute the plan:
 1. `create_project` if new (with description)
 2. `create_todo_in_project` with the full task list, including priorities and due dates
+   - New tasks default to **backlog** status. Only set `status: "open"` for tasks the user wants to work on immediately (this week).
+   - Ask: "Which of these do you want to start on now?" — promote those to open, leave the rest in backlog.
 3. `set_context` to focus the new/existing project
 
 ### Step 5 — Document the Plan
@@ -102,6 +104,7 @@ get_project_context(project) OR get_brain_overview()
 - **Small over large**: A task should be completable in one sitting. If it feels big, break it down.
 - **Ordered over scattered**: Tasks should have a natural sequence. What unlocks what?
 - **Complete enough, not perfect**: A plan with 5 good tasks beats 20 over-specified ones. You can always add more later.
+- **Backlog by default**: New tasks go to backlog. Only promote to open what the user commits to working on soon. This keeps the active list focused and manageable.
 
 ## Notes
 

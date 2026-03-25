@@ -15,14 +15,16 @@ import (
 
 var planCmd = &cobra.Command{
 	Use:   "plan",
-	Short: "Interactive batch task planning",
-	Long: `Interactive workflow for enriching tasks with metadata.
+	Short: "Plan your work: promote backlog tasks and set metadata",
+	Long: `Interactive workflow for planning your work cycle.
+
+Primary use: promote backlog tasks to open (planned for this week).
 
 Select tasks with FZF (Tab to select multiple, Enter to confirm), then set:
+  - Status (defaults to open — promoting from backlog)
   - Priority (1/2/3)
   - Due date (YYYY-MM-DD, tomorrow, +3d, next-friday)
   - Tags (comma separated, autocomplete from existing)
-  - State (open/in-progress/blocked/done)
 
 All fields are optional - press Enter to skip.
 
@@ -30,11 +32,11 @@ Multi-select workflow:
   - Use Tab to select/deselect tasks (moves cursor up for easy spam-selecting)
   - Select one task for individual planning
   - Select multiple tasks to batch-apply the same metadata
-  - Perfect for similar tasks (e.g., multiple reading tasks, similar bugs)
 
-Complements 'brain add' for the capture-curate workflow:
-  - Capture fast: brain add "task"
-  - Curate later: brain plan`,
+Typical workflow:
+  1. Capture tasks: brain add "task" (goes to inbox)
+  2. Refile to projects: brain refile (items land in backlog)
+  3. Plan your week: brain plan (promote backlog → open, set priorities/dates)`,
 	Example: `  brain plan  # Interactive planning with multi-select`,
 	RunE:    runPlan,
 }
@@ -70,25 +72,19 @@ func runPlan(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to parse todos: %w", err)
 	}
 
-	// Filter for planning
-	var filtered []api.TodoItem
+	// Filter for planning: backlog items first (promote workflow), then open/in-progress
+	var backlog []api.TodoItem
+	var active []api.TodoItem
 	for _, todo := range todos {
-		if todo.Status == "open" || todo.Status == "in-progress" {
-			// Prioritize tasks without metadata
-			if todo.Priority == nil || todo.DueDate == "" || len(todo.Tags) == 0 {
-				filtered = append(filtered, todo)
-			}
+		if todo.Status == "backlog" {
+			backlog = append(backlog, todo)
+		} else if todo.Status == "open" || todo.Status == "in-progress" {
+			active = append(active, todo)
 		}
 	}
 
-	// If no unprioritized tasks, include all open tasks
-	if len(filtered) == 0 {
-		for _, todo := range todos {
-			if todo.Status == "open" || todo.Status == "in-progress" {
-				filtered = append(filtered, todo)
-			}
-		}
-	}
+	// Show backlog first, then active tasks
+	filtered := append(backlog, active...)
 
 	if len(filtered) == 0 {
 		fmt.Println("No tasks to plan")
@@ -128,6 +124,30 @@ func runPlan(cmd *cobra.Command, args []string) error {
 		fmt.Println("Apply metadata to all selected tasks:")
 	}
 	fmt.Println("")
+
+	// Check if any selected tasks are in backlog
+	hasBacklog := false
+	for _, todo := range selectedTodos {
+		if todo.Status == "backlog" {
+			hasBacklog = true
+			break
+		}
+	}
+
+	// Prompt for status first (primary action for backlog items is promoting to open)
+	state := promptForPlanStatus(hasBacklog)
+	if state != "" {
+		for _, todo := range selectedTodos {
+			if err := api.SetTodoStatus(todo, state); err != nil {
+				fmt.Printf("Error setting state for %s: %v\n", todo.ID, err)
+			}
+		}
+		if len(selectedTodos) == 1 {
+			fmt.Printf("✓ Set status to %s\n", state)
+		} else {
+			fmt.Printf("✓ Set status to %s for %d tasks\n", state, len(selectedTodos))
+		}
+	}
 
 	// Prompt for priority
 	priority := promptForPriority()
@@ -190,21 +210,6 @@ func runPlan(cmd *cobra.Command, args []string) error {
 			fmt.Printf("✓ Added tags %s\n", formatTags(tags))
 		} else {
 			fmt.Printf("✓ Added tags %s to %d tasks\n", formatTags(tags), len(selectedTodos))
-		}
-	}
-
-	// Prompt for state
-	state := promptForState()
-	if state != "" {
-		for _, todo := range selectedTodos {
-			if err := api.SetTodoStatus(todo, state); err != nil {
-				fmt.Printf("Error setting state for %s: %v\n", todo.ID, err)
-			}
-		}
-		if len(selectedTodos) == 1 {
-			fmt.Printf("✓ Set state to %s\n", state)
-		} else {
-			fmt.Printf("✓ Set state to %s for %d tasks\n", state, len(selectedTodos))
 		}
 	}
 
@@ -289,25 +294,34 @@ func promptForTags() []string {
 	return tags
 }
 
-func promptForState() string {
-	fmt.Print("State (open, in-progress, blocked, done, or Enter to skip): ")
+// promptForPlanStatus prompts for status with backlog-aware defaults.
+// When selected tasks include backlog items, defaults to "open" (promote).
+func promptForPlanStatus(hasBacklog bool) string {
+	if hasBacklog {
+		fmt.Print("Status (Enter for 'open' to promote, or backlog/in-progress/blocked/done): ")
+	} else {
+		fmt.Print("Status (backlog, open, in-progress, blocked, done, or Enter to skip): ")
+	}
 
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
 	input = strings.TrimSpace(strings.ToLower(input))
 
 	if input == "" {
+		if hasBacklog {
+			return "open" // Default: promote backlog to open
+		}
 		return "" // Skip
 	}
 
-	validStates := []string{"open", "in-progress", "blocked", "done"}
+	validStates := []string{"backlog", "open", "in-progress", "blocked", "done"}
 	for _, s := range validStates {
 		if s == input {
 			return input
 		}
 	}
 
-	fmt.Println("Invalid state, skipping")
+	fmt.Println("Invalid status, skipping")
 	return ""
 }
 

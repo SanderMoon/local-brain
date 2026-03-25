@@ -42,10 +42,11 @@ func TestCycleStatusCmd_Forward(t *testing.T) {
 		initialStatus string
 		expectedNext  string
 	}{
+		{"backlog", "open"},
 		{"open", "in-progress"},
 		{"in-progress", "blocked"},
 		{"blocked", "done"},
-		{"done", "open"},
+		{"done", "backlog"},
 	}
 
 	for _, tt := range tests {
@@ -113,7 +114,8 @@ func TestCycleStatusBackwardCmd(t *testing.T) {
 		{"done", "blocked"},
 		{"blocked", "in-progress"},
 		{"in-progress", "open"},
-		{"open", "done"},
+		{"open", "backlog"},
+		{"backlog", "done"},
 	}
 
 	for _, tt := range tests {
