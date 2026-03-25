@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -2347,7 +2347,7 @@
 </code></pre></div></p>
 <p>Moves specific item by ID to a specific project.</p>
 <p><strong>Behavior:</strong>
-- <strong>Tasks</strong> → Appended to project's <code>todo.md</code>
+- <strong>Tasks</strong> → Appended to project's <code>todo.md</code> with <strong>backlog</strong> status (<code>[~]</code>). Use <code>brain plan</code> to promote to open.
 - <strong>Notes</strong> → Created as separate markdown files in project's <code>notes/</code> directory</p>
 <p><strong>Examples:</strong>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Interactive refiling</span>
@@ -2363,39 +2363,23 @@
 - Removed from dump after successful refiling</p>
 <hr />
 <h3 id="brain-plan"><code>brain plan</code></h3>
-<p><strong>Description:</strong> Interactive batch task planning</p>
+<p><strong>Description:</strong> Plan your work: promote backlog tasks and set metadata</p>
 <p><strong>Usage:</strong>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>brain<span class="w"> </span>plan
 </code></pre></div></p>
 <p><strong>Workflow:</strong>
-1. Shows interactive task selection (fzf)
-2. For each selected task, prompts for:
+1. Shows backlog tasks first, then open/in-progress tasks (fzf multi-select)
+2. Tab to select multiple tasks, Enter to confirm
+3. For selected tasks, prompts for:
+   - <strong>Status</strong> (defaults to "open" when backlog items selected — promotes them)
    - <strong>Priority</strong> (1=high, 2=medium, 3=low)
    - <strong>Due date</strong> (YYYY-MM-DD, tomorrow, +3d, next-friday)
    - <strong>Tags</strong> (comma/space separated)
-   - <strong>State</strong> (open, in-progress, blocked)
-3. All fields optional - press Enter to skip
-4. Loops until cancelled (Esc)</p>
-<p><strong>Examples:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>Select task to plan (Esc to exit)
-<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>Task: Fix authentication bug (backend-api)
-<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>--------------------------------------------------------------
-<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>Current priority: none
-<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>Current due date: none
-<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>Current tags: none
-<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>Current state: open
-<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>--------------------------------------------------------------
-<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>Priority (1=high, 2=medium, 3=low, clear, or Enter to skip): 1
-<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>✓ Set priority to 1 (high)
-<a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>
-<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a>Due date (YYYY-MM-DD, tomorrow, +3d, next-friday, clear, or Enter to skip): next-friday
-<a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>✓ Set due date to 2026-02-07
-<a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a>
-<a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a>Tags (comma or space separated, or Enter to skip): bug security
-<a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a>✓ Added tags: #bug #security
-<a id="__codelineno-21-17" name="__codelineno-21-17" href="#__codelineno-21-17"></a>
-<a id="__codelineno-21-18" name="__codelineno-21-18" href="#__codelineno-21-18"></a>State (open, in-progress, blocked, or Enter to skip): in-progress
-<a id="__codelineno-21-19" name="__codelineno-21-19" href="#__codelineno-21-19"></a>✓ Set state to in-progress
+4. All fields optional - press Enter to skip (or accept defaults)</p>
+<p><strong>Typical Workflow:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>1. Capture:  brain add &quot;task&quot;           → goes to inbox
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>2. Refile:   brain refile               → items land in backlog
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>3. Plan:     brain plan                 → promote backlog → open, set priorities/dates
 </code></pre></div></p>
 <p><strong>Natural Language Dates:</strong>
 - <code>today</code> / <code>tomorrow</code> / <code>yesterday</code>
@@ -2403,8 +2387,9 @@
 - <code>next-monday</code>, <code>next-friday</code>, etc.
 - <code>YYYY-MM-DD</code> - Explicit date</p>
 <p><strong>Notes:</strong>
+- Primary use: promote backlog items to open (planned for the current work cycle)
 - Ideal for weekly planning sessions
-- Complements <code>brain add</code> for capture-curate workflow
+- Backlog items auto-promote to "open" when you press Enter at the status prompt
 - Existing tags shown as suggestions
 - Can clear metadata by entering <code>clear</code></p>
 <hr />
@@ -2629,40 +2614,41 @@
 <a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls
 <a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>
 <a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a><span class="c1"># Filter by status</span>
-<a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--status<span class="w"> </span><span class="k">in</span>-progress
-<a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--status<span class="w"> </span>blocked
-<a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a>
-<a id="__codelineno-40-8" name="__codelineno-40-8" href="#__codelineno-40-8"></a><span class="c1"># Filter by priority</span>
-<a id="__codelineno-40-9" name="__codelineno-40-9" href="#__codelineno-40-9"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--priority<span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-40-10" name="__codelineno-40-10" href="#__codelineno-40-10"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--no-priority
-<a id="__codelineno-40-11" name="__codelineno-40-11" href="#__codelineno-40-11"></a>
-<a id="__codelineno-40-12" name="__codelineno-40-12" href="#__codelineno-40-12"></a><span class="c1"># Filter by tags</span>
-<a id="__codelineno-40-13" name="__codelineno-40-13" href="#__codelineno-40-13"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--tag<span class="w"> </span>bug
-<a id="__codelineno-40-14" name="__codelineno-40-14" href="#__codelineno-40-14"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--tag<span class="w"> </span>bug<span class="w"> </span>--tag<span class="w"> </span>security<span class="w"> </span>--tag-mode<span class="w"> </span>and
-<a id="__codelineno-40-15" name="__codelineno-40-15" href="#__codelineno-40-15"></a>
-<a id="__codelineno-40-16" name="__codelineno-40-16" href="#__codelineno-40-16"></a><span class="c1"># Filter by due date</span>
-<a id="__codelineno-40-17" name="__codelineno-40-17" href="#__codelineno-40-17"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--due-today
-<a id="__codelineno-40-18" name="__codelineno-40-18" href="#__codelineno-40-18"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--due-this-week
-<a id="__codelineno-40-19" name="__codelineno-40-19" href="#__codelineno-40-19"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--overdue
-<a id="__codelineno-40-20" name="__codelineno-40-20" href="#__codelineno-40-20"></a>
-<a id="__codelineno-40-21" name="__codelineno-40-21" href="#__codelineno-40-21"></a><span class="c1"># Sorting</span>
-<a id="__codelineno-40-22" name="__codelineno-40-22" href="#__codelineno-40-22"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--sort<span class="w"> </span>priority
-<a id="__codelineno-40-23" name="__codelineno-40-23" href="#__codelineno-40-23"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--sort<span class="w"> </span>deadline
-<a id="__codelineno-40-24" name="__codelineno-40-24" href="#__codelineno-40-24"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--sort<span class="w"> </span>project
-<a id="__codelineno-40-25" name="__codelineno-40-25" href="#__codelineno-40-25"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--sort<span class="w"> </span>status
-<a id="__codelineno-40-26" name="__codelineno-40-26" href="#__codelineno-40-26"></a>
-<a id="__codelineno-40-27" name="__codelineno-40-27" href="#__codelineno-40-27"></a><span class="c1"># Include completed tasks</span>
-<a id="__codelineno-40-28" name="__codelineno-40-28" href="#__codelineno-40-28"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--all
-<a id="__codelineno-40-29" name="__codelineno-40-29" href="#__codelineno-40-29"></a>
-<a id="__codelineno-40-30" name="__codelineno-40-30" href="#__codelineno-40-30"></a><span class="c1"># JSON output</span>
-<a id="__codelineno-40-31" name="__codelineno-40-31" href="#__codelineno-40-31"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--json
+<a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--status<span class="w"> </span>backlog
+<a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--status<span class="w"> </span><span class="k">in</span>-progress
+<a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--status<span class="w"> </span>blocked
+<a id="__codelineno-40-8" name="__codelineno-40-8" href="#__codelineno-40-8"></a>
+<a id="__codelineno-40-9" name="__codelineno-40-9" href="#__codelineno-40-9"></a><span class="c1"># Filter by priority</span>
+<a id="__codelineno-40-10" name="__codelineno-40-10" href="#__codelineno-40-10"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--priority<span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-40-11" name="__codelineno-40-11" href="#__codelineno-40-11"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--no-priority
+<a id="__codelineno-40-12" name="__codelineno-40-12" href="#__codelineno-40-12"></a>
+<a id="__codelineno-40-13" name="__codelineno-40-13" href="#__codelineno-40-13"></a><span class="c1"># Filter by tags</span>
+<a id="__codelineno-40-14" name="__codelineno-40-14" href="#__codelineno-40-14"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--tag<span class="w"> </span>bug
+<a id="__codelineno-40-15" name="__codelineno-40-15" href="#__codelineno-40-15"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--tag<span class="w"> </span>bug<span class="w"> </span>--tag<span class="w"> </span>security<span class="w"> </span>--tag-mode<span class="w"> </span>and
+<a id="__codelineno-40-16" name="__codelineno-40-16" href="#__codelineno-40-16"></a>
+<a id="__codelineno-40-17" name="__codelineno-40-17" href="#__codelineno-40-17"></a><span class="c1"># Filter by due date</span>
+<a id="__codelineno-40-18" name="__codelineno-40-18" href="#__codelineno-40-18"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--due-today
+<a id="__codelineno-40-19" name="__codelineno-40-19" href="#__codelineno-40-19"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--due-this-week
+<a id="__codelineno-40-20" name="__codelineno-40-20" href="#__codelineno-40-20"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--overdue
+<a id="__codelineno-40-21" name="__codelineno-40-21" href="#__codelineno-40-21"></a>
+<a id="__codelineno-40-22" name="__codelineno-40-22" href="#__codelineno-40-22"></a><span class="c1"># Sorting</span>
+<a id="__codelineno-40-23" name="__codelineno-40-23" href="#__codelineno-40-23"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--sort<span class="w"> </span>priority
+<a id="__codelineno-40-24" name="__codelineno-40-24" href="#__codelineno-40-24"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--sort<span class="w"> </span>deadline
+<a id="__codelineno-40-25" name="__codelineno-40-25" href="#__codelineno-40-25"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--sort<span class="w"> </span>project
+<a id="__codelineno-40-26" name="__codelineno-40-26" href="#__codelineno-40-26"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--sort<span class="w"> </span>status
+<a id="__codelineno-40-27" name="__codelineno-40-27" href="#__codelineno-40-27"></a>
+<a id="__codelineno-40-28" name="__codelineno-40-28" href="#__codelineno-40-28"></a><span class="c1"># Include completed tasks</span>
+<a id="__codelineno-40-29" name="__codelineno-40-29" href="#__codelineno-40-29"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--all
+<a id="__codelineno-40-30" name="__codelineno-40-30" href="#__codelineno-40-30"></a>
+<a id="__codelineno-40-31" name="__codelineno-40-31" href="#__codelineno-40-31"></a><span class="c1"># JSON output</span>
+<a id="__codelineno-40-32" name="__codelineno-40-32" href="#__codelineno-40-32"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--json
 </code></pre></div></p>
 <p><strong>Options:</strong>
 - <code>--json</code> - Output JSON format
 - <code>--all</code> - Include completed tasks
 - <code>--priority &lt;1-3&gt;</code> - Filter by priority level
 - <code>--no-priority</code> - Show only unprioritized tasks
-- <code>--status &lt;state&gt;</code> - Filter by status (open, in-progress, blocked, done)
+- <code>--status &lt;state&gt;</code> - Filter by status (backlog, open, in-progress, blocked, done)
 - <code>--tag &lt;tag&gt;</code> - Filter by tag (can specify multiple)
 - <code>--tag-mode &lt;and|or&gt;</code> - Tag filter mode (default: or)
 - <code>--due-today</code> - Tasks due today
@@ -2677,7 +2663,7 @@
 <p><strong>Format:</strong>
 - <code>ID</code> - Unique task identifier
 - <code>[P1]</code> - Priority badge (1=high, 2=medium, 3=low)
-- <code>[&gt;]</code> - Status checkbox (<code>[ ]</code>=open, <code>[&gt;]</code>=in-progress, <code>[-]</code>=blocked, <code>[x]</code>=done)
+- <code>[&gt;]</code> - Status checkbox (<code>[~]</code>=backlog, <code>[ ]</code>=open, <code>[&gt;]</code>=in-progress, <code>[-]</code>=blocked, <code>[x]</code>=done)
 - Task content
 - Tags (with <code>#</code>)
 - <code>(project)</code> - Project name
@@ -2757,13 +2743,15 @@
 <h3 id="brain-todo-status-id-state"><code>brain todo status &lt;id&gt; &lt;state&gt;</code></h3>
 <p><strong>Description:</strong> Set task status directly</p>
 <p><strong>Usage:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span>open
-<a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span><span class="k">in</span>-progress
-<a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span>blocked
-<a id="__codelineno-48-4" name="__codelineno-48-4" href="#__codelineno-48-4"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span><span class="k">done</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span>backlog
+<a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span>open
+<a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span><span class="k">in</span>-progress
+<a id="__codelineno-48-4" name="__codelineno-48-4" href="#__codelineno-48-4"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span>blocked
+<a id="__codelineno-48-5" name="__codelineno-48-5" href="#__codelineno-48-5"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span><span class="k">done</span>
 </code></pre></div></p>
 <p><strong>Valid States:</strong>
-- <code>open</code> - Not started (<code>[ ]</code>)
+- <code>backlog</code> - Not yet planned for active work (<code>[~]</code>)
+- <code>open</code> - Planned for current work cycle (<code>[ ]</code>)
 - <code>in-progress</code> - Currently working (<code>[&gt;]</code>)
 - <code>blocked</code> - Waiting on dependency (<code>[-]</code>)
 - <code>done</code> - Completed (<code>[x]</code>)</p>

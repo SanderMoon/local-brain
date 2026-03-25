@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -998,7 +998,7 @@
 <p><strong><code>search_todos</code></strong> - Filter todos by query, project, status, tags, and dates
 - <code>query</code> (string, optional) - Search term
 - <code>project</code> (string, optional) - Project filter
-- <code>status</code> (string, optional) - Status filter (open, in-progress, blocked, done)
+- <code>status</code> (string, optional) - Status filter (backlog, open, in-progress, blocked, done)
 - <code>tags</code> ([]string, optional) - Tag filter (OR logic)
 - <code>created_after</code> (string, optional) - Filter by capture date &gt;= YYYY-MM-DD
 - <code>created_before</code> (string, optional) - Filter by capture date &lt;= YYYY-MM-DD
@@ -1025,7 +1025,7 @@
 <h3 id="todo-management-3-tools">Todo Management (3 tools)</h3>
 <p><strong><code>update_todo</code></strong> - Update todo status and/or metadata in one call
 - <code>todo_id</code> (string) - 6-character hex ID
-- <code>status</code> (string, optional) - open | in-progress | blocked | done
+- <code>status</code> (string, optional) - backlog | open | in-progress | blocked | done
 - <code>priority</code> (int, optional) - 1 (high), 2 (medium), 3 (low), null to clear
 - <code>due_date</code> (string, optional) - YYYY-MM-DD format or empty to clear
 - <code>add_tags</code> ([]string, optional) - Tags to add
@@ -1099,7 +1099,7 @@
 - Todo IDs must be 6-character lowercase hex (e.g., "abc123" not "ABC123")
 - Dates must be YYYY-MM-DD format (e.g., "2026-02-15")
 - Priority must be 1, 2, or 3
-- Status must be: open, in-progress, blocked, or done</p>
+- Status must be: backlog, open, in-progress, blocked, or done</p>
 <h2 id="technical-details">Technical Details</h2>
 <p><strong>Transport</strong>: stdio (local only)
 <strong>Cache</strong>: 30-second TTL for read operations, invalidated on mutations
