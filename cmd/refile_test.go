@@ -165,8 +165,8 @@ func TestRefileTask_ActiveSection(t *testing.T) {
 
 	// Verify task content is correct (should include ID tag now)
 	taskLine := strings.TrimSpace(lines[newTaskIdx])
-	if !strings.Contains(taskLine, "- [ ] New refiled task #captured:2026-01-30") {
-		t.Errorf("Task should contain '- [ ] New refiled task #captured:2026-01-30', got '%s'", taskLine)
+	if !strings.Contains(taskLine, "- [~] New refiled task #captured:2026-01-30") {
+		t.Errorf("Task should contain '- [~] New refiled task #captured:2026-01-30', got '%s'", taskLine)
 	}
 	// Verify ID tag was added
 	if !strings.Contains(taskLine, "#id:") {
