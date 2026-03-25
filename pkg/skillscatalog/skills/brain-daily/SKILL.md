@@ -37,16 +37,37 @@ Call `get_daily_briefing` to retrieve:
 
 ### Step 2 — Summarize Clearly
 
-Present a concise, scannable summary. Do not dump raw data. Group by urgency:
+Present a concise, scannable summary. Do not dump raw data.
 
-1. **Overdue** — flag prominently with task IDs
+#### Project Overview Table
+
+Always start with a project overview table showing the distribution of tasks. Use the `project_summaries` data:
+
+```
+| Project            | Open | Backlog | Total |
+|--------------------|------|---------|-------|
+| agentic-project    |   15 |       6 |    21 |
+| nsa2d              |    8 |       3 |    11 |
+| ...                |  ... |     ... |   ... |
+```
+
+**Open** = actionable tasks (status: open, in-progress, blocked). **Backlog** = parked for later (status: backlog). This distinction is critical — backlog items are not on the user's plate today.
+
+#### Actionable Items
+
+After the table, list actionable items grouped by urgency. Only show items with status `open`, `in-progress`, or `blocked` — never backlog:
+
+1. **Overdue** — flag prominently with task IDs and due dates
 2. **Due today** — list with IDs
-3. **High priority** — P1 tasks without due dates
-4. **In progress** — what was already underway
-5. **Backlog** — count of items in backlog across projects (brief; this is for awareness, not action)
-6. **Inbox** — count of quick-capture items waiting
+3. **In progress** — what is already underway
+4. **High priority (open)** — P1 tasks that are open (not backlog), without due dates
+5. **Blocked** — items needing unblock
 
-Keep it to 10 items max; offer to drill into an area if there's more.
+Keep it to 10 actionable items max; offer to drill into a project if there's more.
+
+#### Backlog Awareness
+
+End with a single line like: "**Backlog:** 12 items across 4 projects parked for later." Do not list individual backlog items unless the user asks.
 
 If everything is clear (nothing overdue, nothing due, low inbox):
 > "Clean slate today. Here's what's in progress and what you could pick up next."

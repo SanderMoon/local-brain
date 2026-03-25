@@ -10,15 +10,18 @@ import (
 
 // ProjectBriefing summarises a single project for the daily briefing.
 type ProjectBriefing struct {
-	Name      string `json:"name"`
-	TaskCount int    `json:"task_count"`
-	Summary   string `json:"summary,omitempty"` // text from ## Summary section of description.md
+	Name         string `json:"name"`
+	TaskCount    int    `json:"task_count"`
+	OpenCount    int    `json:"open_count"`
+	BacklogCount int    `json:"backlog_count"`
+	Summary      string `json:"summary,omitempty"` // text from ## Summary section of description.md
 }
 
 // DailyBriefing provides a comprehensive overview for starting the day.
 type DailyBriefing struct {
 	Summary struct {
 		TotalOpen            int               `json:"total_open"`
+		TotalBacklog         int               `json:"total_backlog"`
 		Overdue              int               `json:"overdue"`
 		DueToday             int               `json:"due_today"`
 		DueThisWeek          int               `json:"due_this_week"`
@@ -39,6 +42,7 @@ type DailyBriefing struct {
 	HighPriority []TodoItem      `json:"high_priority"`
 	InProgress   []TodoItem      `json:"in_progress"`
 	Blocked      []TodoItem      `json:"blocked"`
+	Backlog      []TodoItem      `json:"backlog"`
 	Context      BriefingContext `json:"context"`
 }
 
@@ -114,8 +118,11 @@ func GetDailyBriefing(activeDir, dumpPath string) (*DailyBriefing, error) {
 
 	// Single-pass categorisation
 	var openTodos []TodoItem
+	var backlogTodos []TodoItem
 	var completedRecently []TodoItem
 	projectTaskCount := make(map[string]int)
+	projectOpenCount := make(map[string]int)
+	projectBacklogCount := make(map[string]int)
 
 	// urgentIDs tracks items already in overdue/due_today to deduplicate HighPriority
 	urgentIDs := make(map[string]bool)
@@ -128,8 +135,17 @@ func GetDailyBriefing(activeDir, dumpPath string) (*DailyBriefing, error) {
 			continue
 		}
 
-		openTodos = append(openTodos, todo)
 		projectTaskCount[todo.Project]++
+
+		// Backlog items are tracked separately — they don't appear in actionable buckets
+		if todo.Status == "backlog" {
+			backlogTodos = append(backlogTodos, todo)
+			projectBacklogCount[todo.Project]++
+			continue
+		}
+
+		openTodos = append(openTodos, todo)
+		projectOpenCount[todo.Project]++
 
 		// Date-based urgency categorisation
 		if todo.DueDate != "" {
@@ -206,6 +222,10 @@ func GetDailyBriefing(activeDir, dumpPath string) (*DailyBriefing, error) {
 		return priorityLess(briefing.Blocked[i].Priority, briefing.Blocked[j].Priority)
 	})
 
+	sort.Slice(backlogTodos, func(i, j int) bool {
+		return priorityLess(backlogTodos[i].Priority, backlogTodos[j].Priority)
+	})
+
 	sort.Slice(completedRecently, func(i, j int) bool {
 		return completedRecently[i].CompletedDate > completedRecently[j].CompletedDate
 	})
@@ -219,6 +239,7 @@ func GetDailyBriefing(activeDir, dumpPath string) (*DailyBriefing, error) {
 	briefing.Summary.InProgress = len(briefing.InProgress)
 	briefing.Summary.Blocked = len(briefing.Blocked)
 	briefing.Summary.InboxCount = len(dumpItems)
+	briefing.Summary.TotalBacklog = len(backlogTodos)
 	briefing.Summary.CompletionsLast3Days = len(completedRecently)
 	// DueNextMonth was incremented inline above
 
@@ -240,9 +261,11 @@ func GetDailyBriefing(activeDir, dumpPath string) (*DailyBriefing, error) {
 				summary = extractSummarySection(desc)
 			}
 			briefing.Summary.ProjectSummaries = append(briefing.Summary.ProjectSummaries, ProjectBriefing{
-				Name:      name,
-				TaskCount: taskCount,
-				Summary:   summary,
+				Name:         name,
+				TaskCount:    taskCount,
+				OpenCount:    projectOpenCount[name],
+				BacklogCount: projectBacklogCount[name],
+				Summary:      summary,
 			})
 		}
 		// Sort by task count descending (most active project first)
@@ -276,6 +299,9 @@ func GetDailyBriefing(activeDir, dumpPath string) (*DailyBriefing, error) {
 			allRecentNotes = allRecentNotes[:15]
 		}
 	}
+
+	// Fill backlog
+	briefing.Backlog = backlogTodos
 
 	// Fill context
 	briefing.Context.RecentCompletions = completedRecently

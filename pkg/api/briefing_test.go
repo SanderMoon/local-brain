@@ -84,6 +84,7 @@ func TestGetDailyBriefing_Categorization(t *testing.T) {
 		"- [ ] High priority task p:1",
 		"- [>] In progress task",
 		"- [-] Blocked task",
+		"- [~] Backlog task",
 	}
 	completedLines := []string{
 		fmt.Sprintf("- [x] Completed task <!-- done:%s -->", threeDaysAgo),
@@ -120,9 +121,16 @@ func TestGetDailyBriefing_Categorization(t *testing.T) {
 	if got := briefing.Summary.CompletionsLast3Days; got != 1 {
 		t.Errorf("expected 1 recent completion, got %d", got)
 	}
-	// 7 open tasks (overdue + today + this week + upcoming + high-prio + in-progress + blocked)
+	// 7 open (non-backlog) tasks
 	if got := briefing.Summary.TotalOpen; got != 7 {
 		t.Errorf("expected 7 total open, got %d", got)
+	}
+	// 1 backlog task
+	if got := briefing.Summary.TotalBacklog; got != 1 {
+		t.Errorf("expected 1 total backlog, got %d", got)
+	}
+	if got := len(briefing.Backlog); got != 1 {
+		t.Errorf("expected 1 backlog item, got %d", got)
 	}
 }
 
@@ -178,6 +186,59 @@ func TestGetDailyBriefing_Deduplication(t *testing.T) {
 	}
 	if !foundInHP {
 		t.Error("due_this_week p:1 item should also appear in HighPriority")
+	}
+}
+
+func TestGetDailyBriefing_BacklogExcludedFromHighPriority(t *testing.T) {
+	tb := testutil.SetupTestBrain(t)
+
+	projectDir := tb.AddProject("backlog-test")
+	tb.WriteFile(filepath.Join(projectDir, "todo.md"), makeTodoMD(
+		"- [ ] Open high priority p:1",
+		"- [~] Backlog high priority p:1",
+		"- [~] Backlog normal task",
+		"- [ ] Open normal task",
+	))
+
+	briefing, err := GetDailyBriefing(tb.ActiveDirPath, tb.DumpPath)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Only the open p:1 item should be in HighPriority
+	if got := len(briefing.HighPriority); got != 1 {
+		t.Errorf("expected 1 high priority (open only), got %d", got)
+	}
+	if len(briefing.HighPriority) > 0 && briefing.HighPriority[0].Status != "open" {
+		t.Errorf("expected high priority item to be open, got %q", briefing.HighPriority[0].Status)
+	}
+
+	// Backlog should contain both backlog items
+	if got := len(briefing.Backlog); got != 2 {
+		t.Errorf("expected 2 backlog items, got %d", got)
+	}
+
+	// TotalOpen should not include backlog
+	if got := briefing.Summary.TotalOpen; got != 2 {
+		t.Errorf("expected 2 total open (excluding backlog), got %d", got)
+	}
+	if got := briefing.Summary.TotalBacklog; got != 2 {
+		t.Errorf("expected 2 total backlog, got %d", got)
+	}
+
+	// Project summary should show open/backlog split
+	if got := len(briefing.Summary.ProjectSummaries); got != 1 {
+		t.Fatalf("expected 1 project summary, got %d", got)
+	}
+	ps := briefing.Summary.ProjectSummaries[0]
+	if ps.OpenCount != 2 {
+		t.Errorf("expected open_count=2, got %d", ps.OpenCount)
+	}
+	if ps.BacklogCount != 2 {
+		t.Errorf("expected backlog_count=2, got %d", ps.BacklogCount)
+	}
+	if ps.TaskCount != 4 {
+		t.Errorf("expected task_count=4, got %d", ps.TaskCount)
 	}
 }
 
