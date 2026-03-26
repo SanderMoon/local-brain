@@ -1071,26 +1071,32 @@
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>brain<span class="w"> </span>new<span class="w"> </span>work<span class="w">         </span><span class="c1"># or create a named brain</span>
 </code></pre></div>
 <p>This sets the new brain as active (symlinked to <code>~/brain</code>).</p>
+<p>Optionally, configure your settings (dev directory, editor, etc.):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>brain<span class="w"> </span>config<span class="w"> </span>setup<span class="w">     </span><span class="c1"># interactive wizard with defaults</span>
+</code></pre></div>
 <p>Verify it works:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Set up my knowledge management system&quot;</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Set up my knowledge management system&quot;</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls
 </code></pre></div>
 <hr />
 <h2 id="environment-variables">Environment Variables</h2>
 <p>Customize storage locations by setting environment variables in your shell config:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Root directory for all brains (default: ~/brains)</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_ROOT</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Dropbox/Brains&quot;</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># Location of the active brain symlink (default: ~/brain)</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_SYMLINK</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Desktop/ActiveBrain&quot;</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># Config directory (default: ~/.config/brain)</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_CONFIG_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.config/brain&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Root directory for all brains (default: ~/brains)</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_ROOT</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Dropbox/Brains&quot;</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># Location of the active brain symlink (default: ~/brain)</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_SYMLINK</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Desktop/ActiveBrain&quot;</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># Dev directory for cloned repos (default: ~/dev)</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_DEV_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/projects&quot;</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="c1"># Config directory (default: ~/.config/brain)</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BRAIN_CONFIG_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.config/brain&quot;</span>
 </code></pre></div>
 <hr />
 <h2 id="updating">Updating</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>brew<span class="w"> </span>upgrade<span class="w"> </span>brain<span class="w">                                    </span><span class="c1"># Homebrew</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>go<span class="w"> </span>install<span class="w"> </span>github.com/SanderMoon/local-brain@latest<span class="w">   </span><span class="c1"># Go</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>brew<span class="w"> </span>upgrade<span class="w"> </span>brain<span class="w">                                    </span><span class="c1"># Homebrew</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>go<span class="w"> </span>install<span class="w"> </span>github.com/SanderMoon/local-brain@latest<span class="w">   </span><span class="c1"># Go</span>
 </code></pre></div>
 <p>For pre-built binaries, download and replace following the <a href="#pre-built-binaries">instructions above</a>.</p>
 <hr />
@@ -1119,26 +1125,26 @@
 </table>
 <hr />
 <h2 id="uninstallation">Uninstallation</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Homebrew</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>brew<span class="w"> </span>uninstall<span class="w"> </span>brain<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>brew<span class="w"> </span>untap<span class="w"> </span>SanderMoon/tap
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># System install</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>sudo<span class="w"> </span>rm<span class="w"> </span>/usr/local/bin/brain<span class="w"> </span>/usr/local/lib/brain
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># Local install</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>rm<span class="w"> </span>~/.local/bin/brain
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Homebrew</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>brew<span class="w"> </span>uninstall<span class="w"> </span>brain<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>brew<span class="w"> </span>untap<span class="w"> </span>SanderMoon/tap
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1"># System install</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>sudo<span class="w"> </span>rm<span class="w"> </span>/usr/local/bin/brain<span class="w"> </span>/usr/local/lib/brain
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="c1"># Local install</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>rm<span class="w"> </span>~/.local/bin/brain
 </code></pre></div>
 <p>To remove all data (<strong>permanently deletes all notes and tasks</strong>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.config/brain<span class="w"> </span>~/brains<span class="w"> </span>~/brain
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.config/brain<span class="w"> </span>~/brains<span class="w"> </span>~/brain
 </code></pre></div>
 <hr />
 <h2 id="ai-agent-setup">AI Agent Setup</h2>
 <p>Local Brain auto-detects installed AI agents (Claude Code, Codex, Gemini CLI, OpenCode).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>install<span class="w">          </span><span class="c1"># register the MCP server with all detected agents</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>brain<span class="w"> </span>mcp<span class="w"> </span>status<span class="w">           </span><span class="c1"># check registration</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w">        </span><span class="c1"># install all bundled workflow skills</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>brain<span class="w"> </span>skill<span class="w"> </span>status<span class="w">         </span><span class="c1"># check what&#39;s installed</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>install<span class="w">          </span><span class="c1"># register the MCP server with all detected agents</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>brain<span class="w"> </span>mcp<span class="w"> </span>status<span class="w">           </span><span class="c1"># check registration</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w">        </span><span class="c1"># install all bundled workflow skills</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>brain<span class="w"> </span>skill<span class="w"> </span>status<span class="w">         </span><span class="c1"># check what&#39;s installed</span>
 </code></pre></div>
 <p>To target a specific agent, add <code>--agent claude</code> (or <code>codex</code>, <code>gemini</code>, <code>opencode</code>).</p>
 <p>After updating Local Brain, run <code>brain skill upgrade</code> to push new skill versions to your agents. See the <a href="../skills/">Skills reference</a> for the full list of bundled skills, customization, and authoring your own.</p>

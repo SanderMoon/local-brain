@@ -508,7 +508,29 @@
   <a href="#brain-config-key-value" class="md-nav__link">
     <span class="md-ellipsis">
       
-        brain config &lt;key&gt; [value]
+        brain config [key] [value]
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brain-config-show" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brain config show
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brain-config-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brain config setup
       
     </span>
   </a>
@@ -688,10 +710,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#brain-project-link-url" class="md-nav__link">
+  <a href="#brain-project-link-urlownerrepo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        brain project link &lt;url&gt;
+        brain project link [url|.|owner/repo]
       
     </span>
   </a>
@@ -1546,7 +1568,29 @@
   <a href="#brain-config-key-value" class="md-nav__link">
     <span class="md-ellipsis">
       
-        brain config &lt;key&gt; [value]
+        brain config [key] [value]
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brain-config-show" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brain config show
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brain-config-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brain config setup
       
     </span>
   </a>
@@ -1726,10 +1770,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#brain-project-link-url" class="md-nav__link">
+  <a href="#brain-project-link-urlownerrepo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        brain project link &lt;url&gt;
+        brain project link [url|.|owner/repo]
       
     </span>
   </a>
@@ -2400,27 +2444,49 @@
 - Registers paths only (does not copy files)
 - Skips already-registered brains</p>
 <hr />
-<h3 id="brain-config-key-value"><code>brain config &lt;key&gt; [value]</code></h3>
+<h3 id="brain-config-key-value"><code>brain config [key] [value]</code></h3>
 <p>Get or set configuration values. Stored in <code>~/.config/brain/config.json</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>brain<span class="w"> </span>config<span class="w"> </span>editor<span class="w">           </span><span class="c1"># Get current editor</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>brain<span class="w"> </span>config<span class="w"> </span>editor<span class="w"> </span>nvim<span class="w">      </span><span class="c1"># Set editor</span>
+<p>When called with no arguments, shows all current config values with their sources.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>brain<span class="w"> </span>config<span class="w">                       </span><span class="c1"># Show all config values</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>brain<span class="w"> </span>config<span class="w"> </span>editor<span class="w">                </span><span class="c1"># Get current editor</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>brain<span class="w"> </span>config<span class="w"> </span>editor<span class="w"> </span>nvim<span class="w">           </span><span class="c1"># Set editor to nvim</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>brain<span class="w"> </span>config<span class="w"> </span>dev_dir<span class="w">               </span><span class="c1"># Get current dev directory</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>brain<span class="w"> </span>config<span class="w"> </span>dev_dir<span class="w"> </span>~/projects<span class="w">    </span><span class="c1"># Set dev directory</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>brain<span class="w"> </span>config<span class="w"> </span>brain_root<span class="w">            </span><span class="c1"># Show brain root (read-only)</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>brain<span class="w"> </span>config<span class="w"> </span>symlink<span class="w">               </span><span class="c1"># Show symlink path (read-only)</span>
 </code></pre></div>
 <p><strong>Available Keys:</strong>
-- <code>editor</code> - Preferred text editor</p>
+- <code>editor</code> - Preferred text editor (e.g., nvim, vim, emacs)
+- <code>dev_dir</code> - Directory for cloned repositories (default: ~/dev)
+- <code>brain_root</code> - Root directory for brains (read-only, use BRAIN_ROOT env var)
+- <code>symlink</code> - Symlink location (read-only, use BRAIN_SYMLINK env var)</p>
+<h3 id="brain-config-show"><code>brain config show</code></h3>
+<p>Show all current configuration values in a table format, including the source of each value (configured, env var, or default).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>brain<span class="w"> </span>config<span class="w"> </span>show
+</code></pre></div>
+<h3 id="brain-config-setup"><code>brain config setup</code></h3>
+<p>Interactive configuration wizard. Walks through key settings, showing current/default values. Press Enter to keep a value or type a new one.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>brain<span class="w"> </span>config<span class="w"> </span>setup
+</code></pre></div>
+<p>Settings configured:
+1. Brain root directory (informational, set via BRAIN_ROOT env var)
+2. Dev directory for repos
+3. Editor
+4. Symlink location (informational, set via BRAIN_SYMLINK env var)</p>
 <hr />
 <h2 id="capture-workflow">Capture Workflow</h2>
 <h3 id="brain-add-text"><code>brain add [text]</code></h3>
 <p>Quick capture to dump.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Fix authentication bug&quot;</span><span class="w">     </span><span class="c1"># Task capture (instant)</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>brain<span class="w"> </span>add<span class="w">                              </span><span class="c1"># Note capture (opens editor)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Fix authentication bug&quot;</span><span class="w">     </span><span class="c1"># Task capture (instant)</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>brain<span class="w"> </span>add<span class="w">                              </span><span class="c1"># Note capture (opens editor)</span>
 </code></pre></div>
 <p><strong>With text:</strong> Appends as <code>- [ ] your text #captured:YYYY-MM-DD</code>.</p>
 <p><strong>Without text:</strong> Prompts for note title, opens <code>$EDITOR</code>, saves as indented note block.</p>
 <hr />
 <h3 id="brain-dump-ls-json"><code>brain dump ls [--json]</code></h3>
 <p>List items in the dump with stable IDs.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls<span class="w"> </span>--json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls<span class="w"> </span>--json
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--json</code> - Output JSON with IDs, types, and line numbers</p>
@@ -2429,8 +2495,8 @@
 <h2 id="curation-workflow">Curation Workflow</h2>
 <h3 id="brain-refile-id-project"><code>brain refile [&lt;id&gt; &lt;project&gt;]</code></h3>
 <p>Move items from dump to projects.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>brain<span class="w"> </span>refile<span class="w">                    </span><span class="c1"># Interactive: walk through each item</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>brain<span class="w"> </span>refile<span class="w"> </span>a1b2c3<span class="w"> </span>backend-api<span class="w"> </span><span class="c1"># Direct: refile by ID</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>brain<span class="w"> </span>refile<span class="w">                    </span><span class="c1"># Interactive: walk through each item</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>brain<span class="w"> </span>refile<span class="w"> </span>a1b2c3<span class="w"> </span>backend-api<span class="w"> </span><span class="c1"># Direct: refile by ID</span>
 </code></pre></div>
 <p><strong>Behavior:</strong>
 - <strong>Tasks</strong> append to project's <code>todo.md</code> with backlog status (<code>[~]</code>). Use <code>brain plan</code> to promote.
@@ -2440,7 +2506,7 @@
 <hr />
 <h3 id="brain-plan"><code>brain plan</code></h3>
 <p>Promote backlog tasks and set metadata. Ideal for weekly planning sessions.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>brain<span class="w"> </span>plan
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>brain<span class="w"> </span>plan
 </code></pre></div>
 <p><strong>Workflow:</strong>
 1. Select tasks via fzf (Tab for multi-select)
@@ -2455,7 +2521,7 @@
 <h2 id="project-management">Project Management</h2>
 <h3 id="brain-project-new-name"><code>brain project new &lt;name&gt;</code></h3>
 <p>Create a new project with boilerplate (<code>notes.md</code>, <code>todo.md</code>, <code>.repos</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>brain<span class="w"> </span>project<span class="w"> </span>new<span class="w"> </span>website-redesign
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>brain<span class="w"> </span>project<span class="w"> </span>new<span class="w"> </span>website-redesign
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--section &lt;section&gt;</code> - PARA section (default: <code>01_active</code>; valid: <code>01_active</code>, <code>02_areas</code>, <code>03_resources</code>)</p>
@@ -2464,8 +2530,8 @@
 <h3 id="brain-project-list-json"><code>brain project list [--json]</code></h3>
 <p><strong>Alias:</strong> <code>brain project ls</code></p>
 <p>List all projects. Selected project marked with <code>*</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>brain<span class="w"> </span>project<span class="w"> </span>list
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>brain<span class="w"> </span>project<span class="w"> </span>list<span class="w"> </span>--json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>brain<span class="w"> </span>project<span class="w"> </span>list
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>brain<span class="w"> </span>project<span class="w"> </span>list<span class="w"> </span>--json
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--json</code> - Output JSON format
@@ -2473,79 +2539,84 @@
 <hr />
 <h3 id="brain-project-select-name"><code>brain project select [name]</code></h3>
 <p>Focus on a specific project. Focus persists across sessions.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>brain<span class="w"> </span>project<span class="w"> </span><span class="k">select</span><span class="w"> </span>backend-api
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>brain<span class="w"> </span>project<span class="w"> </span><span class="k">select</span><span class="w">              </span><span class="c1"># Interactive fzf selection</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>brain<span class="w"> </span>project<span class="w"> </span><span class="k">select</span><span class="w"> </span>backend-api
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>brain<span class="w"> </span>project<span class="w"> </span><span class="k">select</span><span class="w">              </span><span class="c1"># Interactive fzf selection</span>
 </code></pre></div>
 <hr />
 <h3 id="brain-project-current"><code>brain project current</code></h3>
 <p>Show the currently focused project. Exit code 1 if none focused.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>brain<span class="w"> </span>project<span class="w"> </span>current
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>brain<span class="w"> </span>project<span class="w"> </span>current
 </code></pre></div>
 <hr />
 <h3 id="brain-project-describe"><code>brain project describe</code></h3>
 <p>Edit or display a project description (stored in <code>description.md</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>brain<span class="w"> </span>project<span class="w"> </span>describe<span class="w">              </span><span class="c1"># Edit in editor</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>brain<span class="w"> </span>project<span class="w"> </span>describe<span class="w"> </span>--show<span class="w">       </span><span class="c1"># Display</span>
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>brain<span class="w"> </span>project<span class="w"> </span>describe<span class="w"> </span>--show<span class="w"> </span>--json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>brain<span class="w"> </span>project<span class="w"> </span>describe<span class="w">              </span><span class="c1"># Edit in editor</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>brain<span class="w"> </span>project<span class="w"> </span>describe<span class="w"> </span>--show<span class="w">       </span><span class="c1"># Display</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>brain<span class="w"> </span>project<span class="w"> </span>describe<span class="w"> </span>--show<span class="w"> </span>--json
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--show</code> - Display instead of editing
 - <code>--json</code> - JSON output (with <code>--show</code>)</p>
 <hr />
 <h3 id="brain-project-clone-url-name"><code>brain project clone &lt;url&gt; [name]</code></h3>
-<p>Import a git repository as a new project. Creates project, links repo, clones to <code>~/dev/</code>, and focuses.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>brain<span class="w"> </span>project<span class="w"> </span>clone<span class="w"> </span>https://github.com/user/repo.git
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>brain<span class="w"> </span>project<span class="w"> </span>clone<span class="w"> </span>https://github.com/user/repo.git<span class="w"> </span>my-project
+<p>Import a git repository as a new project. Creates project, links repo, clones to dev directory, and focuses.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>brain<span class="w"> </span>project<span class="w"> </span>clone<span class="w"> </span>https://github.com/user/repo.git
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>brain<span class="w"> </span>project<span class="w"> </span>clone<span class="w"> </span>https://github.com/user/repo.git<span class="w"> </span>my-project
 </code></pre></div>
 <p>Project name is extracted from the URL if not provided.</p>
 <hr />
-<h3 id="brain-project-link-url"><code>brain project link &lt;url&gt;</code></h3>
-<p>Link a git repository to the focused project's <code>.repos</code> file.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>brain<span class="w"> </span>project<span class="w"> </span>link<span class="w"> </span>https://github.com/user/repo.git
+<h3 id="brain-project-link-urlownerrepo"><code>brain project link [url|.|owner/repo]</code></h3>
+<p>Link a git repository to the focused project's <code>.repos</code> file. Supports multiple input formats:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>brain<span class="w"> </span>project<span class="w"> </span>link<span class="w"> </span>https://github.com/user/repo.git<span class="w">   </span><span class="c1"># full URL</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>brain<span class="w"> </span>project<span class="w"> </span>link<span class="w"> </span>.<span class="w">                                    </span><span class="c1"># detect remote from current directory</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>brain<span class="w"> </span>project<span class="w"> </span>link<span class="w"> </span>user/repo<span class="w">                            </span><span class="c1"># GitHub shorthand</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>brain<span class="w"> </span>project<span class="w"> </span>link<span class="w"> </span>--pick<span class="w">                               </span><span class="c1"># fzf picker over repos in dev directory</span>
 </code></pre></div>
+<p><strong>Options:</strong>
+- <code>--pick</code> - Scan the dev directory for git repos and pick interactively</p>
 <p>Multiple repos can be linked to one project. Verifies remote accessibility.</p>
 <hr />
 <h3 id="brain-project-pull"><code>brain project pull</code></h3>
 <p>Clone or update all linked repositories for the focused project.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>brain<span class="w"> </span>project<span class="w"> </span>pull
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>brain<span class="w"> </span>project<span class="w"> </span>pull
 </code></pre></div>
-<p>Not-yet-cloned repos are cloned to <code>~/dev/&lt;repo-name&gt;/</code>. Already-cloned repos are pulled. Lines starting with <code>#</code> in <code>.repos</code> are skipped.</p>
+<p>Not-yet-cloned repos are cloned to the dev directory (<code>~/dev/</code> by default, configurable via <code>brain config dev_dir</code>). Already-cloned repos are pulled. Lines starting with <code>#</code> in <code>.repos</code> are skipped.</p>
 <hr />
 <h3 id="brain-project-archive-name"><code>brain project archive &lt;name&gt;</code></h3>
 <p>Move a project from <code>01_active/</code> to <code>99_archive/</code> (appends <code>_YYYYMMDD</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>brain<span class="w"> </span>project<span class="w"> </span>archive<span class="w"> </span>old-project
-<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>brain<span class="w"> </span>project<span class="w"> </span>archive<span class="w">              </span><span class="c1"># Archives focused project</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>brain<span class="w"> </span>project<span class="w"> </span>archive<span class="w"> </span>old-project
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>brain<span class="w"> </span>project<span class="w"> </span>archive<span class="w">              </span><span class="c1"># Archives focused project</span>
 </code></pre></div>
-<p>Does not delete anything. Code repositories in <code>~/dev/</code> are not affected.</p>
+<p>Does not delete anything. Code repositories in the dev directory are not affected.</p>
 <hr />
 <h3 id="brain-project-move-project-target-brain"><code>brain project move &lt;project&gt; [target-brain]</code></h3>
 <p>Move a project to another brain.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>brain<span class="w"> </span>project<span class="w"> </span>move<span class="w"> </span>backend-api<span class="w"> </span>work
-<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>brain<span class="w"> </span>project<span class="w"> </span>move<span class="w"> </span>backend-api<span class="w">     </span><span class="c1"># Interactive brain selection</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>brain<span class="w"> </span>project<span class="w"> </span>move<span class="w"> </span>backend-api<span class="w"> </span>work
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>brain<span class="w"> </span>project<span class="w"> </span>move<span class="w"> </span>backend-api<span class="w">     </span><span class="c1"># Interactive brain selection</span>
 </code></pre></div>
 <p>Fails if a project with the same name exists in the target brain.</p>
 <hr />
 <h3 id="brain-project-delete-name"><code>brain project delete &lt;name&gt;</code></h3>
 <p>Permanently delete a project. <strong>Cannot be undone.</strong> Consider <code>brain project archive</code> instead.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>brain<span class="w"> </span>project<span class="w"> </span>delete<span class="w"> </span>old-project
-<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>brain<span class="w"> </span>project<span class="w"> </span>delete<span class="w">               </span><span class="c1"># Deletes focused project</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>brain<span class="w"> </span>project<span class="w"> </span>delete<span class="w"> </span>old-project
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>brain<span class="w"> </span>project<span class="w"> </span>delete<span class="w">               </span><span class="c1"># Deletes focused project</span>
 </code></pre></div>
-<p>Requires typing the project name to confirm. Does not delete repos in <code>~/dev/</code>.</p>
+<p>Requires typing the project name to confirm. Does not delete repos in the dev directory.</p>
 <hr />
 <h2 id="todo-management">Todo Management</h2>
 <h3 id="brain-todo"><code>brain todo</code></h3>
 <p>Interactive fuzzy search through tasks. Select a task to open it in your editor at the exact line.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>brain<span class="w"> </span>todo
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>brain<span class="w"> </span>todo
 </code></pre></div>
 <p>Requires fzf. Preview uses <code>bat</code> if available.</p>
 <hr />
 <h3 id="brain-todo-ls"><code>brain todo ls</code></h3>
 <p>List tasks with filters.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls
-<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--status<span class="w"> </span><span class="k">in</span>-progress<span class="w"> </span>--priority<span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--tag<span class="w"> </span>bug<span class="w"> </span>--tag<span class="w"> </span>security<span class="w"> </span>--tag-mode<span class="w"> </span>and
-<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--overdue<span class="w"> </span>--sort<span class="w"> </span>deadline
-<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--all<span class="w"> </span>--json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--status<span class="w"> </span><span class="k">in</span>-progress<span class="w"> </span>--priority<span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--tag<span class="w"> </span>bug<span class="w"> </span>--tag<span class="w"> </span>security<span class="w"> </span>--tag-mode<span class="w"> </span>and
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--overdue<span class="w"> </span>--sort<span class="w"> </span>deadline
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--all<span class="w"> </span>--json
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--json</code> - Output JSON format
@@ -2566,83 +2637,83 @@
 <hr />
 <h3 id="brain-todo-done-id"><code>brain todo done [ID...]</code></h3>
 <p>Mark tasks as complete (<code>[x]</code>). Tasks stay in todo.md and can be reopened.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>brain<span class="w"> </span>todo<span class="w"> </span><span class="k">done</span><span class="w"> </span>abc123
-<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>brain<span class="w"> </span>todo<span class="w"> </span><span class="k">done</span><span class="w"> </span>abc123<span class="w"> </span>def456<span class="w">     </span><span class="c1"># Multiple</span>
-<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>brain<span class="w"> </span>todo<span class="w"> </span><span class="k">done</span><span class="w">                   </span><span class="c1"># Interactive multi-select</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>brain<span class="w"> </span>todo<span class="w"> </span><span class="k">done</span><span class="w"> </span>abc123
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>brain<span class="w"> </span>todo<span class="w"> </span><span class="k">done</span><span class="w"> </span>abc123<span class="w"> </span>def456<span class="w">     </span><span class="c1"># Multiple</span>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>brain<span class="w"> </span>todo<span class="w"> </span><span class="k">done</span><span class="w">                   </span><span class="c1"># Interactive multi-select</span>
 </code></pre></div>
 <hr />
 <h3 id="brain-todo-delete-id"><code>brain todo delete [id]</code></h3>
 <p>Permanently delete a task. <strong>Cannot be undone.</strong> Requires confirmation.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>delete<span class="w"> </span>abc123
-<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>delete<span class="w">                 </span><span class="c1"># Interactive selection</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>delete<span class="w"> </span>abc123
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>delete<span class="w">                 </span><span class="c1"># Interactive selection</span>
 </code></pre></div>
 <hr />
 <h3 id="brain-todo-reopen-id"><code>brain todo reopen [id]</code></h3>
 <p>Reopen a completed task (changes <code>[x]</code> back to <code>[ ]</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>reopen<span class="w"> </span>abc123
-<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>reopen<span class="w">                 </span><span class="c1"># Interactive selection from completed tasks</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>reopen<span class="w"> </span>abc123
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>reopen<span class="w">                 </span><span class="c1"># Interactive selection from completed tasks</span>
 </code></pre></div>
 <hr />
 <h3 id="brain-todo-start-id"><code>brain todo start &lt;id&gt;</code></h3>
 <p>Mark task as in-progress (<code>[&gt;]</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>start<span class="w"> </span>abc123
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>start<span class="w"> </span>abc123
 </code></pre></div>
 <hr />
 <h3 id="brain-todo-block-id"><code>brain todo block &lt;id&gt;</code></h3>
 <p>Mark task as blocked (<code>[-]</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>block<span class="w"> </span>abc123
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>block<span class="w"> </span>abc123
 </code></pre></div>
 <hr />
 <h3 id="brain-todo-unblock-id"><code>brain todo unblock &lt;id&gt;</code></h3>
 <p>Unblock a task (changes <code>[-]</code> back to <code>[ ]</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>unblock<span class="w"> </span>abc123
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>unblock<span class="w"> </span>abc123
 </code></pre></div>
 <hr />
 <h3 id="brain-todo-status-id-state"><code>brain todo status &lt;id&gt; &lt;state&gt;</code></h3>
 <p>Set task status directly. Valid states: <code>backlog</code> (<code>[~]</code>), <code>open</code> (<code>[ ]</code>), <code>in-progress</code> (<code>[&gt;]</code>), <code>blocked</code> (<code>[-]</code>), <code>done</code> (<code>[x]</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span><span class="k">in</span>-progress
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>status<span class="w"> </span>abc123<span class="w"> </span><span class="k">in</span>-progress
 </code></pre></div>
 <hr />
 <h3 id="brain-todo-prio-id-priority"><code>brain todo prio &lt;id&gt; &lt;priority&gt;</code></h3>
 <p>Set task priority. Adds/updates <code>#p:N</code> tag.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">1</span><span class="w">          </span><span class="c1"># High (P1)</span>
-<a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">2</span><span class="w">          </span><span class="c1"># Medium (P2)</span>
-<a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">3</span><span class="w">          </span><span class="c1"># Low (P3)</span>
-<a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">0</span><span class="w">          </span><span class="c1"># Clear priority</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">1</span><span class="w">          </span><span class="c1"># High (P1)</span>
+<a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">2</span><span class="w">          </span><span class="c1"># Medium (P2)</span>
+<a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">3</span><span class="w">          </span><span class="c1"># Low (P3)</span>
+<a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a>brain<span class="w"> </span>todo<span class="w"> </span>prio<span class="w"> </span>abc123<span class="w"> </span><span class="m">0</span><span class="w">          </span><span class="c1"># Clear priority</span>
 </code></pre></div>
 <hr />
 <h3 id="brain-todo-due-id-date"><code>brain todo due &lt;id&gt; &lt;date&gt;</code></h3>
 <p>Set task due date. Adds/updates <code>#due:YYYY-MM-DD</code> tag. Overdue tasks show <code>[OVERDUE]</code> in listings.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span><span class="m">2026</span>-02-15
-<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span>tomorrow
-<a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span>+7d
-<a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span>next-friday
-<a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span>clear<span class="w">       </span><span class="c1"># Remove due date</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span><span class="m">2026</span>-02-15
+<a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span>tomorrow
+<a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span>+7d
+<a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span>next-friday
+<a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a>brain<span class="w"> </span>todo<span class="w"> </span>due<span class="w"> </span>abc123<span class="w"> </span>clear<span class="w">       </span><span class="c1"># Remove due date</span>
 </code></pre></div>
 <hr />
 <h3 id="brain-todo-schedule"><code>brain todo schedule</code></h3>
 <p>Batch schedule unscheduled tasks interactively. Loops through open tasks without due dates, prompting for each.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>schedule
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>schedule
 </code></pre></div>
 <p>Press Esc to exit. Supports all date formats from <code>brain todo due</code>.</p>
 <hr />
 <h3 id="brain-todo-tag-id-tags"><code>brain todo tag &lt;id&gt; &lt;tags...&gt;</code></h3>
 <p>Add or remove tags on a task. Tags are stored as <code>#tagname</code> inline.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>tag<span class="w"> </span>abc123<span class="w"> </span>bug<span class="w"> </span>security
-<a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>tag<span class="w"> </span>abc123<span class="w"> </span>--rm<span class="w"> </span>security
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>tag<span class="w"> </span>abc123<span class="w"> </span>bug<span class="w"> </span>security
+<a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>brain<span class="w"> </span>todo<span class="w"> </span>tag<span class="w"> </span>abc123<span class="w"> </span>--rm<span class="w"> </span>security
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--rm</code> - Remove specified tags instead of adding</p>
 <hr />
 <h3 id="brain-todo-tags"><code>brain todo tags</code></h3>
 <p>List all tags in use with counts.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>tags
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>brain<span class="w"> </span>todo<span class="w"> </span>tags
 </code></pre></div>
 <hr />
 <h2 id="note-management">Note Management</h2>
 <h3 id="brain-note"><code>brain note</code></h3>
 <p>Select and open a note in the focused project via fzf.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>brain<span class="w"> </span>note
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>brain<span class="w"> </span>note
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--section &lt;section&gt;</code> - PARA section (default: <code>01_active</code>; valid: <code>01_active</code>, <code>02_areas</code>, <code>03_resources</code>)</p>
@@ -2650,8 +2721,8 @@
 <hr />
 <h3 id="brain-note-ls"><code>brain note ls</code></h3>
 <p>List note files in the focused project.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>brain<span class="w"> </span>note<span class="w"> </span>ls
-<a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>brain<span class="w"> </span>note<span class="w"> </span>ls<span class="w"> </span>--json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>brain<span class="w"> </span>note<span class="w"> </span>ls
+<a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>brain<span class="w"> </span>note<span class="w"> </span>ls<span class="w"> </span>--json
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--json</code> - Output JSON format
@@ -2659,7 +2730,7 @@
 <hr />
 <h3 id="brain-note-delete"><code>brain note delete</code></h3>
 <p>Select and delete a note from the focused project. <strong>Cannot be undone.</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>brain<span class="w"> </span>note<span class="w"> </span>delete
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>brain<span class="w"> </span>note<span class="w"> </span>delete
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--section &lt;section&gt;</code> - PARA section (default: <code>01_active</code>; valid: <code>01_active</code>, <code>02_areas</code>, <code>03_resources</code>)</p>
@@ -2668,15 +2739,15 @@
 <h2 id="context-dev-mode">Context &amp; Dev Mode</h2>
 <h3 id="brain-go"><code>brain go</code></h3>
 <p>Enter project context.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>brain<span class="w"> </span>go
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>brain<span class="w"> </span>go
 </code></pre></div>
 <p><strong>No linked repos:</strong> Opens a new shell in the project directory.</p>
 <p><strong>With linked repos:</strong> Launches a tmux session with windows for the project directory and each linked repository. Activates Python venv if present. Attaches to existing session if already running.</p>
 <hr />
 <h3 id="brain-storm-agent-name"><code>brain storm [--agent &lt;name&gt;]</code></h3>
 <p>Open an AI agent in your brains root directory (<code>~/brains</code> or <code>$BRAIN_ROOT</code>).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>brain<span class="w"> </span>storm<span class="w">                    </span><span class="c1"># Launch Claude Code</span>
-<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>brain<span class="w"> </span>storm<span class="w"> </span>--agent<span class="w"> </span>aider<span class="w">      </span><span class="c1"># Launch aider</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>brain<span class="w"> </span>storm<span class="w">                    </span><span class="c1"># Launch Claude Code</span>
+<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>brain<span class="w"> </span>storm<span class="w"> </span>--agent<span class="w"> </span>aider<span class="w">      </span><span class="c1"># Launch aider</span>
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--agent</code>, <code>-a</code> (string, default: <code>claude</code>) - CLI agent binary to launch</p>
@@ -2685,24 +2756,24 @@
 <h2 id="sync-utilities">Sync &amp; Utilities</h2>
 <h3 id="brain-sync-statusscanrescan"><code>brain sync [status|scan|rescan]</code></h3>
 <p>Syncthing control wrapper. Requires Syncthing installed and running.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>brain<span class="w"> </span>sync<span class="w">              </span><span class="c1"># Force rescan (default)</span>
-<a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>brain<span class="w"> </span>sync<span class="w"> </span>status<span class="w">       </span><span class="c1"># Show Syncthing status</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>brain<span class="w"> </span>sync<span class="w">              </span><span class="c1"># Force rescan (default)</span>
+<a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>brain<span class="w"> </span>sync<span class="w"> </span>status<span class="w">       </span><span class="c1"># Show Syncthing status</span>
 </code></pre></div>
 <hr />
 <h3 id="brain-daily"><code>brain daily</code></h3>
 <p>Create or open today's daily note at <code>{brain}/00_daily/YYYY-MM-DD.md</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>brain<span class="w"> </span>daily
-<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>brain<span class="w"> </span>daily<span class="w"> </span>--open<span class="w">      </span><span class="c1"># Open in editor after creating</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>brain<span class="w"> </span>daily
+<a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>brain<span class="w"> </span>daily<span class="w"> </span>--open<span class="w">      </span><span class="c1"># Open in editor after creating</span>
 </code></pre></div>
 <p>Includes a briefing section with overdue todos from all projects.</p>
 <hr />
 <h2 id="migration">Migration</h2>
 <h3 id="brain-migrate"><code>brain migrate</code></h3>
 <p>Migrate brain files to portable markdown standards. Dry-run by default.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>brain<span class="w"> </span>migrate<span class="w">                          </span><span class="c1"># Dry-run</span>
-<a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>brain<span class="w"> </span>migrate<span class="w"> </span>--apply<span class="w">                  </span><span class="c1"># Write changes</span>
-<a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a>brain<span class="w"> </span>migrate<span class="w"> </span>--project<span class="w"> </span>backend-api<span class="w">    </span><span class="c1"># Single project</span>
-<a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a>brain<span class="w"> </span>migrate<span class="w"> </span>--section<span class="w"> </span>02_areas<span class="w">       </span><span class="c1"># Different PARA section</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>brain<span class="w"> </span>migrate<span class="w">                          </span><span class="c1"># Dry-run</span>
+<a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>brain<span class="w"> </span>migrate<span class="w"> </span>--apply<span class="w">                  </span><span class="c1"># Write changes</span>
+<a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a>brain<span class="w"> </span>migrate<span class="w"> </span>--project<span class="w"> </span>backend-api<span class="w">    </span><span class="c1"># Single project</span>
+<a id="__codelineno-47-4" name="__codelineno-47-4" href="#__codelineno-47-4"></a>brain<span class="w"> </span>migrate<span class="w"> </span>--section<span class="w"> </span>02_areas<span class="w">       </span><span class="c1"># Different PARA section</span>
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--apply</code> - Write changes (default is dry-run)
@@ -2716,7 +2787,7 @@
 <hr />
 <h3 id="brain-migrate-ids"><code>brain migrate-ids</code></h3>
 <p>Add stable IDs (<code>#id:</code> tags) to all todos that don't have them.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>brain<span class="w"> </span>migrate-ids
+<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>brain<span class="w"> </span>migrate-ids
 </code></pre></div>
 <p>Safe to run multiple times. IDs use the same MD5 algorithm as the original bash version.</p>
 <hr />
@@ -2724,8 +2795,8 @@
 <p>Register the brain-mcp server with AI coding agents. Auto-detects installed agents.</p>
 <h3 id="brain-mcp-install-agent-id"><code>brain mcp install [--agent &lt;id&gt;]</code></h3>
 <p>Register brain-mcp with detected AI agents.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>install
-<a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>brain<span class="w"> </span>mcp<span class="w"> </span>install<span class="w"> </span>--agent<span class="w"> </span>claude
+<div class="highlight"><pre><span></span><code><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>install
+<a id="__codelineno-49-2" name="__codelineno-49-2" href="#__codelineno-49-2"></a>brain<span class="w"> </span>mcp<span class="w"> </span>install<span class="w"> </span>--agent<span class="w"> </span>claude
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--agent</code> - Target: <code>claude</code>, <code>codex</code>, <code>gemini</code>, <code>opencode</code>, or <code>all</code> (default: <code>all</code>)</p>
@@ -2765,15 +2836,15 @@
 <hr />
 <h3 id="brain-mcp-remove-agent-id"><code>brain mcp remove [--agent &lt;id&gt;]</code></h3>
 <p>Remove brain-mcp registration from AI agents.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>remove
-<a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>brain<span class="w"> </span>mcp<span class="w"> </span>remove<span class="w"> </span>--agent<span class="w"> </span>claude
+<div class="highlight"><pre><span></span><code><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>remove
+<a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a>brain<span class="w"> </span>mcp<span class="w"> </span>remove<span class="w"> </span>--agent<span class="w"> </span>claude
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--agent</code> - Target: <code>claude</code>, <code>codex</code>, <code>gemini</code>, <code>opencode</code>, or <code>all</code> (default: <code>all</code>)</p>
 <hr />
 <h3 id="brain-mcp-status"><code>brain mcp status</code></h3>
 <p>Show MCP registration status across all known agents.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>status
+<div class="highlight"><pre><span></span><code><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>status
 </code></pre></div>
 <p>Status values: <code>registered</code>, <code>not registered</code>, <code>-</code> (agent not detected).</p>
 <hr />
@@ -2781,15 +2852,15 @@
 <p>Install SKILL.md files into AI coding agents to teach them Local Brain workflows.</p>
 <h3 id="brain-skill-list"><code>brain skill list</code></h3>
 <p>List all bundled skills.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>list
+<div class="highlight"><pre><span></span><code><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>list
 </code></pre></div>
 <hr />
 <h3 id="brain-skill-install-name-agent-id-force"><code>brain skill install [name] [--agent &lt;id&gt;] [--force]</code></h3>
 <p>Install skill(s) to detected AI agents.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w">                              </span><span class="c1"># All skills, all agents</span>
-<a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>--agent<span class="w"> </span>claude<span class="w">               </span><span class="c1"># All skills, one agent</span>
-<a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>brain-daily<span class="w"> </span>--agent<span class="w"> </span>claude<span class="w">   </span><span class="c1"># One skill, one agent</span>
-<a id="__codelineno-51-4" name="__codelineno-51-4" href="#__codelineno-51-4"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>--force<span class="w">                      </span><span class="c1"># Overwrite existing</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w">                              </span><span class="c1"># All skills, all agents</span>
+<a id="__codelineno-53-2" name="__codelineno-53-2" href="#__codelineno-53-2"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>--agent<span class="w"> </span>claude<span class="w">               </span><span class="c1"># All skills, one agent</span>
+<a id="__codelineno-53-3" name="__codelineno-53-3" href="#__codelineno-53-3"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>brain-daily<span class="w"> </span>--agent<span class="w"> </span>claude<span class="w">   </span><span class="c1"># One skill, one agent</span>
+<a id="__codelineno-53-4" name="__codelineno-53-4" href="#__codelineno-53-4"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>--force<span class="w">                      </span><span class="c1"># Overwrite existing</span>
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--agent</code> - Target: <code>claude</code>, <code>codex</code>, <code>gemini</code>, <code>opencode</code>, or <code>all</code> (default: <code>all</code>)
@@ -2825,23 +2896,23 @@
 <hr />
 <h3 id="brain-skill-upgrade-agent-id"><code>brain skill upgrade [--agent &lt;id&gt;]</code></h3>
 <p>Upgrade installed skills to the latest bundled version. Only upgrades already-installed skills. <strong>Overwrites local modifications.</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>upgrade
-<a id="__codelineno-52-2" name="__codelineno-52-2" href="#__codelineno-52-2"></a>brain<span class="w"> </span>skill<span class="w"> </span>upgrade<span class="w"> </span>--agent<span class="w"> </span>claude
+<div class="highlight"><pre><span></span><code><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>upgrade
+<a id="__codelineno-54-2" name="__codelineno-54-2" href="#__codelineno-54-2"></a>brain<span class="w"> </span>skill<span class="w"> </span>upgrade<span class="w"> </span>--agent<span class="w"> </span>claude
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--agent</code> - Target: <code>claude</code>, <code>codex</code>, <code>gemini</code>, <code>opencode</code>, or <code>all</code> (default: <code>all</code>)</p>
 <hr />
 <h3 id="brain-skill-remove-name-agent-id"><code>brain skill remove &lt;name&gt; [--agent &lt;id&gt;]</code></h3>
 <p>Remove a skill from AI agents.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>remove<span class="w"> </span>brain-daily
-<a id="__codelineno-53-2" name="__codelineno-53-2" href="#__codelineno-53-2"></a>brain<span class="w"> </span>skill<span class="w"> </span>remove<span class="w"> </span>brain-daily<span class="w"> </span>--agent<span class="w"> </span>claude
+<div class="highlight"><pre><span></span><code><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>remove<span class="w"> </span>brain-daily
+<a id="__codelineno-55-2" name="__codelineno-55-2" href="#__codelineno-55-2"></a>brain<span class="w"> </span>skill<span class="w"> </span>remove<span class="w"> </span>brain-daily<span class="w"> </span>--agent<span class="w"> </span>claude
 </code></pre></div>
 <p><strong>Options:</strong>
 - <code>--agent</code> - Target: <code>claude</code>, <code>codex</code>, <code>gemini</code>, <code>opencode</code>, or <code>all</code> (default: <code>all</code>)</p>
 <hr />
 <h3 id="brain-skill-status"><code>brain skill status</code></h3>
 <p>Show installation status of all bundled skills across all known agents.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>status
+<div class="highlight"><pre><span></span><code><a id="__codelineno-56-1" name="__codelineno-56-1" href="#__codelineno-56-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>status
 </code></pre></div>
 <p>Status values: <code>installed</code>, <code>not installed</code>, <code>-</code> (agent not detected).</p>
 <hr />
@@ -2935,14 +3006,14 @@
 </tbody>
 </table>
 <p><strong>Example Task:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a><span class="k">-</span><span class="w"> </span>[&gt;] Fix authentication bug <span class="ni">#p:1</span> <span class="ni">#due:2026</span>-02-15 <span class="ni">#bug</span> <span class="ni">#security</span> <span class="ni">#captured:2026</span>-01-29
+<div class="highlight"><pre><span></span><code><a id="__codelineno-57-1" name="__codelineno-57-1" href="#__codelineno-57-1"></a><span class="k">-</span><span class="w"> </span>[&gt;] Fix authentication bug <span class="ni">#p:1</span> <span class="ni">#due:2026</span>-02-15 <span class="ni">#bug</span> <span class="ni">#security</span> <span class="ni">#captured:2026</span>-01-29
 </code></pre></div></p>
 <hr />
 <h2 id="json-api-usage">JSON API Usage</h2>
 <p>Many commands support <code>--json</code> for scripting:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-56-1" name="__codelineno-56-1" href="#__codelineno-56-1"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[0].id&#39;</span>
-<a id="__codelineno-56-2" name="__codelineno-56-2" href="#__codelineno-56-2"></a>brain<span class="w"> </span>project<span class="w"> </span>list<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[] | select(.focused==true) | .name&#39;</span>
-<a id="__codelineno-56-3" name="__codelineno-56-3" href="#__codelineno-56-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--priority<span class="w"> </span><span class="m">1</span><span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[].content&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-58-1" name="__codelineno-58-1" href="#__codelineno-58-1"></a>brain<span class="w"> </span>dump<span class="w"> </span>ls<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[0].id&#39;</span>
+<a id="__codelineno-58-2" name="__codelineno-58-2" href="#__codelineno-58-2"></a>brain<span class="w"> </span>project<span class="w"> </span>list<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[] | select(.focused==true) | .name&#39;</span>
+<a id="__codelineno-58-3" name="__codelineno-58-3" href="#__codelineno-58-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--priority<span class="w"> </span><span class="m">1</span><span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[].content&#39;</span>
 </code></pre></div>
 <hr />
 <h2 id="environment-variables">Environment Variables</h2>
