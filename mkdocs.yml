@@ -22,7 +22,6 @@ theme:
     - search.highlight
     - content.code.copy
     - content.code.annotate
-  custom_dir: docs/overrides
 
 nav:
   - Quickstart: index.md
