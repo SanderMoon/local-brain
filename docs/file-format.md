@@ -261,7 +261,7 @@ git@github.com:user/another-repo.git
 https://github.com/user/third-repo.git
 ```
 
-Repo names are extracted from URLs and mapped to `~/dev/{repo-name}` for `brain dev` (tmux session management).
+Repo names are extracted from URLs and mapped to `{dev_dir}/{repo-name}` (default `~/dev/`, configurable via `brain config dev_dir`).
 
 ---
 

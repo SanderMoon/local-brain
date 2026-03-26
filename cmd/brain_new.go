@@ -206,5 +206,11 @@ date: YYYY-MM-DD
 	fmt.Println("")
 	fmt.Printf("Success! Brain '%s' is ready.\n", brainName)
 
+	// Show hint for first-time users (first brain ever created)
+	if len(cfg.ListBrains()) == 1 && cfg.GetEditor() == "" {
+		fmt.Println("")
+		fmt.Println("Tip: Run 'brain config setup' to customize your settings.")
+	}
+
 	return nil
 }

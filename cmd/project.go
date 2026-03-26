@@ -69,11 +69,21 @@ Creates the project, links the repository, and pulls the code.`,
 	RunE: runProjectClone,
 }
 
+var projectLinkPickFlag bool
+
 var projectLinkCmd = &cobra.Command{
-	Use:   "link <git-url>",
+	Use:   "link [git-url|.|owner/repo]",
 	Short: "Link a git repository to current/focused project",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runProjectLink,
+	Long: `Link a git repository to the current or focused project.
+
+Supports multiple input formats:
+  brain project link <full-git-url>     Link by full URL
+  brain project link .                  Detect remote URL from current directory
+  brain project link /path/to/repo      Detect remote URL from local path
+  brain project link owner/repo         Expand GitHub shorthand to full URL
+  brain project link --pick             Scan ~/dev for repos and pick with fzf`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runProjectLink,
 }
 
 var projectPullCmd = &cobra.Command{
@@ -133,6 +143,7 @@ func init() {
 	projectListCmd.Flags().BoolVar(&projectJSONFlag, "json", false, "Output JSON format")
 	projectListCmd.Flags().StringVar(&projectSectionFlag, "section", "01_active", "PARA section (01_active, 02_areas, 03_resources)")
 	projectNewCmd.Flags().StringVar(&projectSectionFlag, "section", "01_active", "PARA section (01_active, 02_areas, 03_resources)")
+	projectLinkCmd.Flags().BoolVar(&projectLinkPickFlag, "pick", false, "Scan ~/dev for git repos and pick with fzf")
 	projectDescribeCmd.Flags().BoolVar(&projectDescribeShowFlag, "show", false, "Display description instead of editing")
 	projectDescribeCmd.Flags().BoolVar(&projectJSONFlag, "json", false, "Output JSON format (with --show)")
 }
@@ -400,11 +411,105 @@ func runProjectClone(cmd *cobra.Command, args []string) error {
 }
 
 func runProjectLink(cmd *cobra.Command, args []string) error {
-	gitURL := args[0]
-
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	var gitURL string
+
+	if projectLinkPickFlag {
+		// --pick mode: scan dev directory for git repos and pick with fzf
+		if !external.IsFZFAvailable() {
+			return fmt.Errorf("fzf not found (required for --pick mode)")
+		}
+
+		devDir := cfg.GetDevDir()
+
+		entries, err := os.ReadDir(devDir)
+		if err != nil {
+			return fmt.Errorf("failed to read dev directory (%s): %w", devDir, err)
+		}
+
+		var repos []string
+		for _, entry := range entries {
+			if !entry.IsDir() {
+				continue
+			}
+			repoPath := filepath.Join(devDir, entry.Name())
+			if external.IsGitRepo(repoPath) {
+				repos = append(repos, entry.Name())
+			}
+		}
+
+		if len(repos) == 0 {
+			return fmt.Errorf("no git repositories found in %s", devDir)
+		}
+
+		selected, err := external.SelectOne(repos, external.FZFOptions{
+			Header: "Select repository to link",
+			Prompt: "Repo> ",
+		})
+		if err != nil {
+			if err.Error() == "cancelled" {
+				return nil
+			}
+			return err
+		}
+
+		repoPath := filepath.Join(devDir, selected)
+		remoteURL, err := external.GetRemoteURL(repoPath)
+		if err != nil {
+			return fmt.Errorf("selected repo '%s' has no remote origin: %w", selected, err)
+		}
+
+		gitURL = remoteURL
+		fmt.Printf("Detected URL: %s\n", gitURL)
+
+	} else if len(args) == 0 {
+		return fmt.Errorf("requires a git URL, path, or owner/repo argument (or use --pick)")
+	} else {
+		arg := args[0]
+
+		// Determine mode based on argument
+		githubShorthand := regexp.MustCompile(`^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$`)
+
+		if arg == "." || strings.HasPrefix(arg, "/") || strings.HasPrefix(arg, "./") {
+			// Local directory mode: detect git remote URL
+			dirPath := arg
+			if arg == "." || strings.HasPrefix(arg, "./") {
+				cwd, err := os.Getwd()
+				if err != nil {
+					return fmt.Errorf("failed to get working directory: %w", err)
+				}
+				if arg == "." {
+					dirPath = cwd
+				} else {
+					dirPath = filepath.Join(cwd, arg[2:])
+				}
+			}
+
+			if !external.IsGitRepo(dirPath) {
+				return fmt.Errorf("'%s' is not a git repository", arg)
+			}
+
+			remoteURL, err := external.GetRemoteURL(dirPath)
+			if err != nil {
+				return fmt.Errorf("'%s' has no remote origin configured: %w", arg, err)
+			}
+
+			gitURL = remoteURL
+			fmt.Printf("Detected URL: %s\n", gitURL)
+
+		} else if githubShorthand.MatchString(arg) {
+			// GitHub shorthand mode: expand owner/repo
+			gitURL = fmt.Sprintf("https://github.com/%s.git", arg)
+			fmt.Printf("Expanded URL: %s\n", gitURL)
+
+		} else {
+			// Full URL mode (existing behavior)
+			gitURL = arg
+		}
 	}
 
 	// Resolve target project (focused or interactive)
@@ -445,12 +550,12 @@ func runProjectPull(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Project: %s\n", projectName)
 
-	devDir := filepath.Join(os.Getenv("HOME"), "dev")
+	devDir := cfg.GetDevDir()
 	if err := fileutil.EnsureDir(devDir); err != nil {
 		return fmt.Errorf("failed to create dev directory: %w", err)
 	}
 
-	repos, err := api.GetLinkedRepos(projectDir)
+	repos, err := api.GetLinkedRepos(projectDir, devDir)
 	if err != nil {
 		return fmt.Errorf("failed to get linked repos: %w", err)
 	}

@@ -97,7 +97,7 @@ func GetArchivePath(cfg *Config) (string, error) {
 }
 
 // GetLinkedRepos returns the list of linked repository paths for a project
-func GetLinkedRepos(cfg *Config, projectName string) ([]string, error) {
+func GetLinkedRepos(cfg *Config, projectName string, devDir string) ([]string, error) {
 	projectPath, err := GetProjectPath(cfg, projectName)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,6 @@ func GetLinkedRepos(cfg *Config, projectName string) ([]string, error) {
 		return []string{}, nil
 	}
 
-	devDir := filepath.Join(os.Getenv("HOME"), "dev")
 	var repos []string
 
 	file, err := os.Open(reposFile)

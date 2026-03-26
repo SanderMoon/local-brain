@@ -173,13 +173,13 @@ https://github.com/user/repo3.git
 `
 	tb.WriteFile(reposFile, reposContent)
 
-	repos, err := GetLinkedRepos(projectDir)
+	devDir := t.TempDir()
+	repos, err := GetLinkedRepos(projectDir, devDir)
 	if err != nil {
 		t.Fatalf("GetLinkedRepos failed: %v", err)
 	}
 
-	// GetLinkedRepos extracts repo names and creates paths in ~/dev/
-	devDir := filepath.Join(os.Getenv("HOME"), "dev")
+	// GetLinkedRepos extracts repo names and creates paths in devDir
 	expected := []string{
 		filepath.Join(devDir, "repo1"),
 		filepath.Join(devDir, "repo2"),
@@ -202,7 +202,7 @@ func TestGetLinkedRepos_NoFile(t *testing.T) {
 
 	projectDir := filepath.Join(tb.ActiveDirPath, "no-repos")
 
-	repos, err := GetLinkedRepos(projectDir)
+	repos, err := GetLinkedRepos(projectDir, t.TempDir())
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -220,7 +220,7 @@ func TestGetLinkedRepos_EmptyFile(t *testing.T) {
 
 	tb.WriteFile(reposFile, "\n\n\n")
 
-	repos, err := GetLinkedRepos(projectDir)
+	repos, err := GetLinkedRepos(projectDir, t.TempDir())
 	if err != nil {
 		t.Fatalf("GetLinkedRepos failed: %v", err)
 	}

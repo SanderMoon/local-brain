@@ -105,6 +105,12 @@ brain new work         # or create a named brain
 
 This sets the new brain as active (symlinked to `~/brain`).
 
+Optionally, configure your settings (dev directory, editor, etc.):
+
+```bash
+brain config setup     # interactive wizard with defaults
+```
+
 Verify it works:
 
 ```bash
@@ -124,6 +130,9 @@ export BRAIN_ROOT="$HOME/Dropbox/Brains"
 
 # Location of the active brain symlink (default: ~/brain)
 export BRAIN_SYMLINK="$HOME/Desktop/ActiveBrain"
+
+# Dev directory for cloned repos (default: ~/dev)
+export BRAIN_DEV_DIR="$HOME/projects"
 
 # Config directory (default: ~/.config/brain)
 export BRAIN_CONFIG_DIR="$HOME/.config/brain"

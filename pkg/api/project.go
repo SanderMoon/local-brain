@@ -99,7 +99,7 @@ func ExtractRepoName(gitURL string) string {
 }
 
 // GetLinkedRepos returns the list of linked repository paths for a project
-func GetLinkedRepos(projectDir string) ([]string, error) {
+func GetLinkedRepos(projectDir string, devDir string) ([]string, error) {
 	reposFile := filepath.Join(projectDir, ".repos")
 
 	if _, err := os.Stat(reposFile); os.IsNotExist(err) {
@@ -112,7 +112,6 @@ func GetLinkedRepos(projectDir string) ([]string, error) {
 	}
 	defer file.Close()
 
-	devDir := filepath.Join(os.Getenv("HOME"), "dev")
 	var repos []string
 
 	scanner := bufio.NewScanner(file)
@@ -471,7 +470,7 @@ type ProjectContext struct {
 // focusedProject: name of the currently focused project (empty string if none)
 // includeCompleted: whether to include completed todos
 // includeNoteContent: "none" (metadata only), "preview" (first 200 chars), or "full" (entire content)
-func GetProjectContext(projectPath, projectName, focusedProject string, includeCompleted bool, includeNoteContent string) (*ProjectContext, error) {
+func GetProjectContext(projectPath, projectName, focusedProject string, includeCompleted bool, includeNoteContent string, devDir string) (*ProjectContext, error) {
 	// Check if project exists
 	if !fileutil.FileExists(projectPath) {
 		return nil, fmt.Errorf("project not found: %s", projectName)
@@ -496,7 +495,7 @@ func GetProjectContext(projectPath, projectName, focusedProject string, includeC
 	}
 
 	// Get linked repos
-	linkedRepos, err := GetLinkedRepos(projectPath)
+	linkedRepos, err := GetLinkedRepos(projectPath, devDir)
 	if err != nil {
 		// Non-fatal, continue with empty list
 		linkedRepos = []string{}

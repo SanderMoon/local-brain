@@ -117,17 +117,49 @@ brain import ~/Dropbox/Brains       # Scan a custom directory
 
 ---
 
-### `brain config <key> [value]`
+### `brain config [key] [value]`
 
 Get or set configuration values. Stored in `~/.config/brain/config.json`.
 
+When called with no arguments, shows all current config values with their sources.
+
 ```bash
-brain config editor           # Get current editor
-brain config editor nvim      # Set editor
+brain config                       # Show all config values
+brain config editor                # Get current editor
+brain config editor nvim           # Set editor to nvim
+brain config dev_dir               # Get current dev directory
+brain config dev_dir ~/projects    # Set dev directory
+brain config brain_root            # Show brain root (read-only)
+brain config symlink               # Show symlink path (read-only)
 ```
 
 **Available Keys:**
-- `editor` - Preferred text editor
+- `editor` - Preferred text editor (e.g., nvim, vim, emacs)
+- `dev_dir` - Directory for cloned repositories (default: ~/dev)
+- `brain_root` - Root directory for brains (read-only, use BRAIN_ROOT env var)
+- `symlink` - Symlink location (read-only, use BRAIN_SYMLINK env var)
+
+### `brain config show`
+
+Show all current configuration values in a table format, including the source of each value (configured, env var, or default).
+
+```bash
+brain config show
+```
+
+### `brain config setup`
+
+Interactive configuration wizard. Walks through key settings, showing current/default values. Press Enter to keep a value or type a new one.
+
+```bash
+brain config setup
+```
+
+Settings configured:
+1. Brain root directory (informational, set via BRAIN_ROOT env var)
+2. Dev directory for repos
+3. Editor
+4. Symlink location (informational, set via BRAIN_SYMLINK env var)
 
 ---
 
@@ -281,7 +313,7 @@ brain project describe --show --json
 
 ### `brain project clone <url> [name]`
 
-Import a git repository as a new project. Creates project, links repo, clones to `~/dev/`, and focuses.
+Import a git repository as a new project. Creates project, links repo, clones to dev directory, and focuses.
 
 ```bash
 brain project clone https://github.com/user/repo.git
@@ -292,13 +324,19 @@ Project name is extracted from the URL if not provided.
 
 ---
 
-### `brain project link <url>`
+### `brain project link [url|.|owner/repo]`
 
-Link a git repository to the focused project's `.repos` file.
+Link a git repository to the focused project's `.repos` file. Supports multiple input formats:
 
 ```bash
-brain project link https://github.com/user/repo.git
+brain project link https://github.com/user/repo.git   # full URL
+brain project link .                                    # detect remote from current directory
+brain project link user/repo                            # GitHub shorthand
+brain project link --pick                               # fzf picker over repos in dev directory
 ```
+
+**Options:**
+- `--pick` - Scan the dev directory for git repos and pick interactively
 
 Multiple repos can be linked to one project. Verifies remote accessibility.
 
@@ -312,7 +350,7 @@ Clone or update all linked repositories for the focused project.
 brain project pull
 ```
 
-Not-yet-cloned repos are cloned to `~/dev/<repo-name>/`. Already-cloned repos are pulled. Lines starting with `#` in `.repos` are skipped.
+Not-yet-cloned repos are cloned to the dev directory (`~/dev/` by default, configurable via `brain config dev_dir`). Already-cloned repos are pulled. Lines starting with `#` in `.repos` are skipped.
 
 ---
 
@@ -325,7 +363,7 @@ brain project archive old-project
 brain project archive              # Archives focused project
 ```
 
-Does not delete anything. Code repositories in `~/dev/` are not affected.
+Does not delete anything. Code repositories in the dev directory are not affected.
 
 ---
 
@@ -351,7 +389,7 @@ brain project delete old-project
 brain project delete               # Deletes focused project
 ```
 
-Requires typing the project name to confirm. Does not delete repos in `~/dev/`.
+Requires typing the project name to confirm. Does not delete repos in the dev directory.
 
 ---
 

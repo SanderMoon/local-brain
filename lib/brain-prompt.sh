@@ -60,6 +60,19 @@ elif [[ -n "$BASH_VERSION" ]]; then
   fi
 fi
 
+# Shell helper: cd into a project or repo in the current shell
+# Usage: bg [project] [--repo]
+bg() {
+  local path
+  path=$(brain go "$@" --print 2>&1)
+  if [[ $? -eq 0 ]] && [[ -d "$path" ]]; then
+    cd "$path" || return 1
+  else
+    echo "$path" >&2
+    return 1
+  fi
+}
+
 # Example usage in your prompt:
 #
 # For Zsh (add to ~/.zshrc):

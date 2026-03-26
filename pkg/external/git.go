@@ -88,6 +88,19 @@ func IsGitRepo(path string) bool {
 	return err == nil
 }
 
+// GetRemoteURL returns the remote URL for a git repository
+// Equivalent to: git -C <repoPath> remote get-url origin
+func GetRemoteURL(repoPath string) (string, error) {
+	cmd := exec.Command("git", "-C", repoPath, "remote", "get-url", "origin")
+
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get remote URL: %w", err)
+	}
+
+	return strings.TrimSpace(string(output)), nil
+}
+
 // ExtractRepoName extracts the repository name from a git URL
 // Handles various URL formats:
 //   - https://github.com/user/repo.git -> repo

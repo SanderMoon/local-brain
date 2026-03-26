@@ -25,6 +25,7 @@ type Config struct {
 	Current string                `json:"current"`
 	Brains  map[string]*BrainInfo `json:"brains"`
 	Editor  string                `json:"editor,omitempty"` // Preferred editor (e.g., "nvim", "vim", "emacs", "nano")
+	DevDir  string                `json:"dev_dir,omitempty"` // Directory for cloned repositories (default: ~/dev)
 	mu      sync.RWMutex          `json:"-"`
 }
 
@@ -351,4 +352,45 @@ func (c *Config) SetEditor(editor string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.Editor = editor
+}
+
+// GetDevDir returns the configured dev directory with fallback chain:
+// config value → BRAIN_DEV_DIR env var → ~/dev default
+func (c *Config) GetDevDir() string {
+	c.mu.RLock()
+	devDir := c.DevDir
+	c.mu.RUnlock()
+
+	if devDir != "" {
+		expanded, err := fileutil.ExpandPath(devDir)
+		if err == nil {
+			return expanded
+		}
+		return devDir
+	}
+
+	if envDir := os.Getenv("BRAIN_DEV_DIR"); envDir != "" {
+		expanded, err := fileutil.ExpandPath(envDir)
+		if err == nil {
+			return expanded
+		}
+		return envDir
+	}
+
+	return filepath.Join(os.Getenv("HOME"), "dev")
+}
+
+// GetRawDevDir returns the configured dev directory value without fallbacks
+// Returns empty string if not explicitly configured
+func (c *Config) GetRawDevDir() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.DevDir
+}
+
+// SetDevDir sets the dev directory for cloned repositories
+func (c *Config) SetDevDir(dir string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.DevDir = dir
 }

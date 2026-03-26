@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -81,13 +80,13 @@ https://github.com/user/repo2.git
 `
 	tb.WriteFile(reposFile, reposContent)
 
-	repos, err := GetLinkedRepos(cfg, "test-project")
+	devDir := t.TempDir()
+	repos, err := GetLinkedRepos(cfg, "test-project", devDir)
 	if err != nil {
 		t.Fatalf("GetLinkedRepos failed: %v", err)
 	}
 
-	// Repos are expanded to ~/dev/reponame
-	devDir := filepath.Join(os.Getenv("HOME"), "dev")
+	// Repos are expanded to devDir/reponame
 	if len(repos) != 2 {
 		t.Errorf("Expected 2 repos, got %d", len(repos))
 	}

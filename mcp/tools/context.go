@@ -99,7 +99,8 @@ func RegisterContextTools(srv *mcp.Server, sess *session.Session) error {
 		projectPath := filepath.Join(sectionDir, args.ProjectName)
 		focusedProject := cfg.GetFocusedProject()
 
-		projectCtx, err := api.GetProjectContext(projectPath, args.ProjectName, focusedProject, args.IncludeCompleted, args.IncludeNoteContent)
+		devDir := cfg.GetDevDir()
+		projectCtx, err := api.GetProjectContext(projectPath, args.ProjectName, focusedProject, args.IncludeCompleted, args.IncludeNoteContent, devDir)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get project context: %w", err)
 		}

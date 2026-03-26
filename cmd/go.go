@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/sandermoonemans/local-brain/pkg/api"
 	"github.com/sandermoonemans/local-brain/pkg/config"
@@ -13,32 +15,43 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var goCmd = &cobra.Command{
-	Use:   "go",
-	Short: "Jump to a project directory",
-	Long: `Select and jump to a project with intelligent environment setup.
+var (
+	goPrint bool
+	goRepo  bool
+)
 
-Features:
-  - Fuzzy search through all active projects
-  - Auto-detects linked repositories
-  - Intelligent Environment Setup:
-    - If Tmux is available and repos are linked:
-      - Creates/Attaches to session 'brain-<project>'
-      - Window 1 (Code): Repos dir, venv activated, editor opened
-      - Window 2 (Notes): Project notes, editor opened
-    - Fallback: Opens new shell in project directory`,
+var goCmd = &cobra.Command{
+	Use:   "go [project]",
+	Short: "Jump into a project or its linked repository",
+	Long: `Open a new shell in a project directory or one of its linked repos.
+
+Without arguments, shows a fuzzy picker for project selection.
+With a project name, jumps directly to that project.
+
+By default, opens the project directory. With --repo, selects from
+linked repositories instead (auto-selects if only one repo is linked).
+
+Use --print to output the path instead of launching a shell.
+This is useful for composing with other tools:
+
+  cd $(brain go myproject --print)
+  code $(brain go myproject --repo --print)`,
+	Example: `  brain go                          # pick a project interactively
+  brain go website-redesign         # jump to project directory
+  brain go website-redesign --repo  # jump to linked repo
+  brain go --repo                   # pick project, then pick repo
+  brain go myproject --print        # print path (for scripting)`,
+	Args: cobra.MaximumNArgs(1),
 	RunE: runGo,
 }
 
 func init() {
 	rootCmd.AddCommand(goCmd)
+	goCmd.Flags().BoolVarP(&goPrint, "print", "p", false, "Print path instead of launching shell")
+	goCmd.Flags().BoolVarP(&goRepo, "repo", "r", false, "Jump to a linked repository instead of the project directory")
 }
 
 func runGo(cmd *cobra.Command, args []string) error {
-	if !external.IsFZFAvailable() {
-		return fmt.Errorf("fzf not found (required for project selection)")
-	}
-
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
@@ -51,215 +64,165 @@ func runGo(cmd *cobra.Command, args []string) error {
 
 	activeDir := filepath.Join(brainPath, "01_active")
 
-	// Get list of projects
+	var projectDir string
+
+	if len(args) == 1 {
+		// Direct project name given
+		projectDir = filepath.Join(activeDir, args[0])
+		if !fileutil.FileExists(projectDir) {
+			return fmt.Errorf("project %q not found", args[0])
+		}
+	} else {
+		// Interactive selection
+		projectDir, err = selectProject(activeDir)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Determine target directory
+	targetDir := projectDir
+
+	if goRepo {
+		targetDir, err = selectRepo(projectDir, cfg.GetDevDir())
+		if err != nil {
+			return err
+		}
+	}
+
+	// --print mode: just output the path
+	if goPrint {
+		fmt.Println(targetDir)
+		return nil
+	}
+
+	// Launch a subshell in the target directory
+	return launchShell(targetDir)
+}
+
+func selectProject(activeDir string) (string, error) {
+	if !external.IsFZFAvailable() {
+		return "", fmt.Errorf("fzf is required for interactive selection (or pass a project name as argument)")
+	}
+
 	entries, err := os.ReadDir(activeDir)
 	if err != nil {
-		return fmt.Errorf("failed to read active directory: %w", err)
+		return "", fmt.Errorf("failed to read active directory: %w", err)
 	}
 
 	var projects []string
 	for _, entry := range entries {
 		if entry.IsDir() && !strings.HasPrefix(entry.Name(), ".") {
-			projects = append(projects, filepath.Join(activeDir, entry.Name()))
+			projects = append(projects, entry.Name())
 		}
 	}
 
 	if len(projects) == 0 {
-		fmt.Printf("No projects found in %s\n", activeDir)
-		return nil
+		return "", fmt.Errorf("no projects found in %s", activeDir)
 	}
 
-	// Select project with FZF
 	previewCmd := `
-		NOTES={}/notes.md
-		TODO={}/todo.md
-		echo " Notes "
-		if [ -f "$NOTES" ]; then
-			if command -v bat &>/dev/null; then
-				bat --color=always --style=plain "$NOTES" 2>/dev/null
-			else
-				cat "$NOTES"
-			fi
-		else
-			echo "No notes yet"
+		DIR="` + activeDir + `/{}"
+		REPOS="$DIR/.repos"
+		TODO="$DIR/todo.md"
+		if [ -f "$REPOS" ] && [ -s "$REPOS" ]; then
+			echo "REPOS"
+			grep -v '^#' "$REPOS" | grep -v '^$' | while read -r url; do echo "  $url"; done
+			echo ""
 		fi
-		echo ""
-		echo " Tasks "
 		if [ -f "$TODO" ]; then
+			echo "TODO"
 			if command -v bat &>/dev/null; then
 				bat --color=always --style=plain "$TODO" 2>/dev/null
 			else
 				cat "$TODO"
 			fi
-		else
-			echo "No tasks yet"
 		fi
 	`
 
 	selected, err := external.SelectOne(projects, external.FZFOptions{
-		Header:        "Select a project to jump to (Esc to cancel)",
+		Header:        "Select a project",
 		Prompt:        "Project> ",
 		Preview:       previewCmd,
-		PreviewWindow: "right:60%",
+		PreviewWindow: "right:50%",
 	})
 
 	if err != nil {
 		if err.Error() == "cancelled" {
-			fmt.Println("No project selected")
-			return nil
+			return "", fmt.Errorf("cancelled")
 		}
-		return err
+		return "", err
 	}
 
-	projectDir := selected
-	projectName := filepath.Base(projectDir)
+	return filepath.Join(activeDir, selected), nil
+}
 
-	// Get linked repos
-	repos, err := api.GetLinkedRepos(projectDir)
+func selectRepo(projectDir string, devDir string) (string, error) {
+	repos, err := api.GetLinkedRepos(projectDir, devDir)
 	if err != nil {
-		return fmt.Errorf("failed to get linked repos: %w", err)
+		return "", fmt.Errorf("failed to get linked repos: %w", err)
 	}
 
-	// Decide: Tmux or simple shell
-	useTmux := external.IsTmuxAvailable() && len(repos) > 0
-
-	if !useTmux {
-		// Simple shell mode
-		return runSimpleShell(projectDir, projectName, repos)
+	if len(repos) == 0 {
+		return "", fmt.Errorf("no repos linked to %s (add URLs to .repos file)", filepath.Base(projectDir))
 	}
 
-	// Tmux dev environment mode
-	return runTmuxEnvironment(projectDir, projectName, repos)
-}
-
-func runSimpleShell(projectDir, projectName string, repos []string) error {
-	fmt.Printf("Entering project: %s\n", projectName)
-	fmt.Printf("Location: %s\n", projectDir)
-
-	if len(repos) > 0 {
-		fmt.Println("Linked Repositories:")
-		for _, repo := range repos {
-			fmt.Printf("  - %s\n", repo)
-		}
-		fmt.Println("Tip: Install tmux to enable auto-environment setup")
-	}
-
-	fmt.Println("")
-	fmt.Println("Type 'exit' or press Ctrl+D to return")
-
-	// Change to project directory and exec shell
-	if err := os.Chdir(projectDir); err != nil {
-		return fmt.Errorf("failed to change directory: %w", err)
-	}
-
-	// TODO: Actually exec the shell (requires syscall.Exec)
-	// shell := os.Getenv("SHELL")
-	// if shell == "" {
-	//     shell = "/bin/bash"
-	// }
-
-	return external.OpenFile(projectDir) // This will fail, but we want to exec shell
-}
-
-func runTmuxEnvironment(projectDir, projectName string, repos []string) error {
-	var primaryRepo string
-
+	// Auto-select if only one repo
 	if len(repos) == 1 {
-		primaryRepo = repos[0]
-	} else {
-		// Multiple repos: ask user
-		selected, err := external.SelectOne(repos, external.FZFOptions{
-			Header: "Select primary repository for this session",
-			Prompt: "Repo> ",
-		})
-
-		if err != nil {
-			if err.Error() == "cancelled" {
-				// Fall back to notes only
-				if err := os.Chdir(projectDir); err != nil {
-					return fmt.Errorf("failed to change directory: %w", err)
-				}
-				// TODO: exec shell
-				// shell := os.Getenv("SHELL")
-				// if shell == "" {
-				//     shell = "/bin/bash"
-				// }
-				return nil
-			}
-			return err
+		if !fileutil.FileExists(repos[0]) {
+			return "", fmt.Errorf("repo directory not found: %s\nRun 'brain project pull' to clone it", repos[0])
 		}
-
-		primaryRepo = selected
+		return repos[0], nil
 	}
 
-	// Check if repo exists
-	if !fileutil.FileExists(primaryRepo) {
-		fmt.Printf("Warning: Repository directory not found at %s\n", primaryRepo)
-		fmt.Println("Run 'brain project pull' to clone it first.")
-		fmt.Print("Press Enter to continue to notes only...")
-		_, _ = fmt.Scanln()
+	// Multiple repos: let user pick
+	if !external.IsFZFAvailable() {
+		return "", fmt.Errorf("fzf is required to select from multiple repos (project has %d linked repos)", len(repos))
+	}
 
-		if err := os.Chdir(projectDir); err != nil {
-			return fmt.Errorf("failed to change directory: %w", err)
+	// Show just repo names for cleaner display
+	var displayNames []string
+	repoMap := make(map[string]string)
+	for _, repo := range repos {
+		name := filepath.Base(repo)
+		displayNames = append(displayNames, name)
+		repoMap[name] = repo
+	}
+
+	selected, err := external.SelectOne(displayNames, external.FZFOptions{
+		Header: fmt.Sprintf("Select a repo (%s)", filepath.Base(projectDir)),
+		Prompt: "Repo> ",
+	})
+
+	if err != nil {
+		if err.Error() == "cancelled" {
+			return "", fmt.Errorf("cancelled")
 		}
-		// TODO: exec shell
-		return nil
+		return "", err
 	}
 
-	// Session name (replace dots with underscores)
-	sessionName := "brain-" + strings.ReplaceAll(projectName, ".", "_")
-
-	// Check if session already exists
-	if external.HasSession(sessionName) {
-		fmt.Printf("Attaching to existing session: %s\n", sessionName)
-		return external.AttachSession(sessionName)
+	repoPath := repoMap[selected]
+	if !fileutil.FileExists(repoPath) {
+		return "", fmt.Errorf("repo directory not found: %s\nRun 'brain project pull' to clone it", repoPath)
 	}
 
-	fmt.Printf("Setting up dev environment for %s...\n", projectName)
+	return repoPath, nil
+}
 
-	// Create tmux session
-	if err := external.CreateSession(sessionName, primaryRepo); err != nil {
-		return fmt.Errorf("failed to create tmux session: %w", err)
+func launchShell(dir string) error {
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		shell = "/bin/sh"
 	}
 
-	// Rename first window to "code"
-	_ = external.SendKeys(sessionName+":1", "tmux rename-window code") // Non-critical, ignore errors
-
-	// Setup code window
-	editorCmd := "vim"
-	if _, err := external.DetectEditor(); err == nil {
-		editorCmd = "nvim"
+	shellBin, err := exec.LookPath(shell)
+	if err != nil {
+		return fmt.Errorf("shell not found: %w", err)
 	}
 
-	// Send commands to code window
-	setupScript := fmt.Sprintf(`
-if [ ! -d .venv ] && [ ! -d venv ]; then
-  echo 'Creating virtual environment...'
-  python3 -m venv .venv 2>/dev/null || true
-fi
+	if err := os.Chdir(dir); err != nil {
+		return fmt.Errorf("failed to change to directory %s: %w", dir, err)
+	}
 
-if [ -f .venv/bin/activate ]; then
-  source .venv/bin/activate
-elif [ -f venv/bin/activate ]; then
-  source venv/bin/activate
-fi
-
-clear
-%s .
-`, editorCmd)
-
-	_ = external.SendKeys(sessionName+":code", setupScript) // Non-critical, ignore errors
-
-	// Create notes window
-	_ = external.NewWindow(sessionName, 2, "notes", projectDir) // Non-critical, ignore errors
-
-	// Setup notes window
-	notesCmd := fmt.Sprintf("%s notes.md todo.md", editorCmd)
-	_ = external.SendKeys(sessionName+":notes", notesCmd) // Non-critical, ignore errors
-
-	// Select code window
-	_ = external.SelectWindow(sessionName, 1) // Non-critical, ignore errors
-
-	// Attach to session
-	return external.AttachSession(sessionName)
+	return syscall.Exec(shellBin, []string{shell}, os.Environ())
 }

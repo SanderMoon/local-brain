@@ -61,6 +61,8 @@ Open a brain directory directly, or create a `.code-workspace` to include both y
 }
 ```
 
+Adjust `~/dev/` to match your dev directory (`brain config dev_dir` to check).
+
 ### Editor configuration
 
 Local Brain checks these in order when launching an editor (e.g., `brain edit`):
