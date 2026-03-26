@@ -1,27 +1,13 @@
 # Installation Guide
 
-Local Brain can be installed in several ways. Choose the method that works best for your setup.
-
 ## Quick Install (Recommended)
 
 ### Homebrew (macOS/Linux)
 
 ```bash
 brew tap SanderMoon/tap
-brew install brain
-```
-
-Dependencies (fzf and ripgrep) are required and will be suggested automatically:
-
-```bash
-brew install fzf ripgrep
-```
-
-**Verification:**
-
-```bash
+brew install brain fzf ripgrep
 brain --version
-brain --help
 ```
 
 ---
@@ -30,49 +16,20 @@ brain --help
 
 ### Go Install (All Platforms)
 
-If you have Go 1.21+ installed:
+Requires Go 1.25+. Ensure `$(go env GOPATH)/bin` is in your PATH.
 
 ```bash
 go install github.com/SanderMoon/local-brain@latest
 ```
 
-Make sure `$(go env GOPATH)/bin` is in your PATH:
-
-```bash
-export PATH="$(go env GOPATH)/bin:$PATH"
-```
-
-Add this to your shell config (`~/.bashrc`, `~/.zshrc`, etc.) to make it permanent.
-
 ### Pre-built Binaries
 
-Download the latest release for your platform from the [releases page](https://github.com/SanderMoon/local-brain/releases).
-
-#### Linux
+Download from the [releases page](https://github.com/SanderMoon/local-brain/releases), then:
 
 ```bash
-# AMD64
-curl -LO https://github.com/SanderMoon/local-brain/releases/latest/download/brain_Linux_x86_64.tar.gz
-tar -xzf brain_Linux_x86_64.tar.gz
-sudo mv brain /usr/local/bin/
-
-# ARM64
-curl -LO https://github.com/SanderMoon/local-brain/releases/latest/download/brain_Linux_arm64.tar.gz
-tar -xzf brain_Linux_arm64.tar.gz
-sudo mv brain /usr/local/bin/
-```
-
-#### macOS
-
-```bash
-# Intel Mac
-curl -LO https://github.com/SanderMoon/local-brain/releases/latest/download/brain_Darwin_x86_64.tar.gz
-tar -xzf brain_Darwin_x86_64.tar.gz
-sudo mv brain /usr/local/bin/
-
-# Apple Silicon
-curl -LO https://github.com/SanderMoon/local-brain/releases/latest/download/brain_Darwin_arm64.tar.gz
-tar -xzf brain_Darwin_arm64.tar.gz
+# Replace <ARCHIVE> with the file for your platform
+# (e.g., brain_Darwin_arm64.tar.gz, brain_Linux_x86_64.tar.gz)
+tar -xzf <ARCHIVE>
 sudo mv brain /usr/local/bin/
 ```
 
@@ -82,60 +39,27 @@ sudo mv brain /usr/local/bin/
 git clone https://github.com/SanderMoon/local-brain.git
 cd local-brain
 make build
-sudo make install
-```
-
-For a local installation (installs to `~/.local/bin` instead of `/usr/local/bin`):
-
-```bash
-make dev-install
-```
-
-Make sure `~/.local/bin` is in your PATH:
-
-```bash
-export PATH="$HOME/.local/bin:$PATH"
+sudo make install       # system-wide, or:
+make dev-install        # installs to ~/.local/bin (no sudo)
 ```
 
 ---
 
 ## Dependencies
 
-Local Brain requires **fzf** and **ripgrep** for core functionality. Additional tools are optional but recommended.
+**Required:** fzf (interactive selection), ripgrep (text search).
 
-| Tool | Required | Purpose | Installation |
-|------|----------|---------|--------------|
-| **fzf** | ✅ Yes | Fuzzy finder for interactive selection | `brew install fzf` |
-| **ripgrep** | ✅ Yes | Fast text search | `brew install ripgrep` |
-| **bat** | Optional | Syntax-highlighted file preview | `brew install bat` |
-| **tmux** | Optional | Dev mode workspace management | `brew install tmux` |
-| **jq** | Optional | JSON processing for scripts | `brew install jq` |
-| **syncthing** | Optional | Cross-device synchronization | `brew install syncthing` |
-
-### Install All Dependencies
-
-**macOS:**
+**Optional:** bat (syntax-highlighted preview), tmux (dev mode), jq (JSON scripting), syncthing (cross-device sync).
 
 ```bash
+# macOS
 brew install fzf ripgrep bat tmux jq syncthing
-```
 
-**Ubuntu/Debian:**
-
-```bash
+# Ubuntu/Debian
 sudo apt install fzf ripgrep bat tmux jq syncthing
-```
 
-**Arch Linux:**
-
-```bash
+# Arch
 sudo pacman -S fzf ripgrep bat tmux jq syncthing
-```
-
-**Fedora/RHEL:**
-
-```bash
-sudo dnf install fzf ripgrep bat tmux jq syncthing
 ```
 
 ---
@@ -144,94 +68,48 @@ sudo dnf install fzf ripgrep bat tmux jq syncthing
 
 ### Shell Completion
 
-Local Brain supports shell completion for bash, zsh, and fish.
-
-#### Bash
-
-Add to your `~/.bashrc`:
-
 ```bash
+# Bash (add to ~/.bashrc)
 source <(brain completion bash)
-```
 
-Or install system-wide:
-
-```bash
-brain completion bash > /usr/local/etc/bash_completion.d/brain
-```
-
-#### Zsh
-
-Add to your `~/.zshrc`:
-
-```bash
+# Zsh (add to ~/.zshrc)
 source <(brain completion zsh)
-```
 
-Or install to zsh completions directory:
-
-```bash
-brain completion zsh > "${fpath[1]}/_brain"
-```
-
-#### Fish
-
-```bash
+# Fish
 brain completion fish > ~/.config/fish/completions/brain.fish
 ```
 
-### Brain Prompt Helper
+### Prompt Helper (optional)
 
-Display active brain in your shell prompt (optional).
-
-Add to your `~/.bashrc` or `~/.zshrc`:
+Display the active brain name in your shell prompt. Add to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
-# Source the prompt helper
 source /usr/local/lib/brain/brain-prompt.sh
 
-# Add to your PS1 (bash) or PROMPT (zsh)
-# Example for bash:
+# Bash:
 PS1='$(brain_prompt)[\u@\h \W]\$ '
-
-# Example for zsh:
+# Zsh:
 PROMPT='$(brain_prompt)%n@%h %1~ %# '
 ```
 
-This displays `[brain: work] ` when a brain is active.
+This shows `[brain: work] ` when a brain is active.
 
 ---
 
 ## First Run
 
-After installation, initialize your first brain:
-
 ```bash
-brain init
+brain new              # creates ~/brains/default with inbox, project folders, and templates
+brain new work         # or create a named brain
 ```
 
-This will:
+This sets the new brain as active (symlinked to `~/brain`).
 
-1. Create the configuration directory at `~/.config/brain`
-2. Prompt you for your brain's location (default: `~/brains/default`)
-3. Set up the directory structure:
-   ```
-   ~/brains/
-   └── default/
-       ├── 00_dump.md      # Inbox for quick captures
-       ├── 01_active/      # Active projects
-       └── 99_archive/     # Archived projects
-   ```
-4. Create a symlink at `~/brain` → `~/brains/default`
-
-### Quick Test
-
-Verify everything works:
+Verify it works:
 
 ```bash
 brain add "Set up my knowledge management system"
 brain dump ls
-brain --version
 ```
 
 ---
@@ -255,222 +133,67 @@ export BRAIN_CONFIG_DIR="$HOME/.config/brain"
 
 ## Updating
 
-### Homebrew
-
 ```bash
-brew upgrade brain
+brew upgrade brain                                    # Homebrew
+go install github.com/SanderMoon/local-brain@latest   # Go
 ```
 
-### Go Install
-
-```bash
-go install github.com/SanderMoon/local-brain@latest
-```
-
-### Manual Update
-
-Download and install the latest release following the [pre-built binaries](#pre-built-binaries) instructions above.
+For pre-built binaries, download and replace following the [instructions above](#pre-built-binaries).
 
 ---
 
 ## Troubleshooting
 
-### Binary not found after installation
-
-Make sure the installation directory is in your PATH:
-
-- **Go install**: Add `$(go env GOPATH)/bin` to PATH
-- **Local install**: Add `~/.local/bin` to PATH
-- **System install**: `/usr/local/bin` should already be in PATH
-
-Add to your shell config (`~/.bashrc`, `~/.zshrc`, etc.):
-
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-Then reload your shell:
-
-```bash
-source ~/.bashrc  # or source ~/.zshrc
-```
-
-### Permission denied
-
-If you get permission errors during system installation:
-
-```bash
-sudo make install
-```
-
-Or use `make dev-install` for a user-local installation that doesn't require sudo.
-
-### Dependencies not found
-
-Brain requires **fzf** and **ripgrep**. Install them:
-
-```bash
-# macOS
-brew install fzf ripgrep
-
-# Ubuntu/Debian
-sudo apt install fzf ripgrep
-
-# Arch Linux
-sudo pacman -S fzf ripgrep
-```
-
-### Homebrew tap not found
-
-If `brew install brain` fails, ensure you've tapped the repository first:
-
-```bash
-brew tap SanderMoon/tap
-brew install brain
-```
+| Problem | Fix |
+|---------|-----|
+| `brain: command not found` | Ensure the install directory is in your PATH. For `go install`: add `$(go env GOPATH)/bin`. For `make dev-install`: add `~/.local/bin`. Then reload your shell (`source ~/.zshrc`). |
+| Permission denied on install | Use `sudo make install`, or `make dev-install` to avoid sudo entirely. |
+| Homebrew tap not found | Run `brew tap SanderMoon/tap` before `brew install brain`. |
 
 ---
 
 ## Uninstallation
 
-### Homebrew
-
 ```bash
-brew uninstall brain
-brew untap SanderMoon/tap
-```
+# Homebrew
+brew uninstall brain && brew untap SanderMoon/tap
 
-### System Installation
+# System install
+sudo rm /usr/local/bin/brain /usr/local/lib/brain
 
-```bash
-sudo make uninstall
-```
-
-Or manually:
-
-```bash
-sudo rm /usr/local/bin/brain
-sudo rm -rf /usr/local/lib/brain
-```
-
-### Local Installation
-
-```bash
+# Local install
 rm ~/.local/bin/brain
 ```
 
-### Remove All Data
-
-To completely remove all brains and configuration:
+To remove all data (**permanently deletes all notes and tasks**):
 
 ```bash
-rm -rf ~/.config/brain
-rm -rf ~/brains
-rm ~/brain  # Removes symlink
+rm -rf ~/.config/brain ~/brains ~/brain
 ```
-
-**Warning:** This permanently deletes all your notes and tasks. Back up first if needed.
 
 ---
 
 ## AI Agent Setup
 
-Local Brain auto-detects installed AI agents (Claude Code, Codex, Gemini CLI,
-OpenCode) and can configure both the MCP server and skills for each.
-
-### Register the MCP Server
+Local Brain auto-detects installed AI agents (Claude Code, Codex, Gemini CLI, OpenCode).
 
 ```bash
-brain mcp install
+brain mcp install          # register the MCP server with all detected agents
+brain mcp status           # check registration
+
+brain skill install        # install all bundled workflow skills
+brain skill status         # check what's installed
 ```
 
-This registers `brain-mcp` with every detected agent's MCP configuration.
-To target a specific agent: `brain mcp install --agent claude`.
+To target a specific agent, add `--agent claude` (or `codex`, `gemini`, `opencode`).
 
-Check registration status:
-
-```bash
-brain mcp status
-```
-
-### Install Skills
-
-Skills follow the [Agent Skills open standard](https://agentskills.io) and
-teach your agent structured workflows — daily briefings, inbox triage,
-weekly reviews, project planning, and more.
-
-After registering the MCP server, install skills:
-
-```bash
-brain skill install
-```
-
-This installs all bundled skills to every **detected** AI agent
-(any agent whose config directory already exists on disk).
-
-To target a specific agent:
-
-```bash
-brain skill install --agent claude
-```
-
-### Bundled Skills
-
-| Skill | Description |
-|-------|-------------|
-| `brain-daily` | Morning briefing and daily planning. "What should I work on today?" |
-| `brain-setup` | First-time setup wizard — conversational onboarding for new users. |
-| `brain-capture` | Quick capture of tasks, ideas, and notes with smart metadata inference. |
-| `brain-triage` | Process inbox items systematically — refile, categorize, or discard. |
-| `brain-plan` | Break project goals into concrete tasks with priorities and deadlines. |
-| `brain-focus` | Deep work session on a single project with distraction capture. |
-| `brain-review` | Weekly review of all projects, progress, and stale work. |
-
-### Upgrade Skills After a Version Update
-
-When you update Local Brain (`brew upgrade brain` or build from source), new
-skill versions are embedded in the binary but **not** automatically pushed to
-your agents. To update:
-
-```bash
-brain skill upgrade
-```
-
-This overwrites installed SKILL.md files with the latest bundled versions.
-Skills that are not currently installed are skipped.
-
-> **Warning:** `brain skill upgrade` will overwrite any local edits you made to
-> installed SKILL.md files. If you customized a skill, back up your changes
-> first or keep them in a separate file alongside SKILL.md.
-
-### Check Status
-
-```bash
-brain skill status
-```
-
-Shows which skills are installed for each detected agent.
-
-### Makefile Target
-
-If you build from source, you can install skills right after building:
-
-```bash
-make install-skills
-```
+After updating Local Brain, run `brain skill upgrade` to push new skill versions to your agents. See the [Skills reference](skills.md) for the full list of bundled skills, customization, and authoring your own.
 
 ---
 
 ## Next Steps
 
-- Return to the [Quickstart Guide](index.md) for usage examples
-- Read the [Command Reference](commands.md) for complete documentation
-- Check the [Development Guide](development.md) if you want to contribute
-
----
-
-## Getting Help
-
-- **Issues**: [https://github.com/SanderMoon/local-brain/issues](https://github.com/SanderMoon/local-brain/issues)
-- **Discussions**: [https://github.com/SanderMoon/local-brain/discussions](https://github.com/SanderMoon/local-brain/discussions)
-- **Documentation**: [https://sandermoon.github.io/local-brain/](https://sandermoon.github.io/local-brain/)
+- [Quickstart Guide](index.md) for usage examples
+- [Command Reference](commands.md) for all commands
+- [Development Guide](development.md) to contribute
+- [Issues](https://github.com/SanderMoon/local-brain/issues) / [Discussions](https://github.com/SanderMoon/local-brain/discussions) for help

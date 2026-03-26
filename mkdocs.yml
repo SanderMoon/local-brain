@@ -1,5 +1,5 @@
 site_name: Local Brain
-site_description: A minimalist, local-first project management CLI for developers
+site_description: Plain markdown files. Full project management. Managed by AI, or by you.
 site_url: https://sandermoon.github.io/local-brain/
 repo_url: https://github.com/SanderMoon/local-brain
 repo_name: SanderMoon/local-brain
@@ -10,37 +10,30 @@ exclude_docs: |
 theme:
   name: material
   palette:
-    # Light mode
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-    # Dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
+    scheme: slate
+    primary: custom
+    accent: custom
   features:
-    - navigation.instant    # Instant loading
-    - navigation.tracking   # Anchor tracking
-    - navigation.top        # Back to top button
-    - search.suggest        # Search suggestions
-    - search.highlight      # Highlight search results
-    - content.code.copy     # Copy code button
-    - content.code.annotate # Code annotations
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.sections
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  custom_dir: docs/overrides
 
 nav:
-  - 🚀 Quickstart: index.md
-  - 📦 Installation: installation.md
-  - 📖 Command Reference: commands.md
-  - 🤖 MCP Server: mcp-server.md
-  - 💻 Development: development.md
+  - Quickstart: index.md
+  - Installation: installation.md
+  - TUI Dashboard: tui.md
+  - Command Reference: commands.md
+  - File Format: file-format.md
+  - Workflows: workflows.md
+  - MCP Server: mcp-server.md
+  - Agent Skills: skills.md
+  - Development: development.md
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -58,6 +51,9 @@ markdown_extensions:
 
 plugins:
   - search
+
+extra_css:
+  - stylesheets/terminal-sage.css
 
 extra:
   social:

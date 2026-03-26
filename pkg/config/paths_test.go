@@ -62,7 +62,7 @@ func TestGetArchivePath(t *testing.T) {
 		t.Fatalf("GetArchivePath failed: %v", err)
 	}
 
-	expected := filepath.Join(tb.BrainPath, "02_archive")
+	expected := filepath.Join(tb.BrainPath, "99_archive")
 	if archivePath != expected {
 		t.Errorf("Expected %q, got %q", expected, archivePath)
 	}

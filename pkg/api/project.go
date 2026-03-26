@@ -283,10 +283,10 @@ func CreateProject(activeDir, projectName string) (string, error) {
 }
 
 // ArchiveProject moves a project from active to archive directory with timestamp
-// Format: {brainPath}/02_archive/{projectName}-YYYYMMDD/
+// Format: {brainPath}/99_archive/{projectName}-YYYYMMDD/
 func ArchiveProject(brainPath, projectName string) error {
 	srcPath := filepath.Join(brainPath, "01_active", projectName)
-	archiveDir := filepath.Join(brainPath, "02_archive")
+	archiveDir := filepath.Join(brainPath, "99_archive")
 
 	// Check if project exists
 	if !fileutil.FileExists(srcPath) {

@@ -1,163 +1,133 @@
 # Command Reference
 
-Complete documentation of all Local Brain commands.
-
----
-
 ## Brain Management
 
 ### `brain new [name]`
 
-**Description:** Create a new brain workspace
+Create a new brain workspace.
 
-**Usage:**
 ```bash
 brain new work
 brain new personal
 ```
 
-Creates a new brain directory in `~/brains/<name>` with the following structure:
-- `00_dump.md` - Inbox for quick captures
-- `01_active/` - Active projects directory
-- `99_archive/` - Archived projects directory
+Creates `~/brains/<name>` with: `00_dump.md`, `01_active/`, `02_areas/`, `03_resources/`, `99_archive/`, `_templates/`.
 
 **Notes:**
-- If no name is provided, prompts interactively
-- Automatically switches to the new brain
+- Defaults to `default` if no name given
+- Auto-switches to the new brain if it's the first one or named "default"
 - Creates a symlink at `~/brain` pointing to the new brain
 
 ---
 
 ### `brain switch [name]`
 
-**Description:** Switch to a different brain workspace
+Switch to a different brain workspace.
 
-**Usage:**
 ```bash
 brain switch work
-brain switch personal
+brain switch          # interactive fzf selection
 ```
 
-**Options:**
-- If no name provided, shows interactive selection with fzf
-
-**Notes:**
-- Updates the `~/brain` symlink to point to the selected brain
-- Previous brain remains intact and can be switched back to anytime
+Updates the `~/brain` symlink. Previous brain remains intact.
 
 ---
 
 ### `brain current`
 
-**Description:** Show the currently active brain name
+Show the currently active brain.
 
-**Usage:**
 ```bash
 brain current
+brain current --name-only
+brain current --path-only
 ```
 
-**Output:**
-```
-work
-```
-
-**Notes:**
-- Returns exit code 1 if no brain is active
-- Useful for shell prompts and scripts
+**Options:**
+- `--name-only` - Output only the brain name (useful for scripts/prompts)
+- `--path-only` - Output only the path
 
 ---
 
 ### `brain list`
 
-**Description:** List all registered brains
+List all registered brains.
 
-**Usage:**
 ```bash
 brain list
+brain list --paths
+brain list --json
 ```
 
-**Output:**
-```
-Available Brains:
------------------
- * work           (active)
-   personal
-   research
-```
+**Options:**
+- `--paths` - Show full filesystem paths
+- `--json` - Output JSON format
 
-The active brain is marked with `*`.
+Active brain is marked with `*`.
 
 ---
 
-### `brain path`
+### `brain path [brain-name]`
 
-**Description:** Show the filesystem path of the active brain
+Show the filesystem path of a brain. Defaults to the active brain.
 
-**Usage:**
 ```bash
 brain path
+brain path work
+cd $(brain path)      # navigate to brain directory
 ```
-
-**Output:**
-```
-/Users/username/brains/work
-```
-
-**Notes:**
-- Useful for scripting and integrations
-- Can be used with `cd $(brain path)` to navigate to brain directory
 
 ---
 
 ### `brain rename <old> <new>`
 
-**Description:** Rename a brain
+Rename a brain. Updates the directory, config, and symlink if active.
 
-**Usage:**
 ```bash
 brain rename work work-2024
 ```
 
-**Notes:**
-- Renames both the directory and updates the configuration
-- If renaming the active brain, the symlink is updated automatically
-
 ---
 
-### `brain delete [name]`
+### `brain delete <name>`
 
-**Description:** Permanently delete a brain
+Permanently delete a brain. **Cannot be undone.**
 
-**Usage:**
 ```bash
 brain delete old-brain
 ```
 
-**Options:**
-- If no name provided, shows interactive selection
-
-**Notes:**
-- **DESTRUCTIVE OPERATION** - Cannot be undone
-- Requires typing the brain name to confirm deletion
-- Cannot delete the currently active brain (switch first)
-- All projects, notes, and tasks in the brain are permanently deleted
+Requires `y/N` confirmation. Removes the `~/brain` symlink if it pointed to the deleted brain.
 
 ---
 
-### `brain import [path]`
+### `brain import [root-path]`
 
-**Description:** Import an existing brain directory
+Scan a directory for brain structures and register them.
 
-**Usage:**
 ```bash
-brain import ~/Dropbox/my-old-brain
-brain import /path/to/synced-brain
+brain import                        # Scan ~/brains (default)
+brain import ~/Dropbox/Brains       # Scan a custom directory
 ```
 
 **Notes:**
-- Registers an existing brain directory with Local Brain
-- Useful for importing synced brains from cloud storage
-- Does not copy files, only registers the path
+- Looks for subdirectories containing `01_active/` and `00_dump.md`
+- Registers paths only (does not copy files)
+- Skips already-registered brains
+
+---
+
+### `brain config <key> [value]`
+
+Get or set configuration values. Stored in `~/.config/brain/config.json`.
+
+```bash
+brain config editor           # Get current editor
+brain config editor nvim      # Set editor
+```
+
+**Available Keys:**
+- `editor` - Preferred text editor
 
 ---
 
@@ -165,102 +135,32 @@ brain import /path/to/synced-brain
 
 ### `brain add [text]`
 
-**Description:** Quick capture to dump
+Quick capture to dump.
 
-**Usage:**
 ```bash
-# Quick task capture
-brain add "Fix authentication bug"
-brain add "Email Sarah about proposal"
-
-# Note capture (opens editor)
-brain add
+brain add "Fix authentication bug"     # Task capture (instant)
+brain add                              # Note capture (opens editor)
 ```
 
-**Modes:**
+**With text:** Appends as `- [ ] your text #captured:YYYY-MM-DD`.
 
-**Quick Capture** (with text):
-- Appends as a checkbox task: `- [ ] your text #captured:YYYY-MM-DD`
-- Takes < 1 second
-- No metadata required
-
-**Editor Mode** (no text):
-- Prompts for note title
-- Opens your editor (vim/nvim/nano)
-- Saves as indented note block with title
-
-**Examples:**
-```bash
-# Task
-brain add "Review PR #123"
-# Result in dump: - [ ] Review PR #123 #captured:2026-01-29
-
-# Note (opens editor)
-brain add
-# Prompts: Note title: Meeting Notes
-# Opens editor for content
-```
-
-**Notes:**
-- Uses `$EDITOR` environment variable
-- Captured tasks can be enriched later with `brain plan`
-- Notes are multi-line and support full markdown
+**Without text:** Prompts for note title, opens `$EDITOR`, saves as indented note block.
 
 ---
 
 ### `brain dump ls [--json]`
 
-**Description:** List items in the dump with stable IDs
+List items in the dump with stable IDs.
 
-**Usage:**
 ```bash
-# Human-readable
 brain dump ls
-
-# JSON output for scripts
 brain dump ls --json
 ```
 
 **Options:**
-- `--json` - Output JSON format with IDs for programmatic access
+- `--json` - Output JSON with IDs, types, and line numbers
 
-**Output (human):**
-```
-a1b2c3  [Task] Fix authentication bug #captured:2026-01-29
-d4e5f6  [Note] Meeting notes from standup #captured:2026-01-29
-```
-
-**Output (JSON):**
-```json
-[
-  {
-    "id": "a1b2c3",
-    "type": "task",
-    "content": "Fix authentication bug #captured:2026-01-29",
-    "line": 5
-  }
-]
-```
-
-**Notes:**
-- IDs are stable and based on MD5 hash of content + line number + file mtime
-- JSON output includes line numbers for precise file editing
-
----
-
-### `brain dump rm <id>`
-
-**Description:** Remove an item from the dump by ID
-
-**Usage:**
-```bash
-brain dump rm a1b2c3
-```
-
-**Notes:**
-- Permanently deletes the item from dump
-- Use `brain refile` instead to move items to projects
-- Useful for removing spam or accidental captures
+IDs are stable (MD5 hash of content + line number + file mtime).
 
 ---
 
@@ -268,101 +168,43 @@ brain dump rm a1b2c3
 
 ### `brain refile [<id> <project>]`
 
-**Description:** Move items from dump to projects
+Move items from dump to projects.
 
-**Usage:**
-
-**Interactive Mode** (recommended):
 ```bash
-brain refile
+brain refile                    # Interactive: walk through each item
+brain refile a1b2c3 backend-api # Direct: refile by ID
 ```
-
-Shows each dump item one by one with:
-- Interactive project selection (fzf)
-- Special options: `[SKIP]` and `[TRASH]`
-- Progress counter
-
-**Direct Mode:**
-```bash
-brain refile a1b2c3 backend-api
-```
-
-Moves specific item by ID to a specific project.
 
 **Behavior:**
-- **Tasks** → Appended to project's `todo.md` with **backlog** status (`[~]`). Use `brain plan` to promote to open.
-- **Notes** → Created as separate markdown files in project's `notes/` directory
+- **Tasks** append to project's `todo.md` with backlog status (`[~]`). Use `brain plan` to promote.
+- **Notes** are saved as `YYYY-MM-DD-title-slug.md` in the project's `notes/` directory.
+- Items retain their `#captured:` timestamp and are removed from dump after refiling.
 
-**Examples:**
-```bash
-# Interactive refiling
-brain refile
-
-# Direct refiling
-brain refile a1b2c3 work
-brain refile d4e5f6 personal
-```
-
-**Notes:**
-- Items retain their `#captured:YYYY-MM-DD` timestamp
-- Notes are saved as `YYYY-MM-DD-title-slug.md`
-- Removed from dump after successful refiling
+Interactive mode shows fzf project selection with `[SKIP]` and `[TRASH]` options.
 
 ---
 
 ### `brain plan`
 
-**Description:** Plan your work: promote backlog tasks and set metadata
+Promote backlog tasks and set metadata. Ideal for weekly planning sessions.
 
-**Usage:**
 ```bash
 brain plan
 ```
 
 **Workflow:**
-1. Shows backlog tasks first, then open/in-progress tasks (fzf multi-select)
-2. Tab to select multiple tasks, Enter to confirm
-3. For selected tasks, prompts for:
-   - **Status** (defaults to "open" when backlog items selected — promotes them)
-   - **Priority** (1=high, 2=medium, 3=low)
-   - **Due date** (YYYY-MM-DD, tomorrow, +3d, next-friday)
-   - **Tags** (comma/space separated)
-4. All fields optional - press Enter to skip (or accept defaults)
+1. Select tasks via fzf (Tab for multi-select)
+2. For each, prompts for status, priority (1-3), due date, and tags
+3. All fields optional; press Enter to skip or accept defaults
+4. Backlog items auto-promote to "open" on Enter
 
-**Typical Workflow:**
-```
-1. Capture:  brain add "task"           → goes to inbox
-2. Refile:   brain refile               → items land in backlog
-3. Plan:     brain plan                 → promote backlog → open, set priorities/dates
-```
-
-**Natural Language Dates:**
-- `today` / `tomorrow` / `yesterday`
-- `+3d` - 3 days from now
-- `next-monday`, `next-friday`, etc.
-- `YYYY-MM-DD` - Explicit date
-
-**Notes:**
-- Primary use: promote backlog items to open (planned for the current work cycle)
-- Ideal for weekly planning sessions
-- Backlog items auto-promote to "open" when you press Enter at the status prompt
-- Existing tags shown as suggestions
-- Can clear metadata by entering `clear`
+**Natural language dates:** `today`, `tomorrow`, `+3d`, `next-friday`, `YYYY-MM-DD`. Enter `clear` to remove metadata.
 
 ---
 
 ### `brain review`
 
-**Description:** Review and process items (if implemented)
-
-**Usage:**
-```bash
-brain review
-```
-
-**Notes:**
-- Check implementation status with `brain review --help`
-- May provide weekly review workflows
+AI-powered project analysis. **Not yet implemented** (stub).
 
 ---
 
@@ -370,122 +212,64 @@ brain review
 
 ### `brain project new <name>`
 
-**Description:** Create a new project
+Create a new project with boilerplate (`notes.md`, `todo.md`, `.repos`).
 
-**Usage:**
 ```bash
 brain project new website-redesign
-brain project new blog-posts
 ```
 
-**Creates:**
-- Project directory in `01_active/<name>/`
-- `notes.md` with initial template
-- `todo.md` with sample tasks
-- `.repos` file for git repository links
+**Options:**
+- `--section <section>` - PARA section (default: `01_active`; valid: `01_active`, `02_areas`, `03_resources`)
 
-**Name Requirements:**
-- Letters, numbers, hyphens, and underscores only
-- No spaces (use hyphens instead)
-
-**Notes:**
-- Automatically selects (focuses) the new project
-- Creates boilerplate structure to get started quickly
+Names: letters, numbers, hyphens, and underscores only. Auto-focuses the new project.
 
 ---
 
 ### `brain project list [--json]`
 
-**Aliases:** `brain project ls`
+**Alias:** `brain project ls`
 
-**Description:** List all active projects
+List all projects. Selected project marked with `*`.
 
-**Usage:**
 ```bash
-# Human-readable
 brain project list
-
-# JSON output
 brain project list --json
 ```
 
 **Options:**
 - `--json` - Output JSON format
-
-**Output (human):**
-```
-Active Projects:
-----------------
- * backend-api        (selected) [Repos: 1, Tasks: 12]
-   frontend                      [Repos: 2, Tasks: 5]
-   documentation                 [Repos: 0, Tasks: 3]
-```
-
-**Output (JSON):**
-```json
-[
-  {
-    "name": "backend-api",
-    "focused": true,
-    "repo_count": 1,
-    "task_count": 12
-  }
-]
-```
-
-**Notes:**
-- Shows task counts and linked repo counts
-- Selected project marked with `*`
+- `--section <section>` - PARA section (default: `01_active`; valid: `01_active`, `02_areas`, `03_resources`)
 
 ---
 
 ### `brain project select [name]`
 
-**Description:** Focus on a specific project
+Focus on a specific project. Focus persists across sessions.
 
-**Usage:**
 ```bash
 brain project select backend-api
-brain project select  # Interactive selection
+brain project select              # Interactive fzf selection
 ```
-
-**Options:**
-- If no name provided, shows interactive fzf selection
-
-**Notes:**
-- Focused project used as default for commands like `brain project link`
-- Focus persists across sessions
 
 ---
 
 ### `brain project current`
 
-**Description:** Show currently focused project
+Show the currently focused project. Exit code 1 if none focused.
 
-**Usage:**
 ```bash
 brain project current
 ```
-
-**Output:**
-```
-backend-api
-```
-
-**Notes:**
-- Returns exit code 1 if no project is focused
-- Useful for shell prompts and scripts
 
 ---
 
 ### `brain project describe`
 
-**Description:** Edit or display project description
+Edit or display a project description (stored in `description.md`).
 
-**Usage:**
 ```bash
 brain project describe              # Edit in editor
-brain project describe --show       # Display description
+brain project describe --show       # Display
 brain project describe --show --json
 ```
 
@@ -493,153 +277,81 @@ brain project describe --show --json
 - `--show` - Display instead of editing
 - `--json` - JSON output (with `--show`)
 
-**Notes:**
-- Stored in separate `description.md` file
-- Use for brief project overview (notes.md is for detailed documentation)
-- Created on first use, not with `brain project new`
-
 ---
 
 ### `brain project clone <url> [name]`
 
-**Description:** Import a git repository as a new project
+Import a git repository as a new project. Creates project, links repo, clones to `~/dev/`, and focuses.
 
-**Usage:**
 ```bash
 brain project clone https://github.com/user/repo.git
 brain project clone https://github.com/user/repo.git my-project
 ```
 
-**Workflow:**
-1. Creates new project (name extracted from URL if not provided)
-2. Links the repository
-3. Clones to `~/dev/`
-4. Focuses the project
-
-**Examples:**
-```bash
-# Auto-name from URL
-brain project clone https://github.com/user/awesome-tool.git
-# Creates project: awesome-tool
-
-# Custom name
-brain project clone https://github.com/user/repo.git backend-api
-# Creates project: backend-api
-```
-
-**Notes:**
-- One-command setup for code-based projects
-- Repository cloned to `~/dev/<repo-name>/`
-- Use `brain go` afterward to enter dev mode
+Project name is extracted from the URL if not provided.
 
 ---
 
 ### `brain project link <url>`
 
-**Description:** Link a git repository to current/focused project
+Link a git repository to the focused project's `.repos` file.
 
-**Usage:**
 ```bash
 brain project link https://github.com/user/repo.git
 ```
 
-**Notes:**
-- Links repository URL to focused project's `.repos` file
-- Multiple repos can be linked to one project
-- Use `brain project pull` to clone/update linked repos
-- Verifies remote accessibility (warns if unreachable)
+Multiple repos can be linked to one project. Verifies remote accessibility.
 
 ---
 
 ### `brain project pull`
 
-**Description:** Clone/update all linked repositories
+Clone or update all linked repositories for the focused project.
 
-**Usage:**
 ```bash
 brain project pull
 ```
 
-**Behavior:**
-- Reads `.repos` file from focused project
-- For each repository:
-  - **If not cloned**: Clones to `~/dev/<repo-name>/`
-  - **If already cloned**: Runs `git pull`
-
-**Output:**
-```
-Project: backend-api
-  backend-service
-    Cloning...
-
-  frontend-app
-    Updating...
-```
-
-**Notes:**
-- Clones to `~/dev/` directory by default
-- Skips repos that are commented out in `.repos` (lines starting with `#`)
+Not-yet-cloned repos are cloned to `~/dev/<repo-name>/`. Already-cloned repos are pulled. Lines starting with `#` in `.repos` are skipped.
 
 ---
 
 ### `brain project archive <name>`
 
-**Description:** Archive a project
+Move a project from `01_active/` to `99_archive/` (appends `_YYYYMMDD`).
 
-**Usage:**
 ```bash
 brain project archive old-project
-brain project archive  # Archives focused project
+brain project archive              # Archives focused project
 ```
 
-**Behavior:**
-- Moves project from `01_active/` to `99_archive/`
-- Appends timestamp: `project-name_YYYYMMDD`
-- Clears focus if archiving focused project
-
-**Notes:**
-- Does not delete the project, just moves it
-- Archived projects can be manually moved back to `01_active/` if needed
-- Code repositories in `~/dev/` are not affected
+Does not delete anything. Code repositories in `~/dev/` are not affected.
 
 ---
 
 ### `brain project move <project> [target-brain]`
 
-**Description:** Move a project to another brain
+Move a project to another brain.
 
-**Usage:**
 ```bash
 brain project move backend-api work
-brain project move backend-api  # Interactive brain selection
+brain project move backend-api     # Interactive brain selection
 ```
 
-**Options:**
-- If target brain not provided, shows interactive selection
-
-**Notes:**
-- Moves entire project directory between brains
-- Clears focus if moving focused project
-- Target brain must exist
-- Cannot move if project with same name exists in target brain
+Fails if a project with the same name exists in the target brain.
 
 ---
 
 ### `brain project delete <name>`
 
-**Description:** Permanently delete a project
+Permanently delete a project. **Cannot be undone.** Consider `brain project archive` instead.
 
-**Usage:**
 ```bash
 brain project delete old-project
-brain project delete  # Deletes focused project
+brain project delete               # Deletes focused project
 ```
 
-**Notes:**
-- **DESTRUCTIVE OPERATION** - Cannot be undone
-- Requires typing project name to confirm
-- Consider using `brain project archive` instead
-- Does not delete code repositories in `~/dev/`
+Requires typing the project name to confirm. Does not delete repos in `~/dev/`.
 
 ---
 
@@ -647,63 +359,26 @@ brain project delete  # Deletes focused project
 
 ### `brain todo`
 
-**Description:** Interactive fuzzy search through tasks
+Interactive fuzzy search through tasks. Select a task to open it in your editor at the exact line.
 
-**Usage:**
 ```bash
 brain todo
 ```
 
-**Behavior:**
-- Shows all open tasks in fzf
-- Preview shows file location with context (uses `bat` if available)
-- Select task → Opens in editor at exact line
-
-**Notes:**
-- Requires fzf for interactive mode
-- Opens file at the specific line number of the task
-- Great for quickly finding and editing tasks
+Requires fzf. Preview uses `bat` if available.
 
 ---
 
 ### `brain todo ls`
 
-**Description:** List tasks with filters
+List tasks with filters.
 
-**Usage:**
 ```bash
-# List all open tasks
 brain todo ls
-
-# Filter by status
-brain todo ls --status backlog
-brain todo ls --status in-progress
-brain todo ls --status blocked
-
-# Filter by priority
-brain todo ls --priority 1
-brain todo ls --no-priority
-
-# Filter by tags
-brain todo ls --tag bug
+brain todo ls --status in-progress --priority 1
 brain todo ls --tag bug --tag security --tag-mode and
-
-# Filter by due date
-brain todo ls --due-today
-brain todo ls --due-this-week
-brain todo ls --overdue
-
-# Sorting
-brain todo ls --sort priority
-brain todo ls --sort deadline
-brain todo ls --sort project
-brain todo ls --sort status
-
-# Include completed tasks
-brain todo ls --all
-
-# JSON output
-brain todo ls --json
+brain todo ls --overdue --sort deadline
+brain todo ls --all --json
 ```
 
 **Options:**
@@ -711,329 +386,203 @@ brain todo ls --json
 - `--all` - Include completed tasks
 - `--priority <1-3>` - Filter by priority level
 - `--no-priority` - Show only unprioritized tasks
-- `--status <state>` - Filter by status (backlog, open, in-progress, blocked, done)
-- `--tag <tag>` - Filter by tag (can specify multiple)
+- `--status <state>` - Filter: backlog, open, in-progress, blocked, done
+- `--tag <tag>` - Filter by tag (repeatable)
 - `--tag-mode <and|or>` - Tag filter mode (default: or)
 - `--due-today` - Tasks due today
 - `--due-this-week` - Tasks due within 7 days
 - `--overdue` - Tasks past due date
-- `--sort <field>` - Sort by priority, deadline, project, or status
+- `--sort <field>` - Sort by: priority, deadline, project, status
+- `--completed-after <YYYY-MM-DD>` - Completed on/after date (implies `--all`)
+- `--completed-before <YYYY-MM-DD>` - Completed on/before date (implies `--all`)
 
-**Output:**
-```
-abc123 [P1] [>] Fix authentication bug #bug #security (backend-api) [Due: 2026-02-07]
-def456 [P2] [ ] Update documentation (docs) [Due: 2026-02-10]
-ghi789      [ ] Refactor API handlers (backend-api)
-```
+**Output format:** `ID [P1] [>] Task content #tags (project) [Due: DATE]`
 
-**Format:**
-- `ID` - Unique task identifier
-- `[P1]` - Priority badge (1=high, 2=medium, 3=low)
-- `[>]` - Status checkbox (`[~]`=backlog, `[ ]`=open, `[>]`=in-progress, `[-]`=blocked, `[x]`=done)
-- Task content
-- Tags (with `#`)
-- `(project)` - Project name
-- `[Due: DATE]` - Due date (shows `[OVERDUE]` if past due)
-
-**Notes:**
-- Default sort: overdue/upcoming tasks first, then by priority
-- Filters can be combined
-- JSON output includes file paths and line numbers for editing
+Default sort: overdue/upcoming first, then by priority. Filters can be combined.
 
 ---
 
-### `brain todo done [id]`
+### `brain todo done [ID...]`
 
-**Description:** Mark task as complete
+Mark tasks as complete (`[x]`). Tasks stay in todo.md and can be reopened.
 
-**Usage:**
 ```bash
-# By ID
 brain todo done abc123
-
-# Interactive selection
-brain todo done
+brain todo done abc123 def456     # Multiple
+brain todo done                   # Interactive multi-select
 ```
-
-**Behavior:**
-- Changes checkbox from `[ ]` to `[x]`
-- Keeps task in todo.md (doesn't delete)
-- Can be reopened with `brain todo reopen`
 
 ---
 
 ### `brain todo delete [id]`
 
-**Description:** Permanently delete a task
+Permanently delete a task. **Cannot be undone.** Requires confirmation.
 
-**Usage:**
 ```bash
-# By ID
 brain todo delete abc123
-
-# Interactive selection
-brain todo delete
+brain todo delete                 # Interactive selection
 ```
-
-**Notes:**
-- **DESTRUCTIVE** - Requires confirmation
-- Removes line from todo.md
-- Cannot be undone (unless using version control)
 
 ---
 
 ### `brain todo reopen [id]`
 
-**Description:** Reopen a completed task
+Reopen a completed task (changes `[x]` back to `[ ]`).
 
-**Usage:**
 ```bash
-# By ID
 brain todo reopen abc123
-
-# Interactive selection from completed tasks
-brain todo reopen
+brain todo reopen                 # Interactive selection from completed tasks
 ```
-
-**Behavior:**
-- Changes checkbox from `[x]` back to `[ ]`
-- Task becomes visible in default listings again
 
 ---
 
 ### `brain todo start <id>`
 
-**Description:** Mark task as in-progress
+Mark task as in-progress (`[>]`).
 
-**Usage:**
 ```bash
 brain todo start abc123
 ```
-
-**Behavior:**
-- Changes checkbox to `[>]`
-- Signals active work on the task
 
 ---
 
 ### `brain todo block <id>`
 
-**Description:** Mark task as blocked
+Mark task as blocked (`[-]`).
 
-**Usage:**
 ```bash
 brain todo block abc123
 ```
-
-**Behavior:**
-- Changes checkbox to `[-]`
-- Indicates task is waiting on external dependency
 
 ---
 
 ### `brain todo unblock <id>`
 
-**Description:** Unblock a task (set to open)
+Unblock a task (changes `[-]` back to `[ ]`).
 
-**Usage:**
 ```bash
 brain todo unblock abc123
 ```
-
-**Behavior:**
-- Changes checkbox from `[-]` back to `[ ]`
 
 ---
 
 ### `brain todo status <id> <state>`
 
-**Description:** Set task status directly
+Set task status directly. Valid states: `backlog` (`[~]`), `open` (`[ ]`), `in-progress` (`[>]`), `blocked` (`[-]`), `done` (`[x]`).
 
-**Usage:**
 ```bash
-brain todo status abc123 backlog
-brain todo status abc123 open
 brain todo status abc123 in-progress
-brain todo status abc123 blocked
-brain todo status abc123 done
 ```
-
-**Valid States:**
-- `backlog` - Not yet planned for active work (`[~]`)
-- `open` - Planned for current work cycle (`[ ]`)
-- `in-progress` - Currently working (`[>]`)
-- `blocked` - Waiting on dependency (`[-]`)
-- `done` - Completed (`[x]`)
 
 ---
 
 ### `brain todo prio <id> <priority>`
 
-**Description:** Set task priority
+Set task priority. Adds/updates `#p:N` tag.
 
-**Usage:**
 ```bash
-brain todo prio abc123 1  # High priority
-brain todo prio abc123 2  # Medium priority
-brain todo prio abc123 3  # Low priority
-brain todo prio abc123 0  # Clear priority
+brain todo prio abc123 1          # High (P1)
+brain todo prio abc123 2          # Medium (P2)
+brain todo prio abc123 3          # Low (P3)
+brain todo prio abc123 0          # Clear priority
 ```
-
-**Priority Levels:**
-- `1` - High (P1)
-- `2` - Medium (P2)
-- `3` - Low (P3)
-- `0` or `clear` - No priority
-
-**Behavior:**
-- Adds/updates `#p:N` tag in task line
-- Affects sort order in `brain todo ls`
 
 ---
 
 ### `brain todo due <id> <date>`
 
-**Description:** Set task due date
+Set task due date. Adds/updates `#due:YYYY-MM-DD` tag. Overdue tasks show `[OVERDUE]` in listings.
 
-**Usage:**
 ```bash
-# Explicit date
 brain todo due abc123 2026-02-15
-
-# Natural language
 brain todo due abc123 tomorrow
-brain todo due abc123 next-friday
 brain todo due abc123 +7d
-
-# Clear due date
-brain todo due abc123 clear
+brain todo due abc123 next-friday
+brain todo due abc123 clear       # Remove due date
 ```
 
-**Date Formats:**
-- `YYYY-MM-DD` - Explicit date
-- `today`, `tomorrow`, `yesterday`
-- `+Nd` - N days from now (e.g., `+7d`)
-- `next-monday`, `next-tuesday`, etc.
-- `clear` / `none` - Remove due date
+---
 
-**Behavior:**
-- Adds/updates `#due:YYYY-MM-DD` tag
-- Shows as `[Due: DATE]` in listings
-- Overdue tasks highlighted with `[OVERDUE]`
+### `brain todo schedule`
+
+Batch schedule unscheduled tasks interactively. Loops through open tasks without due dates, prompting for each.
+
+```bash
+brain todo schedule
+```
+
+Press Esc to exit. Supports all date formats from `brain todo due`.
 
 ---
 
 ### `brain todo tag <id> <tags...>`
 
-**Description:** Add tags to a task
+Add or remove tags on a task. Tags are stored as `#tagname` inline.
 
-**Usage:**
 ```bash
-# Single tag
-brain todo tag abc123 bug
-
-# Multiple tags
-brain todo tag abc123 bug security urgent
-
-# Remove tags
-brain todo tag abc123 --rm bug security
+brain todo tag abc123 bug security
+brain todo tag abc123 --rm security
 ```
 
 **Options:**
 - `--rm` - Remove specified tags instead of adding
 
-**Examples:**
-```bash
-# Add tags
-brain todo tag abc123 bug security
-# Result: - [ ] Fix auth bug #bug #security
-
-# Remove tags
-brain todo tag abc123 --rm security
-# Result: - [ ] Fix auth bug #bug
-```
-
-**Notes:**
-- Tags are stored as `#tagname` in the task line
-- Tags can be filtered with `brain todo ls --tag`
-- Use lowercase for consistency (convention)
-
 ---
 
 ### `brain todo tags`
 
-**Description:** List all tags used across tasks
+List all tags in use with counts.
 
-**Usage:**
 ```bash
 brain todo tags
 ```
-
-**Output:**
-```
-Tags in use:
-  bug (5 tasks)
-  security (3 tasks)
-  documentation (2 tasks)
-  performance (1 task)
-```
-
-**Notes:**
-- Shows tag usage statistics
-- Useful for discovering existing tags before adding new ones
-- Helps maintain tag consistency
 
 ---
 
 ## Note Management
 
-### `brain note [project]`
+### `brain note`
 
-**Description:** Open project notes in editor
+Select and open a note in the focused project via fzf.
 
-**Usage:**
 ```bash
-# Open focused project's notes
 brain note
-
-# Open specific project's notes
-brain note backend-api
 ```
 
-**Behavior:**
-- Opens `notes.md` in your editor
-- Uses `$EDITOR` environment variable
+**Options:**
+- `--section <section>` - PARA section (default: `01_active`; valid: `01_active`, `02_areas`, `03_resources`)
 
-**Notes:**
-- Notes are free-form markdown
-- Can include documentation, meeting notes, ideas, etc.
-- Timestamped notes from dump are stored in `notes/` subdirectory
+Requires a focused project. To create notes: `brain add` then `brain refile`.
 
 ---
 
-### `brain note ls [project]`
+### `brain note ls`
 
-**Description:** List note files
+List note files in the focused project.
 
-**Usage:**
 ```bash
-# List notes in focused project
 brain note ls
-
-# List notes in specific project
-brain note ls backend-api
+brain note ls --json
 ```
 
-**Output:**
-```
-notes.md
-notes/2026-01-20-meeting-notes.md
-notes/2026-01-25-architecture-ideas.md
+**Options:**
+- `--json` - Output JSON format
+- `--section <section>` - PARA section (default: `01_active`; valid: `01_active`, `02_areas`, `03_resources`)
+
+---
+
+### `brain note delete`
+
+Select and delete a note from the focused project. **Cannot be undone.**
+
+```bash
+brain note delete
 ```
 
-**Notes:**
-- Shows `notes.md` and all files in `notes/` directory
-- Timestamped notes created by refiling from dump
+**Options:**
+- `--section <section>` - PARA section (default: `01_active`; valid: `01_active`, `02_areas`, `03_resources`)
+
+Shows fzf selection with preview. Requires `y/N` confirmation.
 
 ---
 
@@ -1041,95 +590,57 @@ notes/2026-01-25-architecture-ideas.md
 
 ### `brain go`
 
-**Description:** Enter project context
+Enter project context.
 
-**Usage:**
 ```bash
 brain go
 ```
 
-**Behavior:**
+**No linked repos:** Opens a new shell in the project directory.
 
-**No linked repos:**
-- Opens new shell in project directory
-
-**With linked repos:**
-- Launches tmux session
-- Creates windows for:
-  - Project directory (notes/todos)
-  - Each linked repository
-- Activates Python venv if present
-
-**Examples:**
-```bash
-# Simple project
-cd ~/brain/01_active/documentation
-brain go
-# Opens shell in documentation/
-
-# Project with repos
-cd ~/brain/01_active/backend-api
-brain go
-# Launches tmux with windows for:
-#   1. backend-api (project)
-#   2. backend-service (code repo)
-#   3. frontend-app (code repo)
-```
-
-**Notes:**
-- Requires tmux for multi-repo projects
-- Automatically names tmux session after project
-- Attaches to existing session if already running
+**With linked repos:** Launches a tmux session with windows for the project directory and each linked repository. Activates Python venv if present. Attaches to existing session if already running.
 
 ---
 
 ### `brain storm [--agent <name>]`
 
-**Description:** Open an AI agent in your brains root directory
+Open an AI agent in your brains root directory (`~/brains` or `$BRAIN_ROOT`).
 
-**Usage:**
 ```bash
-brain storm                    # Launch Claude Code in ~/brains
-brain storm --agent aider      # Launch aider instead
-brain storm -a llm             # Short form
+brain storm                    # Launch Claude Code
+brain storm --agent aider      # Launch aider
 ```
 
 **Options:**
-- `--agent`, `-a` (string, default: `claude`) — CLI agent binary to launch
+- `--agent`, `-a` (string, default: `claude`) - CLI agent binary to launch
 
-**Notes:**
-- Changes working directory to `~/brains` (or `$BRAIN_ROOT` if set) before launching
-- The agent process replaces the current shell process (exec, not fork)
-- Create a `CLAUDE.md` in `~/brains` to give Claude Code standing instructions as your personal assistant; it is loaded automatically when Claude Code starts in that directory
-- Other agents (aider, llm, aichat, etc.) may require their own context configuration mechanism — see your agent's documentation
-- Requires the agent binary to be on `$PATH`
-
-**Examples:**
-```bash
-# Start a Claude Code session across all your brains
-brain storm
-
-# Use a different AI agent
-brain storm --agent aider
-```
+The agent process replaces the current shell (exec). Requires the agent binary on `$PATH`.
 
 ---
 
 ## Sync & Utilities
 
-### `brain sync`
+### `brain sync [status|scan|rescan]`
 
-**Description:** Sync with external storage (if implemented)
+Syncthing control wrapper. Requires Syncthing installed and running.
 
-**Usage:**
 ```bash
-brain sync
+brain sync              # Force rescan (default)
+brain sync status       # Show Syncthing status
 ```
 
-**Notes:**
-- Check `brain sync --help` for implementation status
-- May integrate with Syncthing, Dropbox, etc.
-- Brain directories are plain files, easily syncable manually
+---
+
+### `brain daily`
+
+Create or open today's daily note at `{brain}/00_daily/YYYY-MM-DD.md`.
+
+```bash
+brain daily
+brain daily --open      # Open in editor after creating
+```
+
+Includes a briefing section with overdue todos from all projects.
 
 ---
 
@@ -1137,84 +648,56 @@ brain sync
 
 ### `brain migrate`
 
-**Description:** Migrate brain files to portable markdown standards
+Migrate brain files to portable markdown standards. Dry-run by default.
 
-**Usage:**
 ```bash
-# Dry-run (default) - show what would change
-brain migrate
-
-# Apply changes
-brain migrate --apply
-
-# Migrate only one project
-brain migrate --project backend-api
-
-# Migrate a different PARA section
-brain migrate --section 02_areas
+brain migrate                          # Dry-run
+brain migrate --apply                  # Write changes
+brain migrate --project backend-api    # Single project
+brain migrate --section 02_areas       # Different PARA section
 ```
 
 **Options:**
-- `--apply` - Write changes (default is dry-run; no files are modified without this flag)
-- `--project <name>` - Migrate only the named project instead of all projects
-- `--section <section>` - PARA section to scan (default: `01_active`; valid values: `01_active`, `02_areas`, `03_resources`)
+- `--apply` - Write changes (default is dry-run)
+- `--project <name>` - Migrate only the named project
+- `--section <section>` - PARA section (default: `01_active`; valid: `01_active`, `02_areas`, `03_resources`)
 
-**Operations performed:**
-1. **Notes frontmatter** - Adds YAML frontmatter to note files that still use legacy `# Title` + `Created: YYYY-MM-DD` body format
-2. **Todos HTML comments** - Moves inline `#id:`, `#captured:`, `#done:` system tags into `<!-- id:... captured:... done:... -->` HTML comments
-3. **Notes index links** - Appends missing relative markdown links to `notes.md` for files in `notes/` that are not yet indexed
+**Operations:**
+1. **Notes frontmatter** - Adds YAML frontmatter to legacy note files
+2. **Todos HTML comments** - Moves inline `#id:`, `#captured:`, `#done:` tags into HTML comments
+3. **Notes index links** - Appends missing relative links to `notes.md`
 
-**Example output (dry-run):**
-```
-[DRY RUN] No changes written. Use --apply to write changes.
+Idempotent and safe to run multiple times. Uses atomic writes.
 
-Project: backend-api
-  Notes: 2 change(s) (would add frontmatter x2)
-  Todos: 1 change(s) (would move 3 items to HTML comments)
-  Links: 1 change(s) (would add 2 links)
+---
 
-Total: 2 notes, 1 todos, 1 links changed
-```
+### `brain migrate-ids`
 
-**Example output (apply):**
-```
-[APPLY] Writing changes...
+Add stable IDs (`#id:` tags) to all todos that don't have them.
 
-Project: backend-api
-  Notes: 2 change(s) (added frontmatter x2)
-  Todos: 1 change(s) (moved 3 items to HTML comments)
-  Links: 1 change(s) (added 2 links)
-
-Total: 2 notes, 1 todos, 1 links changed
+```bash
+brain migrate-ids
 ```
 
-**Notes:**
-- Safe to run multiple times - idempotent (already-migrated files are skipped)
-- Dry-run is the default to prevent accidental changes
-- Uses atomic writes to prevent file corruption
+Safe to run multiple times. IDs use the same MD5 algorithm as the original bash version.
 
 ---
 
 ## MCP Server Management
 
-Manage the brain-mcp server registration with AI coding agents. These commands
-auto-detect installed agents and configure them to use Local Brain's MCP server.
+Register the brain-mcp server with AI coding agents. Auto-detects installed agents.
 
 ### `brain mcp install [--agent <id>]`
 
-**Description:** Register brain-mcp with detected AI agents
+Register brain-mcp with detected AI agents.
 
-**Usage:**
 ```bash
-# Register with all detected agents
 brain mcp install
-
-# Register with a specific agent
 brain mcp install --agent claude
 ```
 
 **Options:**
-- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
+- `--agent` - Target: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
 
 **Supported agents:**
 
@@ -1225,219 +708,122 @@ brain mcp install --agent claude
 | `gemini` | Gemini CLI | `~/.gemini/settings.json` |
 | `opencode` | OpenCode | `~/.config/opencode/opencode.json` |
 
-**Notes:**
-- `--agent all` registers with all **detected** agents (those whose config directory exists)
-- `--agent <id>` registers with that specific agent
-- The server is registered as `local-brain` using stdio transport
-- Re-running is safe — already-registered agents are skipped
-- The binary path is auto-detected (next to `brain` in the same directory, or from PATH)
-
-**Output:**
-```
-OK:   Registered local-brain → Claude Code
-OK:   Registered local-brain → Gemini CLI
-SKIP: local-brain already registered for OpenCode
-
-Using binary: /opt/homebrew/bin/brain-mcp
-```
+Re-running is safe; already-registered agents are skipped. Binary path is auto-detected.
 
 ---
 
 ### `brain mcp remove [--agent <id>]`
 
-**Description:** Remove brain-mcp from AI agents
+Remove brain-mcp registration from AI agents.
 
-**Usage:**
 ```bash
-# Remove from all detected agents
 brain mcp remove
-
-# Remove from a specific agent
 brain mcp remove --agent claude
 ```
 
 **Options:**
-- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
+- `--agent` - Target: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
 
 ---
 
 ### `brain mcp status`
 
-**Description:** Show MCP registration status across all known agents
+Show MCP registration status across all known agents.
 
-**Usage:**
 ```bash
 brain mcp status
 ```
 
-**Output:**
-```
-Agent           MCP Server
-------------------------------
-Claude Code     registered
-Codex           -
-Gemini CLI      registered
-OpenCode        not registered
-```
-
-- `registered` — agent detected and MCP server is configured
-- `not registered` — agent detected but MCP server not configured
-- `-` — agent not detected (config directory does not exist)
+Status values: `registered`, `not registered`, `-` (agent not detected).
 
 ---
 
 ## Skill Management
 
-Bundled AI agent skills are SKILL.md files installed into AI coding agents
-(Claude Code, Codex, Gemini CLI, OpenCode). They teach agents context-aware
-workflows for your Local Brain workspace.
+Install SKILL.md files into AI coding agents to teach them Local Brain workflows.
 
 ### `brain skill list`
 
-**Description:** List all bundled skills
+List all bundled skills.
 
-**Usage:**
 ```bash
 brain skill list
-```
-
-**Output:**
-```
-brain-daily          Run the morning brain briefing and plan the day. Use when starting work...
 ```
 
 ---
 
 ### `brain skill install [name] [--agent <id>] [--force]`
 
-**Description:** Install skill(s) to detected AI agents
+Install skill(s) to detected AI agents.
 
-**Usage:**
 ```bash
-# Install all skills to all detected agents
-brain skill install
-
-# Install all skills to a specific agent
-brain skill install --agent claude
-
-# Install a single skill
-brain skill install brain-daily --agent claude
-
-# Overwrite existing skill files
-brain skill install --force
+brain skill install                              # All skills, all agents
+brain skill install --agent claude               # All skills, one agent
+brain skill install brain-daily --agent claude   # One skill, one agent
+brain skill install --force                      # Overwrite existing
 ```
 
 **Options:**
-- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
-- `--force` - Overwrite existing skill files (default: skip existing)
+- `--agent` - Target: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
+- `--force` - Overwrite existing skill files
 
-**Supported agents:**
+**Skills directories:**
 
-| ID | Name | Skills directory |
-|----|------|-----------------|
-| `claude` | Claude Code | `~/.claude/skills/` |
-| `opencode` | OpenCode | `~/.config/opencode/skills/` |
-| `codex` | Codex | `~/.codex/skills/` |
-| `gemini` | Gemini CLI | `~/.gemini/skills/` |
+| ID | Skills directory |
+|----|-----------------|
+| `claude` | `~/.claude/skills/` |
+| `codex` | `~/.codex/skills/` |
+| `gemini` | `~/.gemini/skills/` |
+| `opencode` | `~/.config/opencode/skills/` |
 
-**Notes:**
-- `--agent all` installs to all **detected** agents (those whose config directory exists)
-- `--agent <id>` installs to that agent even if it is not detected (for manual targeting)
-- Re-running without `--force` is safe — already-installed skills are skipped
-- OpenCode also reads `~/.claude/skills/` natively, so `--agent claude` benefits both
-
-**Output:**
-```
-OK:   Installed brain-daily → Claude Code (~/.claude/skills/brain-daily/)
-SKIP: brain-daily already installed for Codex (use --force to overwrite)
-```
+Re-running without `--force` is safe; existing skills are skipped. OpenCode also reads `~/.claude/skills/` natively.
 
 ---
 
 ### `brain skill upgrade [--agent <id>]`
 
-**Description:** Upgrade installed skills to the latest bundled version
+Upgrade installed skills to the latest bundled version. Only upgrades already-installed skills. **Overwrites local modifications.**
 
-**Usage:**
 ```bash
-# Upgrade all installed skills for all detected agents
 brain skill upgrade
-
-# Upgrade for a specific agent only
 brain skill upgrade --agent claude
 ```
 
 **Options:**
-- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
-
-**Notes:**
-- Only upgrades skills that are **already installed** — new skills are not added. Use `brain skill install` to add new skills.
-- **Overwrites local modifications** to SKILL.md files. If you customized a skill, back up your changes first.
-- Run this after updating Local Brain (`brew upgrade brain` or building from source) to get the latest skill workflows.
-
-**Output:**
-```
-OK:   Upgraded brain-daily → Claude Code
-OK:   Upgraded brain-plan → Claude Code
-
-Upgraded 2 skill(s). Note: any local modifications to SKILL.md files have been overwritten.
-```
+- `--agent` - Target: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
 
 ---
 
 ### `brain skill remove <name> [--agent <id>]`
 
-**Description:** Remove a skill from AI agents
+Remove a skill from AI agents.
 
-**Usage:**
 ```bash
-# Remove from all detected agents
 brain skill remove brain-daily
-
-# Remove from a specific agent
 brain skill remove brain-daily --agent claude
 ```
 
 **Options:**
-- `--agent` - Target agent: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
+- `--agent` - Target: `claude`, `codex`, `gemini`, `opencode`, or `all` (default: `all`)
 
 ---
 
 ### `brain skill status`
 
-**Description:** Show installation status of all bundled skills across all known agents
+Show installation status of all bundled skills across all known agents.
 
-**Usage:**
 ```bash
 brain skill status
 ```
 
-**Output:**
-```
-Skill                Claude Code     Codex           Gemini CLI      OpenCode
-------------------------------------------------------------------------
-brain-daily          installed       -               -               installed
-```
-
-- `installed` — agent detected and skill is installed
-- `not installed` — agent detected but skill is absent
-- `-` — agent not detected (config directory does not exist)
+Status values: `installed`, `not installed`, `-` (agent not detected).
 
 ---
 
 ## Global Options
 
-Available on all commands:
-
 - `--help` - Show command help
 - `--version` - Show version information
-
-**Examples:**
-```bash
-brain --help
-brain todo ls --help
-brain --version
-```
 
 ---
 
@@ -1447,7 +833,8 @@ Local Brain uses markdown checkboxes with different symbols:
 
 | Checkbox | State | Description |
 |----------|-------|-------------|
-| `[ ]` | open | Not started |
+| `[~]` | backlog | Not yet planned for active work |
+| `[ ]` | open | Planned for current work cycle |
 | `[>]` | in-progress | Currently working |
 | `[-]` | blocked | Waiting on external dependency |
 | `[x]` | done | Completed |
@@ -1475,112 +862,29 @@ Tasks support inline metadata tags:
 
 ## JSON API Usage
 
-Many commands support `--json` for programmatic access:
+Many commands support `--json` for scripting:
 
 ```bash
-# Get dump items with IDs
 brain dump ls --json | jq '.[0].id'
-
-# List projects
 brain project list --json | jq '.[] | select(.focused==true) | .name'
-
-# Filter tasks
 brain todo ls --priority 1 --json | jq '.[].content'
-```
-
-**Non-interactive Commands:**
-
-These commands support scripting without user interaction:
-
-```bash
-# Refile by ID
-brain refile abc123 backend-api
-
-# Set task metadata
-brain todo prio abc123 1
-brain todo due abc123 2026-02-15
-brain todo tag abc123 bug security
-brain todo status abc123 in-progress
-```
-
-**Example AI Agent Workflow:**
-```bash
-#!/bin/bash
-# Get first dump item
-ID=$(brain dump ls --json | jq -r '.[0].id')
-
-# Refile to focused project
-PROJECT=$(brain project current)
-brain refile "$ID" "$PROJECT"
-
-# Set high priority
-brain todo prio "$ID" 1
 ```
 
 ---
 
 ## Environment Variables
 
-Customize Local Brain behavior:
-
-```bash
-# Root directory for all brains (default: ~/brains)
-export BRAIN_ROOT="$HOME/Dropbox/Brains"
-
-# Active brain symlink location (default: ~/brain)
-export BRAIN_SYMLINK="$HOME/ActiveBrain"
-
-# Config directory (default: ~/.config/brain)
-export BRAIN_CONFIG_DIR="$HOME/.config/brain"
-
-# Editor for notes (default: vi)
-export EDITOR="nvim"
-```
-
-Add to `~/.bashrc` or `~/.zshrc` to make permanent.
-
----
-
-## Tips & Best Practices
-
-**Daily Workflow:**
-```bash
-# Morning: Quick captures throughout the day
-brain add "Task 1"
-brain add "Task 2"
-
-# End of day: Process dump
-brain refile
-
-# Weekly: Enrich tasks
-brain plan
-```
-
-**Keyboard-Driven Workflow:**
-- Use shell aliases: `alias ba='brain add'`
-- Use fzf for all interactive selections
-- Set up shell completion for tab completion
-
-**Project Organization:**
-- Use hyphens in project names: `backend-api` not `backend_api`
-- Archive completed projects regularly
-- One brain per major context (Work, Personal, Learning)
-
-**Task Management:**
-- Capture without metadata (speed)
-- Enrich during planning (batch)
-- Use priorities sparingly (only what's urgent)
-- Tags for categorization, not micro-management
-
-**Code Integration:**
-- Link repos early: `brain project link <url>`
-- Pull repos before work: `brain project pull`
-- Use `brain go` for instant dev environment
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BRAIN_ROOT` | `~/brains` | Root directory for all brains |
+| `BRAIN_SYMLINK` | `~/brain` | Active brain symlink location |
+| `BRAIN_CONFIG_DIR` | `~/.config/brain` | Config directory |
+| `EDITOR` | `vi` | Editor for notes |
 
 ---
 
 ## Next Steps
 
-- [Installation Guide](installation.md) - Set up Local Brain
-- [Quickstart](index.md) - Get started quickly
-- [Development Guide](development.md) - Contribute or extend Local Brain
+- [Installation Guide](installation.md)
+- [Quickstart](index.md)
+- [Development Guide](development.md)

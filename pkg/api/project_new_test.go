@@ -136,7 +136,7 @@ func TestArchiveProject(t *testing.T) {
 	}
 
 	// Verify project in archive with timestamp
-	archiveDir := filepath.Join(tb.BrainPath, "02_archive")
+	archiveDir := filepath.Join(tb.BrainPath, "99_archive")
 	entries, err := os.ReadDir(archiveDir)
 	if err != nil {
 		t.Fatalf("Failed to read archive directory: %v", err)

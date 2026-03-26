@@ -8,36 +8,99 @@
   \/_____/   \/_/ /_/   \/_/\/_/   \/_/   \/_/ \/_/
 ```
 
-> A local-first project management tool — with a CLI/TUI for humans and an MCP server for AI agents.
+> Plain markdown files. Full project management. Managed by AI, or by you.
 
 [![Documentation](https://img.shields.io/badge/docs-sandermoon.github.io-blue)](https://sandermoon.github.io/local-brain/)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/SanderMoon/local-brain)](https://github.com/SanderMoon/local-brain)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Local Brain keeps your projects, tasks, and notes in plain Markdown files on your own machine. Use it yourself via the CLI and TUI, or let an AI agent manage your projects through the built-in MCP server — or both.
+Local Brain turns a folder of markdown files into a project management system: a CLI, a TUI, and an AI agent interface. Your projects, tasks, and notes stay in plain text on your machine. You can manage them yourself, hand them off to an AI agent, or do both.
+
+Open the same files in Obsidian, grep them from the terminal, or let Claude organize your week. It's just markdown.
 
 ---
 
-## Two Interfaces, One System
+## What it looks like on disk
 
-### Human Interface — CLI & TUI
+```
+~/brains/work/                          ← a "brain" (workspace)
+├── 00_dump.md                          ← inbox for quick captures
+├── website-redesign/                   ← a project
+│   ├── todo.md
+│   ├── notes.md
+│   └── .repos                          ← linked git repositories
+├── api-migration/
+│   ├── todo.md
+│   └── notes.md
+└── ...
+```
+
+A **brain** is a folder. A **project** is a subfolder. Tasks and notes are markdown files. That's it.
+
+Here's what a `todo.md` looks like:
+
+```markdown
+# Website Redesign
+
+## Active
+
+- [ ] Finalize color palette #p:1 due:2026-04-01 #design
+- [ ] Set up CI/CD pipeline #p:2 #infra
+- [ ] Write copy for landing page
+
+## Completed
+
+- [x] Create wireframes #p:1 #design #captured:2026-03-01 #done:2026-03-18
+```
+
+And the inbox (`00_dump.md`), where quick captures land before you organize them:
+
+```markdown
+# Dump
+
+- [ ] Fix authentication bug #captured:2026-03-25
+- [ ] Review PR #452 #captured:2026-03-25
+
+[Note] Architecture meeting #captured:2026-03-25
+    Decided to move to microservices
+    Redis for session caching
+    Follow up with platform team
+```
+
+These files work in any text editor, any markdown tool, and any git workflow. Local Brain provides the API layer on top.
+
+---
+
+## Three ways to use it
+
+### 1. AI agent (the main event)
+
+![Claude chat with Local Brain](docs/images/claude-chat-screenshot.png)
+
+Connect your AI agent via the built-in MCP server and agent skills. Then just talk to it:
+
+- *"Good morning"* : get a daily briefing with priorities, overdue tasks, and blockers
+- *"Process my inbox"* : guided triage of captured items
+- *"Let's plan the website redesign"* : break a project into tasks with priorities and deadlines
+- *"What should I focus on today?"* : context-aware recommendations
+
+The agent reads and writes the same markdown files. No sync, no database, no lock-in.
+
+### 2. CLI & TUI
 
 ![Local Brain TUI](docs/images/tui-screenshot.png)
 
-- **Zero-friction capture** — `brain add "..."` takes under a second, no context switching
-- **Batch curation** — process and organize during dedicated time blocks with `brain refile` and `brain plan`
-- **Full CLI** — every operation is a command; scriptable and composable
-- **Optional TUI** — visual project and task overview with `brain tui`
+```bash
+brain add "Fix auth bug"            # capture to inbox (< 1 second)
+brain refile                        # move inbox items to projects
+brain todo ls --priority 1          # see high-priority tasks
+brain todo done abc123              # mark a task done
+brain tui                           # visual project overview
+```
 
-### AI Interface — MCP Server + Agent Skills
+### 3. Your editor
 
-<!-- TODO: Add screenshot of chatting with Claude about projects/todos. Save to docs/images/claude-chat-screenshot.png -->
-![Claude chat with Local Brain](docs/images/claude-chat-screenshot.png)
-
-- **18 purpose-built MCP tools** — designed to minimize LLM round-trips while giving complete access to your projects
-- **7 bundled [Agent Skills](https://agentskills.io)** — teach your AI agent *how* to be a project manager: daily briefings, inbox triage, weekly reviews, project planning, and more
-- **Personal assistant** — run `brain storm` to open Claude in your brains directory for an interactive session
-- **Works with any skills-compatible agent** — Claude Code, Codex, Gemini CLI, OpenCode
+Open `~/brains/work/` as an Obsidian vault, VS Code workspace, or just use vim. Edit the markdown directly; Local Brain picks up changes instantly.
 
 ---
 
@@ -65,122 +128,78 @@ brain init                   # create your first brain
 
 ```bash
 brain mcp install            # register the MCP server with detected agents
-brain skill install          # install skills (daily briefing, triage, planning, ...)
+brain skill install          # install agent skills (briefing, triage, planning, ...)
 ```
 
-This auto-detects your installed agents (Claude Code, Codex, Gemini CLI, OpenCode) and configures both the MCP server and skills for each. You can target a specific agent with `--agent claude`.
+Auto-detects installed agents (Claude Code, Codex, Gemini CLI, OpenCode). Target a specific one with `--agent claude`.
 
-### Use it
+### Start using it
 
 ```bash
-# CLI: capture → organize → act
-brain add "Fix authentication bug"
-brain refile                        # move inbox items to projects
-brain todo ls --priority 1          # see what matters today
+# Capture something
+brain add "Ship the new API endpoint"
 
-# AI: just talk to your agent
-# "Good morning"                    → daily briefing
-# "Process my inbox"                → guided triage
-# "Let's plan the website redesign" → project breakdown
+# Or just open your agent and say "what's on my plate?"
 ```
-
-**[📖 Full Documentation →](https://sandermoon.github.io/local-brain/)**
-
----
-
-## Core Workflow: Capture → Curate
-
-**Phase 1: Capture** (< 1 second)
-
-Dump everything to your inbox — no metadata, no decisions, no interruptions.
-
-```bash
-brain add "Fix auth bug in login"
-brain add "Review Sarah's PR"
-brain add "Update deployment docs"
-```
-
-**Phase 2: Curate** (dedicated time blocks)
-
-Organize, prioritize, and act on your items in batch.
-
-```bash
-brain refile      # move inbox items to projects
-brain plan        # add priorities, due dates, tags
-brain todo ls     # see your task list
-```
-
-Or let your AI agent handle it — with skills installed, just say "process my inbox" and it walks you through each item.
 
 ---
 
 ## Agent Skills
 
-Local Brain ships 7 bundled skills that follow the [Agent Skills open standard](https://agentskills.io). Skills teach your AI agent structured workflows — turning it from a generic chatbot into a capable project manager.
+Local Brain ships 7 skills that follow the [Agent Skills open standard](https://agentskills.io). These teach your AI agent structured project management workflows.
 
-| Skill | What it does |
-|-------|-------------|
-| `brain-daily` | Morning briefing — priorities, overdue tasks, blocked items |
-| `brain-setup` | First-time setup wizard — conversational onboarding |
-| `brain-capture` | Quick capture with smart metadata inference |
-| `brain-triage` | Systematic inbox processing — refile, categorize, discard |
-| `brain-plan` | Break goals into concrete tasks with priorities and deadlines |
-| `brain-focus` | Deep work session with distraction capture |
-| `brain-review` | Weekly review of progress, stale work, and priorities |
+| Skill | Trigger | What it does |
+|-------|---------|-------------|
+| `brain-daily` | *"Good morning"* | Briefing with priorities, overdue tasks, blocked items |
+| `brain-capture` | *"Remind me to..."* | Quick capture with smart metadata inference |
+| `brain-triage` | *"Process my inbox"* | Walk through each inbox item: refile, tag, or discard |
+| `brain-plan` | *"Let's plan..."* | Break goals into tasks with priorities and deadlines |
+| `brain-focus` | *"Let's work on..."* | Deep work session on one project |
+| `brain-review` | *"Weekly review"* | Progress check across all projects |
+| `brain-setup` | *"Set up my brain"* | Guided first-time onboarding |
+
+Together these form a **Capture, Organize, Plan, Execute, Reflect** loop, inspired by GTD and built for AI-assisted workflows.
 
 ```bash
-brain skill install          # install all skills to detected agents
-brain skill upgrade          # update skills after a brain version upgrade
-brain skill status           # check what's installed where
+brain skill install          # install all skills
+brain skill status           # check what's installed
+brain skill upgrade          # update after a brain version upgrade
 ```
-
-Together, these skills form a complete **Capture → Organize → Plan → Execute → Reflect** loop — inspired by GTD, adapted for AI-assisted workflows.
-
-> **Customizing skills:** Installed skills live as plain SKILL.md files in your agent's skills directory (e.g., `~/.claude/skills/`). You're free to edit them — but note that `brain skill upgrade` will overwrite your changes. To preserve customizations, either skip upgrading that skill or keep your edits in a separate file alongside SKILL.md.
 
 ---
 
-## Key Concepts
+## Why Local Brain?
 
-**Brains**: Top-level workspaces (e.g., "Work", "Personal"). Only one is active at a time, symlinked to `~/brain`.
+**Your files are the database.** No proprietary format, no cloud sync, no vendor lock-in. Every piece of data is a markdown file you can read, edit, grep, and version control.
 
-**Projects**: Focus areas within a brain (e.g., "website-redesign"). Each has `notes.md`, `todo.md`, and optional git repo links.
+**AI-native, not AI-only.** The MCP server gives agents full access to your projects, but you're never locked out. Edit a `todo.md` by hand, and the agent sees the change. Let the agent reorganize your tasks, and you see the result in your editor.
 
-**Dump**: Your inbox (`00_dump.md`) for rapid capture. Process it regularly with `brain refile`.
+**Works with your tools.** Obsidian, VS Code, vim, Syncthing, git... anything that reads files works with Local Brain. The CLI and TUI are there for when you want structured operations.
 
 ---
 
 ## Documentation
 
-- **[🚀 Quickstart Guide](https://sandermoon.github.io/local-brain/)** — Get started in 3 minutes
-- **[📦 Installation](https://sandermoon.github.io/local-brain/installation/)** — All installation methods
-- **[📖 Command Reference](https://sandermoon.github.io/local-brain/commands/)** — Complete command documentation
-- **[🤖 MCP Server Setup](docs/mcp-server.md)** — AI agent integration (Claude Desktop, Claude Code)
-- **[💻 Development Guide](https://sandermoon.github.io/local-brain/development/)** — Architecture and contributing
+- **[Quickstart Guide](https://sandermoon.github.io/local-brain/)** · Get started in 3 minutes
+- **[Installation](https://sandermoon.github.io/local-brain/installation/)** · All installation methods and shell integration
+- **[Command Reference](https://sandermoon.github.io/local-brain/commands/)** · Full CLI documentation
+- **[MCP Server](docs/mcp-server.md)** · AI agent integration details
+- **[Development Guide](https://sandermoon.github.io/local-brain/development/)** · Architecture and contributing
 
 ---
 
 ## Contributing
 
-Contributions are welcome! See the [Development Guide](https://sandermoon.github.io/local-brain/development/) for setup, architecture, and contributing guidelines.
-
 ```bash
 git clone https://github.com/SanderMoon/local-brain.git
 cd local-brain
-make build
-make test
+make build && make test
 ```
 
----
-
-## Community
-
-- **Issues**: [GitHub Issues](https://github.com/SanderMoon/local-brain/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/SanderMoon/local-brain/discussions)
-- **Documentation**: [https://sandermoon.github.io/local-brain/](https://sandermoon.github.io/local-brain/)
+See the [Development Guide](https://sandermoon.github.io/local-brain/development/) for architecture details.
 
 ---
 
 ## License
 
-MIT License — See [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE) for details.

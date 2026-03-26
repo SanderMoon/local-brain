@@ -93,7 +93,7 @@ func GetArchivePath(cfg *Config) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(brainPath, "02_archive"), nil
+	return filepath.Join(brainPath, "99_archive"), nil
 }
 
 // GetLinkedRepos returns the list of linked repository paths for a project

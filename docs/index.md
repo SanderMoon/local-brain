@@ -1,10 +1,10 @@
 # Local Brain
 
-> A minimalist, local-first project management system for developers who live in the terminal.
+> Plain markdown files. Full project management. Managed by AI, or by you.
 
-Local Brain is a context manager for your workflow. It stitches together your notes, tasks, and code repositories into a cohesive, keyboard-driven environment.
+Local Brain turns a folder of markdown files into a project management system: a CLI, a TUI, and an AI agent interface. Your projects, tasks, and notes stay in plain text on your machine. You can manage them yourself, hand them off to an AI agent, or do both.
 
-## 30-Second Install
+## Quick Start
 
 ```bash
 brew tap SanderMoon/tap
@@ -12,110 +12,92 @@ brew install brain
 brain init
 ```
 
-That's it. Start capturing immediately:
+### Connect your AI agent
 
 ```bash
-brain add "Fix authentication bug"
-brain add -n "Meeting notes from standup"
+brain mcp install            # register the MCP server with detected agents
+brain skill install           # install agent skills (briefing, triage, planning, ...)
 ```
 
-## Core Philosophy: Capture Fast, Curate Later
+Auto-detects installed agents (Claude Code, Codex, Gemini CLI, OpenCode). Target a specific one with `--agent claude`.
 
-Local Brain follows a two-phase workflow designed to keep you in flow state:
-
-### Phase 1: Capture (Speed is King)
-
-When ideas strike, capture them instantly without breaking focus. No prompts, no decisions, no context switching.
+### Start using it
 
 ```bash
-brain add "Fix auth bug"
-brain add "Call client"
-brain add -n "Use Redis for sessions"
+brain add "Ship the new API endpoint"    # capture to inbox
+brain                                     # launch the TUI
+# Or open your agent and say "what's on my plate?"
 ```
 
-Everything goes to your **dump** (`00_dump.md`) - an inbox for raw thoughts. Capturing takes < 1 second.
+## Three Ways to Use It
 
-### Phase 2: Curate (Organization is King)
+### 1. AI agent
 
-Later, when you have dedicated time, organize and enrich your captured items:
+Connect via the built-in MCP server and agent skills, then talk naturally:
+
+- *"Good morning"* -- get a daily briefing with priorities, overdue tasks, and blockers
+- *"Process my inbox"* -- guided triage of captured items
+- *"Let's plan the website redesign"* -- break a project into tasks with priorities and deadlines
+
+The agent reads and writes the same markdown files. No sync, no database, no lock-in.
+
+### 2. CLI & TUI
 
 ```bash
-brain refile    # Move items from dump to projects
-brain plan      # Add priorities, due dates, tags
+brain add "Fix auth bug"            # capture to inbox (< 1 second)
+brain refile                        # move inbox items to projects
+brain todo ls --priority 1          # see high-priority tasks
+brain todo done abc123              # mark a task done
+brain plan                          # promote backlog tasks, set metadata
+brain daily                         # create/open today's daily note
+brain                               # launch the TUI
 ```
 
-Batch process multiple items in one focused session using interactive FZF-powered workflows.
+### 3. Your editor
 
-## Daily Practice Example
+Open `~/brains/work/` as an Obsidian vault, VS Code workspace, or just use vim. Edit the markdown directly; Local Brain picks up changes instantly.
 
-**Morning** (Capture throughout the day):
+## What It Looks Like on Disk
+
+A **brain** is a workspace folder. A **project** is a subfolder with `todo.md` and `notes.md`. The **dump** (`00_dump.md`) is your inbox for rapid capture. Only one brain is active at a time, symlinked to `~/brain`.
+
+```
+~/brains/work/                          <- a brain (workspace)
+├── 00_dump.md                          <- inbox for quick captures
+├── 00_daily/                           <- daily notes
+│   └── 2026-03-25.md
+├── website-redesign/                   <- a project
+│   ├── todo.md
+│   ├── notes.md
+│   └── .repos                          <- linked git repositories
+└── api-migration/
+    ├── todo.md
+    └── notes.md
+```
+
+## Agent Skills
+
+Local Brain ships 7 skills that follow the [Agent Skills open standard](https://agentskills.io). These teach your AI agent structured project management workflows.
+
+| Skill | Trigger | What it does |
+|-------|---------|-------------|
+| `brain-daily` | *"Good morning"* | Briefing with priorities, overdue tasks, blocked items |
+| `brain-capture` | *"Remind me to..."* | Quick capture with smart metadata inference |
+| `brain-triage` | *"Process my inbox"* | Walk through each inbox item: refile, tag, or discard |
+| `brain-plan` | *"Let's plan..."* | Break goals into tasks with priorities and deadlines |
+| `brain-focus` | *"Let's work on..."* | Deep work session on one project |
+| `brain-review` | *"Weekly review"* | Progress check across all projects |
+| `brain-setup` | *"Set up my brain"* | Guided first-time onboarding |
 
 ```bash
-brain add "Fix auth bug in login"
-brain add "Review Sarah's PR"
-brain add -n "Architecture discussion notes"
+brain skill install          # install all skills
+brain skill status           # check what's installed
+brain skill upgrade          # update after a brain version upgrade
 ```
-
-**End of Day** (Refile):
-
-```bash
-brain refile
-# Interactive prompts move items to appropriate projects
-# "Fix auth bug" → backend-api
-# "Review Sarah's PR" → frontend
-# "Architecture notes" → architecture (as note)
-```
-
-**Friday** (Weekly planning):
-
-```bash
-brain plan
-# Set priorities, due dates, tags, states for tasks
-# Priority? 1 (high)
-# Due date? next-friday
-# Tags? bug security
-```
-
-**Throughout the Week**:
-
-```bash
-brain todo ls --status in-progress --priority 1
-brain todo ls --overdue
-brain todo done <id>
-```
-
-This workflow ensures you **never lose an idea** while maintaining **organized, actionable projects**.
-
-## Key Concepts
-
-**Brains**: Top-level workspaces (e.g., "Work", "Personal"). Only one brain active at a time, symlinked to `~/brain`.
-
-**Projects**: Focus areas within a brain (e.g., "website-redesign"). Each has `notes.md`, `todo.md`, and optional code repo links.
-
-**Dump**: Your inbox (`00_dump.md`) for rapid capture. Process it regularly with `brain refile`.
-
-## Key Features
-
-- **Local-First**: Plain text Markdown files, grep-able, version-controllable
-- **Zero-Friction Capture**: Add tasks in < 1 second without context switching
-- **Batch Curation**: Process and organize during dedicated time blocks
-- **Developer-Friendly**: Integrates with git repos, supports JSON API for scripts
-- **Privacy-First**: Everything lives locally in `~/brains/`, syncable via Syncthing/Dropbox
 
 ## Next Steps
 
-- **[Installation Guide](installation.md)** - Complete installation instructions for all platforms
-- **[Command Reference](commands.md)** - Full documentation of all 23 commands
-- **[Development Guide](development.md)** - Architecture, contributing, and API docs
-
-## Quick Reference: The Three Commands
-
-| Command | Phase | Purpose | When to Use |
-|---------|-------|---------|-------------|
-| `brain add` | Capture | Instant brain dump | Anytime an idea strikes |
-| `brain refile` | Curate | Sort dump → projects | End of day / start of day |
-| `brain plan` | Curate | Enrich with metadata | Weekly planning sessions |
-
----
-
-**Ready to get started?** Head to the [Installation Guide](installation.md) to set up Local Brain in under 5 minutes.
+- **[Installation Guide](installation.md)** -- Complete installation for all platforms
+- **[Command Reference](commands.md)** -- Full CLI documentation
+- **[MCP Server](mcp-server.md)** -- AI agent integration details
+- **[Development Guide](development.md)** -- Architecture, contributing, and API docs

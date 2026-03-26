@@ -1,6 +1,6 @@
 # Local Brain MCP Server
 
-Model Context Protocol server that exposes Local Brain functionality to AI assistants like Claude Desktop.
+MCP server exposing Local Brain to AI assistants (Claude Desktop, Claude Code, etc.).
 
 ## Quick Start
 
@@ -81,102 +81,107 @@ Run this from your project directory. The server is registered at the project le
 - Homebrew (macOS Intel): `/usr/local/bin/brain-mcp`
 - User install: `/Users/<you>/.local/bin/brain-mcp`
 
-**Using Local Brain as a personal AI assistant:**
+## Available Tools (16)
 
-Create a `CLAUDE.md` file in your `~/brains` directory to give Claude Code standing instructions — your preferences, context to load automatically, how to handle tasks. When you run `brain storm` (see [Commands Reference](commands.md)), Claude Code reads this file automatically.
+### Context Retrieval & Search (6 tools)
 
-> Other AI agents (aider, llm, aichat, etc.) may require a different mechanism to load context — typically a system prompt file or a project-level configuration file. See your agent's documentation for details.
-
-## Available Tools (17)
-
-### Context Retrieval & Search (7 tools)
-
-**`get_brain_overview`** - Complete workspace overview (brain name, focused project, all projects with stats, inbox count)
+**`get_brain_overview`** - Complete workspace overview: brain name, focused project, all projects with stats, inbox count
 
 **`get_dump_items`** - All inbox items with IDs, content, and timestamps
 
-**`get_all_todos`** - All tasks across projects with metadata (status, priority, due date, tags, capture/complete dates)
-- `include_completed` (bool) - Include done tasks
-- `project` (string, optional) - Filter by project name
-- `created_after` (string, optional) - Filter by capture date >= YYYY-MM-DD
-- `created_before` (string, optional) - Filter by capture date <= YYYY-MM-DD
-- `completed_after` (string, optional) - Filter by completion date >= YYYY-MM-DD
-- `completed_before` (string, optional) - Filter by completion date <= YYYY-MM-DD
-
-**`get_project_context`** - Complete project details (description, todos, repos, notes with optional content)
+**`get_project_context`** - Full project details: description, todos, repos, notes
 - `project_name` (string) - Project to retrieve
 - `include_completed` (bool) - Include done tasks
-- `include_note_content` (string, optional) - Note content: none|preview|full (default: preview)
+- `include_note_content` (string, optional) - Note content depth: none|preview|full (default: preview)
+- `section` (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources
 
-**`search_todos`** - Filter todos by query, project, status, tags, and dates
-- `query` (string, optional) - Search term
-- `project` (string, optional) - Project filter
-- `status` (string, optional) - Status filter (backlog, open, in-progress, blocked, done)
-- `tags` ([]string, optional) - Tag filter (OR logic)
-- `created_after` (string, optional) - Filter by capture date >= YYYY-MM-DD
-- `created_before` (string, optional) - Filter by capture date <= YYYY-MM-DD
-- `completed_after` (string, optional) - Filter by completion date >= YYYY-MM-DD
-- `completed_before` (string, optional) - Filter by completion date <= YYYY-MM-DD
-
-**`search`** - Unified search across todos and notes with temporal filtering
+**`search`** - Search across todos and notes with filtering by status, priority, tags, and dates
 - `query` (string, optional) - Search term
 - `project` (string, optional) - Project filter
 - `include_todos` (bool, optional) - Include todos (default: true)
 - `include_notes` (bool, optional) - Include notes (default: true)
-- `search_note_content` (bool, optional) - Search note content not just titles
-- `created_after`, `created_before`, `completed_after`, `completed_before` (strings, optional) - Temporal filters
+- `search_note_content` (bool, optional) - Search note body text, not just titles
+- `status` (string, optional) - Filter todos by status (backlog, open, in-progress, blocked, done)
+- `priority` (int, optional) - Filter todos by priority (1=high, 2=medium, 3=low)
+- `tags` ([]string, optional) - Filter todos by tags (OR logic)
+- `include_completed` (bool, optional) - Include completed tasks (default: false)
+- `created_after`, `created_before` (strings, optional) - Filter by created date (YYYY-MM-DD)
+- `completed_after`, `completed_before` (strings, optional) - Filter by completed date (YYYY-MM-DD)
+- `due_after`, `due_before` (strings, optional) - Filter by due date (YYYY-MM-DD)
+- `section` (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources
 
-**`switch_brain`** - Switch to different brain workspace
-- `brain_name` (string) - Brain to activate
+**`set_context`** - Switch brain and/or set focused project (at least one required)
+- `brain_name` (string, optional) - Brain to switch to
+- `project_name` (string, optional) - Project to focus
 
-### Quick Capture (3 tools)
+**`get_daily_briefing`** - Daily briefing: overdue/due items, high-priority tasks, in-progress work, blocked items, recent completions, inbox
+- `section` (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources
 
-**`add_task_to_dump`** - Add task to inbox
-- `content` (string) - Task description
+### Quick Capture (2 tools)
 
-**`add_note_to_dump`** - Add note to inbox
-- `title` (string) - Note title
-- `content` (string) - Note content (can be multi-line)
+**`add_to_dump`** - Capture a task or note to the inbox
+- `type` (string) - Item type: "task" or "note"
+- `content` (string) - Task or note content (multi-line supported for notes)
+- `title` (string, optional) - Note title (required when type="note", ignored for tasks)
 
-**`refile_item`** - Move item from inbox to project
-- `item_id` (string) - 6-character hex ID
+**`refile_item`** - Move items from inbox to projects (batch supported)
+- `refiles` (array) - Refile operations, each with:
+  - `item_id` (string) - 6-character hex ID
+  - `project_name` (string) - Target project
+
+### Todo Management (2 tools)
+
+**`update_todo`** - Update todos: content, status, priority, due date, tags, or delete (batch supported)
+- `updates` (array) - Todo updates, each with:
+  - `todo_id` (string) - 6-character hex ID
+  - `content` (string, optional) - New task text
+  - `status` (string, optional) - backlog | open | in-progress | blocked | done
+  - `priority` (int, optional) - 1 (high), 2 (medium), 3 (low), null to clear
+  - `due_date` (string, optional) - YYYY-MM-DD format, or "" to clear
+  - `add_tags` ([]string, optional) - Tags to add
+  - `remove_tags` ([]string, optional) - Tags to remove
+  - `delete` (bool, optional) - Permanently delete this todo
+- `section` (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources
+
+**`create_todo_in_project`** - Add tasks directly to a project (batch supported)
 - `project_name` (string) - Target project
+- `todos` (array) - Todos to create, each with:
+  - `content` (string) - Task description
+  - `priority` (int, optional) - 1 (high), 2 (medium), 3 (low)
+  - `due_date` (string, optional) - YYYY-MM-DD format
+  - `tags` ([]string, optional) - Tags
+  - `status` (string, optional) - Initial status: backlog (default), open, in-progress, blocked
+- `section` (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources
 
-### Todo Management (3 tools)
+### Note Management (3 tools)
 
-**`update_todo`** - Update todo status and/or metadata in one call
-- `todo_id` (string) - 6-character hex ID
-- `status` (string, optional) - backlog | open | in-progress | blocked | done
-- `priority` (int, optional) - 1 (high), 2 (medium), 3 (low), null to clear
-- `due_date` (string, optional) - YYYY-MM-DD format or empty to clear
-- `add_tags` ([]string, optional) - Tags to add
-- `remove_tags` ([]string, optional) - Tags to remove
-
-**`create_todo_in_project`** - Add task directly to project
-- `project_name` (string) - Target project
-- `content` (string) - Task description
-
-**`delete_todo`** - Delete task permanently (requires user confirmation)
-- `todo_id` (string) - 6-character hex ID
-
-### Note Management (2 tools)
-
-**`create_project_note`** - Create timestamped note file in project
+**`create_project_note`** - Create a timestamped note file in a project
 - `project_name` (string) - Target project
 - `title` (string) - Note title
 - `content` (string) - Note content
+- `section` (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources
 
-**`get_note_content`** - Read note file content
+**`get_note_content`** - Read a note file's content
 - `note_path` (string) - Full path to note file
+
+**`update_note`** - Replace full content of an existing note file
+- `note_path` (string) - Full path to note file
+- `content` (string) - New full content for the note file
 
 ### Project Management (2 tools)
 
 **`create_project`** - Create new project
 - `name` (string) - Project name (alphanumeric, hyphens, underscores)
 - `description` (string, optional) - Project description
+- `section` (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources
 
-**`set_focused_project`** - Set the focused project
-- `project_name` (string) - Project to focus
+**`archive_project`** - Move a project from active to archive (timestamped)
+- `name` (string) - Name of the project to archive
+
+### Daily Notes (1 tool)
+
+**`create_daily_note`** - Create or open a daily note in `{brain}/00_daily/YYYY-MM-DD.md` with overdue todo briefing
+- `date` (string, optional) - Date in YYYY-MM-DD format (defaults to today)
 
 ## Usage Examples
 
@@ -184,6 +189,9 @@ Create a `CLAUDE.md` file in your `~/brains` directory to give Claude Code stand
 ```
 Ask Claude: "What am I working on?"
 → Calls get_brain_overview
+
+Ask Claude: "Give me my daily briefing"
+→ Calls get_daily_briefing
 ```
 
 ### Process inbox
@@ -191,41 +199,36 @@ Ask Claude: "What am I working on?"
 Ask Claude: "Help me process my inbox"
 → Calls get_dump_items
 → Asks where each item should go
-→ Calls refile_item for each
+→ Calls refile_item(refiles: [{item_id: "abc123", project_name: "backend"}, ...])
 ```
 
 ### Manage tasks
 ```
 Ask Claude: "Show me all high priority tasks"
-→ Calls get_all_todos
-→ Filters by priority
+→ Calls search(priority: 1)
 
 Ask Claude: "Mark task abc123 as in-progress with high priority"
-→ Calls update_todo(todo_id: "abc123", status: "in-progress", priority: 1)
+→ Calls update_todo(updates: [{todo_id: "abc123", status: "in-progress", priority: 1}])
 
 Ask Claude: "What's overdue?"
-→ Calls get_all_todos
-→ Filters by due date
+→ Calls search(due_before: "2026-03-25")
 ```
 
 ### Create content
 ```
 Ask Claude: "Add a task to my backend project: Fix auth bug"
-→ Calls create_todo_in_project(project_name: "backend", content: "Fix auth bug")
+→ Calls create_todo_in_project(project_name: "backend", todos: [{content: "Fix auth bug"}])
 
-Ask Claude: "Add a note about today's standup to project X"
-→ Calls create_project_note with meeting notes
+Ask Claude: "Write up notes from today's standup in project X"
+→ Calls create_project_note(project_name: "X", title: "Standup notes", content: "...")
 ```
 
 ## Design Principles
 
-**Efficiency** - Batch operations minimize round-trips (e.g., `get_brain_overview` replaces 5+ separate calls)
-
-**Safety** - Destructive operations (delete_todo) require user confirmation. No project/brain deletion exposed.
-
-**Privacy** - Local stdio transport only, no network access
-
-**Validation** - All inputs validated before execution with clear error messages
+- **Efficiency** - Batch operations minimize round-trips (`get_brain_overview` replaces 5+ separate calls)
+- **Safety** - Destructive operations (`update_todo` with `delete` flag) are explicit. No brain deletion exposed.
+- **Privacy** - Local stdio transport only, no network access.
+- **Validation** - All inputs validated before execution with clear error messages.
 
 ## Troubleshooting
 
@@ -240,8 +243,8 @@ Ask Claude: "Add a note about today's standup to project X"
 
 **Tool calls failing**
 - Verify you have an active brain configured: `brain config show`
-- Check item IDs are valid 6-character hex (use get_dump_items or get_all_todos to find IDs)
-- Ensure project names match exactly (use list_projects to see available projects)
+- Check item IDs are valid 6-character hex (use get_dump_items or search to find IDs)
+- Ensure project names match exactly (use get_brain_overview to see available projects)
 
 **Validation errors**
 - Todo IDs must be 6-character lowercase hex (e.g., "abc123" not "ABC123")
