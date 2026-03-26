@@ -1,171 +1,269 @@
 /* Terminal Sage color scheme for MkDocs Material */
-/* Palette: https://github.com/SanderMoon/terminal-sage */
+/* Light palette from sandermoonemans.com, dark from terminal-sage */
 
-:root {
-  /* Terminal Sage palette */
-  --ts-bg-dark: #111411;
-  --ts-bg: #161916;
-  --ts-bg-alt: #1C1F1C;
-  --ts-surface: #222522;
-  --ts-divider: #363A36;
-  --ts-fg: #E4E4DC;
-  --ts-fg-dim: #C8C8BC;
-  --ts-fg-muted: #8A8A7E;
-  --ts-fg-dark: #606058;
-  --ts-green: #7DB880;
-  --ts-green-dark: #6DAA70;
-  --ts-red: #C45B5B;
-  --ts-yellow: #C9B458;
-  --ts-blue: #6A9FCF;
-  --ts-purple: #A87FBF;
-  --ts-cyan: #6EB5A0;
-  --ts-bg-code: #1E211E;
-  --ts-card-hover: #282C28;
-}
+/* ============================================================
+   LIGHT MODE (default scheme)
+   ============================================================ */
 
-/* Slate scheme overrides */
-[data-md-color-scheme="slate"] {
-  --md-default-bg-color: var(--ts-bg);
-  --md-default-fg-color: var(--ts-fg);
-  --md-default-fg-color--light: var(--ts-fg-dim);
-  --md-default-fg-color--lighter: var(--ts-fg-muted);
-  --md-default-fg-color--lightest: var(--ts-fg-dark);
+[data-md-color-scheme="default"] {
+  --md-default-bg-color: #FAF7F2;
+  --md-default-fg-color: #2C2C28;
+  --md-default-fg-color--light: #7A7A6E;
+  --md-default-fg-color--lighter: #A0A094;
+  --md-default-fg-color--lightest: #D4CFC6;
 
-  --md-primary-fg-color: var(--ts-green);
-  --md-primary-fg-color--light: var(--ts-green);
-  --md-primary-fg-color--dark: var(--ts-green-dark);
-  --md-primary-bg-color: var(--ts-fg);
-  --md-primary-bg-color--light: var(--ts-fg-dim);
+  --md-primary-fg-color: #5E8C61;
+  --md-primary-fg-color--light: #5E8C61;
+  --md-primary-fg-color--dark: #4E7A50;
+  --md-primary-bg-color: #FFFFFF;
+  --md-primary-bg-color--light: #FAF7F2;
 
-  --md-accent-fg-color: var(--ts-cyan);
-  --md-accent-fg-color--transparent: rgba(110, 181, 160, 0.1);
-  --md-accent-bg-color: var(--ts-bg);
+  --md-accent-fg-color: #5E8C61;
+  --md-accent-fg-color--transparent: rgba(94, 140, 97, 0.08);
+  --md-accent-bg-color: #FAF7F2;
 
   /* Code */
-  --md-code-bg-color: var(--ts-bg-code);
-  --md-code-fg-color: var(--ts-fg);
-  --md-code-hl-color: rgba(125, 184, 128, 0.15);
-  --md-code-hl-number-color: var(--ts-yellow);
-  --md-code-hl-special-color: var(--ts-purple);
-  --md-code-hl-function-color: var(--ts-blue);
-  --md-code-hl-constant-color: var(--ts-cyan);
-  --md-code-hl-keyword-color: var(--ts-purple);
-  --md-code-hl-string-color: var(--ts-green);
-  --md-code-hl-name-color: var(--ts-fg);
-  --md-code-hl-operator-color: var(--ts-fg-dim);
-  --md-code-hl-punctuation-color: var(--ts-fg-muted);
-  --md-code-hl-comment-color: var(--ts-fg-dark);
-  --md-code-hl-generic-color: var(--ts-green);
-  --md-code-hl-variable-color: var(--ts-fg);
+  --md-code-bg-color: #F0ECE4;
+  --md-code-fg-color: #2C2C28;
+  --md-code-hl-color: rgba(94, 140, 97, 0.12);
+  --md-code-hl-number-color: #986801;
+  --md-code-hl-special-color: #7A3E9D;
+  --md-code-hl-function-color: #4078A0;
+  --md-code-hl-constant-color: #4E7A50;
+  --md-code-hl-keyword-color: #7A3E9D;
+  --md-code-hl-string-color: #5E8C61;
+  --md-code-hl-name-color: #2C2C28;
+  --md-code-hl-operator-color: #7A7A6E;
+  --md-code-hl-punctuation-color: #A0A094;
+  --md-code-hl-comment-color: #A0A094;
+  --md-code-hl-generic-color: #5E8C61;
+  --md-code-hl-variable-color: #2C2C28;
 
   /* Typography */
-  --md-typeset-color: var(--ts-fg);
-  --md-typeset-a-color: var(--ts-cyan);
+  --md-typeset-color: #2C2C28;
+  --md-typeset-a-color: #5E8C61;
 
   /* Navigation */
-  --md-footer-bg-color: var(--ts-bg-dark);
-  --md-footer-bg-color--dark: var(--ts-bg-dark);
-  --md-footer-fg-color: var(--ts-fg-dim);
-  --md-footer-fg-color--light: var(--ts-fg-muted);
-  --md-footer-fg-color--lighter: var(--ts-fg-dark);
+  --md-footer-bg-color: #F2EDE5;
+  --md-footer-bg-color--dark: #F2EDE5;
+  --md-footer-fg-color: #7A7A6E;
+  --md-footer-fg-color--light: #A0A094;
+  --md-footer-fg-color--lighter: #D4CFC6;
 
   /* Admonitions */
-  --md-admonition-bg-color: var(--ts-bg-alt);
+  --md-admonition-bg-color: #F2EDE5;
 
   /* Typeset */
-  --md-typeset-table-color: var(--ts-divider);
-  --md-typeset-mark-color: rgba(201, 180, 88, 0.25);
-  --md-typeset-kbd-color: var(--ts-surface);
-  --md-typeset-kbd-border-color: var(--ts-divider);
-  --md-typeset-kbd-accent-color: var(--ts-fg-muted);
+  --md-typeset-table-color: #D4CFC6;
+  --md-typeset-mark-color: rgba(201, 180, 88, 0.2);
+  --md-typeset-kbd-color: #FFFFFF;
+  --md-typeset-kbd-border-color: #D4CFC6;
+  --md-typeset-kbd-accent-color: #A0A094;
 }
 
-/* Header */
-[data-md-color-scheme="slate"] .md-header {
-  background-color: var(--ts-bg-dark);
-  color: var(--ts-fg);
+/* Light header */
+[data-md-color-scheme="default"] .md-header {
+  background-color: #FAF7F2;
+  color: #2C2C28;
+  box-shadow: 0 1px 0 rgba(44, 44, 40, 0.08);
 }
 
-[data-md-color-scheme="slate"] .md-header__title {
-  color: var(--ts-fg);
+[data-md-color-scheme="default"] .md-header__title,
+[data-md-color-scheme="default"] .md-header__topic,
+[data-md-color-scheme="default"] .md-header .md-logo,
+[data-md-color-scheme="default"] .md-header .md-icon,
+[data-md-color-scheme="default"] .md-header__button {
+  color: #2C2C28;
 }
 
-[data-md-color-scheme="slate"] .md-header__topic {
-  color: var(--ts-fg);
+[data-md-color-scheme="default"] .md-source {
+  color: #7A7A6E;
 }
 
-[data-md-color-scheme="slate"] .md-header .md-logo,
-[data-md-color-scheme="slate"] .md-header .md-icon {
-  color: var(--ts-fg);
+[data-md-color-scheme="default"] .md-tabs {
+  background-color: #FAF7F2;
 }
 
-[data-md-color-scheme="slate"] .md-header__button {
-  color: var(--ts-fg);
+[data-md-color-scheme="default"] .md-sidebar {
+  background-color: #FAF7F2;
 }
 
-[data-md-color-scheme="slate"] .md-header-nav__source {
-  color: var(--ts-fg);
+[data-md-color-scheme="default"] .md-nav__link--active {
+  color: #5E8C61;
 }
 
-[data-md-color-scheme="slate"] .md-source {
-  color: var(--ts-fg-dim);
+[data-md-color-scheme="default"] .md-search__input {
+  background-color: #F2EDE5;
 }
 
-/* Tabs and navigation */
-[data-md-color-scheme="slate"] .md-tabs {
-  background-color: var(--ts-bg-dark);
+/* Light tables */
+[data-md-color-scheme="default"] .md-typeset table:not([class]) th {
+  background-color: #F2EDE5;
+  color: #4E7A50;
 }
 
-/* Sidebar */
-[data-md-color-scheme="slate"] .md-sidebar {
-  background-color: var(--ts-bg);
+[data-md-color-scheme="default"] .md-typeset table:not([class]) tr:hover td {
+  background-color: #FDFCFA;
 }
 
-[data-md-color-scheme="slate"] .md-nav__link--active {
-  color: var(--ts-green);
-}
-
-/* Search */
-[data-md-color-scheme="slate"] .md-search__input {
-  background-color: var(--ts-surface);
-}
-
-/* Tables */
-[data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
-  background-color: var(--ts-bg-alt);
-  color: var(--ts-green);
-}
-
-[data-md-color-scheme="slate"] .md-typeset table:not([class]) tr:hover td {
-  background-color: var(--ts-card-hover);
-}
-
-/* Inline code */
-[data-md-color-scheme="slate"] .md-typeset code {
-  background-color: var(--ts-bg-code);
-  color: var(--ts-cyan);
+/* Light inline code */
+[data-md-color-scheme="default"] .md-typeset code {
+  background-color: #F0ECE4;
+  color: #4E7A50;
   border-radius: 3px;
 }
 
-/* Code blocks */
-[data-md-color-scheme="slate"] .md-typeset pre > code {
-  color: var(--ts-fg);
+[data-md-color-scheme="default"] .md-typeset pre > code {
+  color: #2C2C28;
 }
 
-/* Links */
+/* Light links */
+[data-md-color-scheme="default"] .md-typeset a {
+  color: #5E8C61;
+}
+
+[data-md-color-scheme="default"] .md-typeset a:hover {
+  color: #4E7A50;
+}
+
+/* Light scrollbar */
+[data-md-color-scheme="default"] ::-webkit-scrollbar-thumb {
+  background-color: #D4CFC6;
+}
+
+[data-md-color-scheme="default"] ::-webkit-scrollbar-thumb:hover {
+  background-color: #A0A094;
+}
+
+/* ============================================================
+   DARK MODE (slate scheme)
+   ============================================================ */
+
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #161916;
+  --md-default-fg-color: #E4E4DC;
+  --md-default-fg-color--light: #C8C8BC;
+  --md-default-fg-color--lighter: #8A8A7E;
+  --md-default-fg-color--lightest: #606058;
+
+  --md-primary-fg-color: #7DB880;
+  --md-primary-fg-color--light: #7DB880;
+  --md-primary-fg-color--dark: #6DAA70;
+  --md-primary-bg-color: #E4E4DC;
+  --md-primary-bg-color--light: #C8C8BC;
+
+  --md-accent-fg-color: #6EB5A0;
+  --md-accent-fg-color--transparent: rgba(110, 181, 160, 0.1);
+  --md-accent-bg-color: #161916;
+
+  /* Code */
+  --md-code-bg-color: #1E211E;
+  --md-code-fg-color: #E4E4DC;
+  --md-code-hl-color: rgba(125, 184, 128, 0.15);
+  --md-code-hl-number-color: #C9B458;
+  --md-code-hl-special-color: #A87FBF;
+  --md-code-hl-function-color: #6A9FCF;
+  --md-code-hl-constant-color: #6EB5A0;
+  --md-code-hl-keyword-color: #A87FBF;
+  --md-code-hl-string-color: #7DB880;
+  --md-code-hl-name-color: #E4E4DC;
+  --md-code-hl-operator-color: #C8C8BC;
+  --md-code-hl-punctuation-color: #8A8A7E;
+  --md-code-hl-comment-color: #606058;
+  --md-code-hl-generic-color: #7DB880;
+  --md-code-hl-variable-color: #E4E4DC;
+
+  /* Typography */
+  --md-typeset-color: #E4E4DC;
+  --md-typeset-a-color: #6EB5A0;
+
+  /* Navigation */
+  --md-footer-bg-color: #111411;
+  --md-footer-bg-color--dark: #111411;
+  --md-footer-fg-color: #C8C8BC;
+  --md-footer-fg-color--light: #8A8A7E;
+  --md-footer-fg-color--lighter: #606058;
+
+  /* Admonitions */
+  --md-admonition-bg-color: #1C1F1C;
+
+  /* Typeset */
+  --md-typeset-table-color: #363A36;
+  --md-typeset-mark-color: rgba(201, 180, 88, 0.25);
+  --md-typeset-kbd-color: #222522;
+  --md-typeset-kbd-border-color: #363A36;
+  --md-typeset-kbd-accent-color: #8A8A7E;
+}
+
+/* Dark header */
+[data-md-color-scheme="slate"] .md-header {
+  background-color: #111411;
+  color: #E4E4DC;
+}
+
+[data-md-color-scheme="slate"] .md-header__title,
+[data-md-color-scheme="slate"] .md-header__topic,
+[data-md-color-scheme="slate"] .md-header .md-logo,
+[data-md-color-scheme="slate"] .md-header .md-icon,
+[data-md-color-scheme="slate"] .md-header__button {
+  color: #E4E4DC;
+}
+
+[data-md-color-scheme="slate"] .md-source {
+  color: #C8C8BC;
+}
+
+[data-md-color-scheme="slate"] .md-tabs {
+  background-color: #111411;
+}
+
+[data-md-color-scheme="slate"] .md-sidebar {
+  background-color: #161916;
+}
+
+[data-md-color-scheme="slate"] .md-nav__link--active {
+  color: #7DB880;
+}
+
+[data-md-color-scheme="slate"] .md-search__input {
+  background-color: #222522;
+}
+
+/* Dark tables */
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
+  background-color: #1C1F1C;
+  color: #7DB880;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) tr:hover td {
+  background-color: #282C28;
+}
+
+/* Dark inline code */
+[data-md-color-scheme="slate"] .md-typeset code {
+  background-color: #1E211E;
+  color: #6EB5A0;
+  border-radius: 3px;
+}
+
+[data-md-color-scheme="slate"] .md-typeset pre > code {
+  color: #E4E4DC;
+}
+
+/* Dark links */
 [data-md-color-scheme="slate"] .md-typeset a {
-  color: var(--ts-cyan);
+  color: #6EB5A0;
 }
 
 [data-md-color-scheme="slate"] .md-typeset a:hover {
-  color: var(--ts-green);
+  color: #7DB880;
 }
 
-/* Scrollbar */
+/* Dark scrollbar */
 [data-md-color-scheme="slate"] ::-webkit-scrollbar-thumb {
-  background-color: var(--ts-divider);
+  background-color: #363A36;
 }
 
 [data-md-color-scheme="slate"] ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--ts-fg-dark);
+  background-color: #606058;
 }
