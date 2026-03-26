@@ -10,29 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://sandermoon.github.io/local-brain/">
+        <link rel="canonical" href="https://sandermoon.github.io/local-brain/tui/">
       
       
+        <link rel="prev" href="../installation/">
       
-        <link rel="next" href="installation/">
+      
+        <link rel="next" href="../commands/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Local Brain</title>
+        <title>TUI Dashboard - Local Brain</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,9 +53,9 @@
       
     
     
-      <link rel="stylesheet" href="stylesheets/terminal-sage.css">
+      <link rel="stylesheet" href="../stylesheets/terminal-sage.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#local-brain" class="md-skip">
+        <a href="#tui-reference" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +94,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="Local Brain" class="md-header__button md-logo" aria-label="Local Brain" data-md-component="logo">
+    <a href=".." title="Local Brain" class="md-header__button md-logo" aria-label="Local Brain" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quickstart
+              TUI Dashboard
             
           </span>
         </div>
@@ -204,7 +206,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="Local Brain" class="md-nav__button md-logo" aria-label="Local Brain" data-md-component="logo">
+    <a href=".." title="Local Brain" class="md-nav__button md-logo" aria-label="Local Brain" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -231,6 +233,60 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -250,7 +306,7 @@
   <span class="md-ellipsis">
     
   
-    Quickstart
+    TUI Dashboard
   
 
     
@@ -261,14 +317,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="." class="md-nav__link md-nav__link--active">
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Quickstart
+    TUI Dashboard
   
 
     
@@ -294,22 +350,33 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
+  <a href="#layout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Start
+        Layout
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Quick Start">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keybindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keybindings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Keybindings">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#connect-your-ai-agent" class="md-nav__link">
+  <a href="#global" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Connect your AI agent
+        Global
       
     </span>
   </a>
@@ -317,10 +384,54 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#start-using-it" class="md-nav__link">
+  <a href="#sidebar" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start using it
+        Sidebar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#todo-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Todo List
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kanban" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kanban
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#input-prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Prompts
       
     </span>
   </a>
@@ -333,60 +444,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#three-ways-to-use-it" class="md-nav__link">
+  <a href="#inline-editing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Three Ways to Use It
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Three Ways to Use It">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-ai-agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. AI agent
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-cli-tui" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. CLI &amp; TUI
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-your-editor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Your editor
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-it-looks-like-on-disk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What It Looks Like on Disk
+        Inline Editing
       
     </span>
   </a>
@@ -394,10 +455,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#agent-skills" class="md-nav__link">
+  <a href="#kanban-board" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Agent Skills
+        Kanban Board
       
     </span>
   </a>
@@ -405,10 +466,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#notes-view" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next Steps
+        Notes View
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filters
       
     </span>
   </a>
@@ -430,61 +502,7 @@
   
   
     <li class="md-nav__item">
-      <a href="installation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Installation
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="tui/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    TUI Dashboard
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="commands/" class="md-nav__link">
+      <a href="../commands/" class="md-nav__link">
         
   
   
@@ -511,7 +529,7 @@
   
   
     <li class="md-nav__item">
-      <a href="file-format/" class="md-nav__link">
+      <a href="../file-format/" class="md-nav__link">
         
   
   
@@ -538,7 +556,7 @@
   
   
     <li class="md-nav__item">
-      <a href="workflows/" class="md-nav__link">
+      <a href="../workflows/" class="md-nav__link">
         
   
   
@@ -565,7 +583,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mcp-server/" class="md-nav__link">
+      <a href="../mcp-server/" class="md-nav__link">
         
   
   
@@ -592,7 +610,7 @@
   
   
     <li class="md-nav__item">
-      <a href="skills/" class="md-nav__link">
+      <a href="../skills/" class="md-nav__link">
         
   
   
@@ -619,7 +637,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/" class="md-nav__link">
+      <a href="../development/" class="md-nav__link">
         
   
   
@@ -666,22 +684,33 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
+  <a href="#layout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Start
+        Layout
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Quick Start">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keybindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keybindings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Keybindings">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#connect-your-ai-agent" class="md-nav__link">
+  <a href="#global" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Connect your AI agent
+        Global
       
     </span>
   </a>
@@ -689,10 +718,54 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#start-using-it" class="md-nav__link">
+  <a href="#sidebar" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start using it
+        Sidebar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#todo-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Todo List
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kanban" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kanban
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#input-prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Prompts
       
     </span>
   </a>
@@ -705,60 +778,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#three-ways-to-use-it" class="md-nav__link">
+  <a href="#inline-editing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Three Ways to Use It
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Three Ways to Use It">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-ai-agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. AI agent
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-cli-tui" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. CLI &amp; TUI
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-your-editor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Your editor
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-it-looks-like-on-disk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What It Looks Like on Disk
+        Inline Editing
       
     </span>
   </a>
@@ -766,10 +789,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#agent-skills" class="md-nav__link">
+  <a href="#kanban-board" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Agent Skills
+        Kanban Board
       
     </span>
   </a>
@@ -777,10 +800,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#notes-view" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next Steps
+        Notes View
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filters
       
     </span>
   </a>
@@ -807,119 +841,207 @@
   
 
 
-<h1 id="local-brain">Local Brain</h1>
-<blockquote>
-<p>Plain markdown files. Full project management. Managed by AI, or by you.</p>
-</blockquote>
-<p>Local Brain turns a folder of markdown files into a project management system: a CLI, a TUI, and an AI agent interface. Your projects, tasks, and notes stay in plain text on your machine. You can manage them yourself, hand them off to an AI agent, or do both.</p>
-<h2 id="quick-start">Quick Start</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>tap<span class="w"> </span>SanderMoon/tap
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>brew<span class="w"> </span>install<span class="w"> </span>brain
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>brain<span class="w"> </span>init
-</code></pre></div>
-<h3 id="connect-your-ai-agent">Connect your AI agent</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>brain<span class="w"> </span>mcp<span class="w"> </span>install<span class="w">            </span><span class="c1"># register the MCP server with detected agents</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w">           </span><span class="c1"># install agent skills (briefing, triage, planning, ...)</span>
-</code></pre></div>
-<p>Auto-detects installed agents (Claude Code, Codex, Gemini CLI, OpenCode). Target a specific one with <code>--agent claude</code>.</p>
-<h3 id="start-using-it">Start using it</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Ship the new API endpoint&quot;</span><span class="w">    </span><span class="c1"># capture to inbox</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>brain<span class="w">                                     </span><span class="c1"># launch the TUI</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Or open your agent and say &quot;what&#39;s on my plate?&quot;</span>
-</code></pre></div>
-<h2 id="three-ways-to-use-it">Three Ways to Use It</h2>
-<h3 id="1-ai-agent">1. AI agent</h3>
-<p>Connect via the built-in MCP server and agent skills, then talk naturally:</p>
+<h1 id="tui-reference">TUI Reference</h1>
+<p>Launch with <code>brain</code> (no arguments). Press <code>q</code> or <code>Ctrl+C</code> to exit.</p>
+<h2 id="layout">Layout</h2>
 <ul>
-<li><em>"Good morning"</em> -- get a daily briefing with priorities, overdue tasks, and blockers</li>
-<li><em>"Process my inbox"</em> -- guided triage of captured items</li>
-<li><em>"Let's plan the website redesign"</em> -- break a project into tasks with priorities and deadlines</li>
+<li><strong>Sidebar</strong> (left): brains and projects</li>
+<li><strong>Content</strong> (right): notes, todo list, or kanban board</li>
+<li><strong>Status bar</strong> (bottom): current brain, project, filters, and keybinding hints</li>
 </ul>
-<p>The agent reads and writes the same markdown files. No sync, no database, no lock-in.</p>
-<h3 id="2-cli-tui">2. CLI &amp; TUI</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>brain<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;Fix auth bug&quot;</span><span class="w">            </span><span class="c1"># capture to inbox (&lt; 1 second)</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>brain<span class="w"> </span>refile<span class="w">                        </span><span class="c1"># move inbox items to projects</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>brain<span class="w"> </span>todo<span class="w"> </span>ls<span class="w"> </span>--priority<span class="w"> </span><span class="m">1</span><span class="w">          </span><span class="c1"># see high-priority tasks</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>brain<span class="w"> </span>todo<span class="w"> </span><span class="k">done</span><span class="w"> </span>abc123<span class="w">              </span><span class="c1"># mark a task done</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>brain<span class="w"> </span>plan<span class="w">                          </span><span class="c1"># promote backlog tasks, set metadata</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>brain<span class="w"> </span>daily<span class="w">                         </span><span class="c1"># create/open today&#39;s daily note</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>brain<span class="w">                               </span><span class="c1"># launch the TUI</span>
-</code></pre></div>
-<h3 id="3-your-editor">3. Your editor</h3>
-<p>Open <code>~/brains/work/</code> as an Obsidian vault, VS Code workspace, or just use vim. Edit the markdown directly; Local Brain picks up changes instantly.</p>
-<h2 id="what-it-looks-like-on-disk">What It Looks Like on Disk</h2>
-<p>A <strong>brain</strong> is a workspace folder. A <strong>project</strong> is a subfolder with <code>todo.md</code> and <code>notes.md</code>. The <strong>dump</strong> (<code>00_dump.md</code>) is your inbox for rapid capture. Only one brain is active at a time, symlinked to <code>~/brain</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>~/brains/work/                          &lt;- a brain (workspace)
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>├── 00_dump.md                          &lt;- inbox for quick captures
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>├── 00_daily/                           &lt;- daily notes
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>│   └── 2026-03-25.md
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>├── website-redesign/                   &lt;- a project
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>│   ├── todo.md
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>│   ├── notes.md
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>│   └── .repos                          &lt;- linked git repositories
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>└── api-migration/
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    ├── todo.md
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    └── notes.md
-</code></pre></div>
-<h2 id="agent-skills">Agent Skills</h2>
-<p>Local Brain ships 7 skills that follow the <a href="https://agentskills.io">Agent Skills open standard</a>. These teach your AI agent structured project management workflows.</p>
+<p><code>Tab</code> toggles focus between sidebar and content.</p>
+<h2 id="keybindings">Keybindings</h2>
+<h3 id="global">Global</h3>
 <table>
 <thead>
 <tr>
-<th>Skill</th>
-<th>Trigger</th>
-<th>What it does</th>
+<th>Key</th>
+<th>Action</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>brain-daily</code></td>
-<td><em>"Good morning"</em></td>
-<td>Briefing with priorities, overdue tasks, blocked items</td>
+<td><code>q</code> / <code>Ctrl+C</code></td>
+<td>Quit</td>
 </tr>
 <tr>
-<td><code>brain-capture</code></td>
-<td><em>"Remind me to..."</em></td>
-<td>Quick capture with smart metadata inference</td>
+<td><code>Tab</code></td>
+<td>Toggle sidebar / content focus</td>
 </tr>
 <tr>
-<td><code>brain-triage</code></td>
-<td><em>"Process my inbox"</em></td>
-<td>Walk through each inbox item: refile, tag, or discard</td>
+<td><code>1</code> / <code>2</code> / <code>3</code></td>
+<td>Switch view (Notes, List, Kanban)</td>
 </tr>
 <tr>
-<td><code>brain-plan</code></td>
-<td><em>"Let's plan..."</em></td>
-<td>Break goals into tasks with priorities and deadlines</td>
+<td><code>?</code></td>
+<td>Toggle help overlay</td>
 </tr>
 <tr>
-<td><code>brain-focus</code></td>
-<td><em>"Let's work on..."</em></td>
-<td>Deep work session on one project</td>
+<td><code>r</code></td>
+<td>Refresh data</td>
 </tr>
 <tr>
-<td><code>brain-review</code></td>
-<td><em>"Weekly review"</em></td>
-<td>Progress check across all projects</td>
+<td><code>c</code></td>
+<td>Toggle completed todos</td>
 </tr>
 <tr>
-<td><code>brain-setup</code></td>
-<td><em>"Set up my brain"</em></td>
-<td>Guided first-time onboarding</td>
+<td><code>a</code></td>
+<td>Toggle all projects / current project</td>
 </tr>
 </tbody>
 </table>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>brain<span class="w"> </span>skill<span class="w"> </span>install<span class="w">          </span><span class="c1"># install all skills</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>brain<span class="w"> </span>skill<span class="w"> </span>status<span class="w">           </span><span class="c1"># check what&#39;s installed</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>brain<span class="w"> </span>skill<span class="w"> </span>upgrade<span class="w">          </span><span class="c1"># update after a brain version upgrade</span>
-</code></pre></div>
-<h2 id="next-steps">Next Steps</h2>
+<h3 id="sidebar">Sidebar</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>j</code> / <code>k</code></td>
+<td>Move selection</td>
+</tr>
+<tr>
+<td><code>h</code> / <code>l</code></td>
+<td>Switch Brains / Projects section</td>
+</tr>
+<tr>
+<td><code>Enter</code></td>
+<td>Activate brain or project</td>
+</tr>
+</tbody>
+</table>
+<h3 id="todo-list">Todo List</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>j</code> / <code>k</code></td>
+<td>Move selection</td>
+</tr>
+<tr>
+<td><code>e</code></td>
+<td>Open in editor (jumps to line)</td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td>Set priority (1/2/3)</td>
+</tr>
+<tr>
+<td><code>s</code></td>
+<td>Cycle status: backlog &gt; open &gt; in-progress &gt; blocked &gt; done</td>
+</tr>
+<tr>
+<td><code>d</code></td>
+<td>Set due date (<code>YYYY-MM-DD</code>, <code>tomorrow</code>, <code>+3d</code>, etc.)</td>
+</tr>
+<tr>
+<td><code>t</code></td>
+<td>Add tags (space-separated)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="kanban">Kanban</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>h</code> / <code>l</code></td>
+<td>Move column focus left / right</td>
+</tr>
+<tr>
+<td><code>j</code> / <code>k</code></td>
+<td>Move selection within column</td>
+</tr>
+<tr>
+<td><code>e</code></td>
+<td>Open in editor</td>
+</tr>
+<tr>
+<td><code>m</code> / <code>b</code></td>
+<td>Move task forward / backward one status</td>
+</tr>
+<tr>
+<td><code>B</code></td>
+<td>Toggle backlog column</td>
+</tr>
+</tbody>
+</table>
+<h3 id="notes">Notes</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>j</code> / <code>k</code></td>
+<td>Move selection</td>
+</tr>
+<tr>
+<td><code>e</code></td>
+<td>Open in editor</td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td>Toggle preview pane</td>
+</tr>
+</tbody>
+</table>
+<h3 id="input-prompts">Input Prompts</h3>
+<p><code>Enter</code> submits, <code>Esc</code> cancels.</p>
+<h2 id="inline-editing">Inline Editing</h2>
+<p>In the Todo List, you can modify task metadata without leaving the TUI. Press <code>e</code> for full editing in your configured editor (suspends the TUI, opens at the correct line, refreshes on return).</p>
+<h2 id="kanban-board">Kanban Board</h2>
+<p>Five columns: <strong>Backlog</strong>, <strong>Open</strong>, <strong>In Progress</strong>, <strong>Blocked</strong>, <strong>Done</strong>.</p>
 <ul>
-<li><strong><a href="installation/">Installation Guide</a></strong> -- Complete installation for all platforms</li>
-<li><strong><a href="commands/">Command Reference</a></strong> -- Full CLI documentation</li>
-<li><strong><a href="mcp-server/">MCP Server</a></strong> -- AI agent integration details</li>
-<li><strong><a href="development/">Development Guide</a></strong> -- Architecture, contributing, and API docs</li>
+<li>Tasks sorted by priority within each column (P1 first).</li>
+<li>Columns scroll independently; <code>^</code>/<code>v</code> indicators appear when content overflows.</li>
+<li>Backlog is collapsed by default (shows item count only). Press <code>B</code> to expand.</li>
+<li>Each card shows: priority badge + content, project name, and due date or tags.</li>
 </ul>
+<h2 id="notes-view">Notes View</h2>
+<p>Split layout by default: note list on the left, preview on the right. Press <code>p</code> to toggle the preview pane. Each entry shows title and creation date.</p>
+<h2 id="filters">Filters</h2>
+<table>
+<thead>
+<tr>
+<th>Toggle</th>
+<th>Key</th>
+<th>Default</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Show completed</td>
+<td><code>c</code></td>
+<td>Off</td>
+<td>Kanban Done column always shows completed tasks regardless.</td>
+</tr>
+<tr>
+<td>All projects</td>
+<td><code>a</code></td>
+<td>Off</td>
+<td>Show tasks from every project.</td>
+</tr>
+</tbody>
+</table>
+<p>Active filters are shown in the status bar.</p>
 
 
 
@@ -991,10 +1113,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "navigation.sections", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "navigation.sections", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

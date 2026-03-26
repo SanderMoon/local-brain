@@ -1,0 +1,171 @@
+/* Terminal Sage color scheme for MkDocs Material */
+/* Palette: https://github.com/SanderMoon/terminal-sage */
+
+:root {
+  /* Terminal Sage palette */
+  --ts-bg-dark: #111411;
+  --ts-bg: #161916;
+  --ts-bg-alt: #1C1F1C;
+  --ts-surface: #222522;
+  --ts-divider: #363A36;
+  --ts-fg: #E4E4DC;
+  --ts-fg-dim: #C8C8BC;
+  --ts-fg-muted: #8A8A7E;
+  --ts-fg-dark: #606058;
+  --ts-green: #7DB880;
+  --ts-green-dark: #6DAA70;
+  --ts-red: #C45B5B;
+  --ts-yellow: #C9B458;
+  --ts-blue: #6A9FCF;
+  --ts-purple: #A87FBF;
+  --ts-cyan: #6EB5A0;
+  --ts-bg-code: #1E211E;
+  --ts-card-hover: #282C28;
+}
+
+/* Slate scheme overrides */
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: var(--ts-bg);
+  --md-default-fg-color: var(--ts-fg);
+  --md-default-fg-color--light: var(--ts-fg-dim);
+  --md-default-fg-color--lighter: var(--ts-fg-muted);
+  --md-default-fg-color--lightest: var(--ts-fg-dark);
+
+  --md-primary-fg-color: var(--ts-green);
+  --md-primary-fg-color--light: var(--ts-green);
+  --md-primary-fg-color--dark: var(--ts-green-dark);
+  --md-primary-bg-color: var(--ts-fg);
+  --md-primary-bg-color--light: var(--ts-fg-dim);
+
+  --md-accent-fg-color: var(--ts-cyan);
+  --md-accent-fg-color--transparent: rgba(110, 181, 160, 0.1);
+  --md-accent-bg-color: var(--ts-bg);
+
+  /* Code */
+  --md-code-bg-color: var(--ts-bg-code);
+  --md-code-fg-color: var(--ts-fg);
+  --md-code-hl-color: rgba(125, 184, 128, 0.15);
+  --md-code-hl-number-color: var(--ts-yellow);
+  --md-code-hl-special-color: var(--ts-purple);
+  --md-code-hl-function-color: var(--ts-blue);
+  --md-code-hl-constant-color: var(--ts-cyan);
+  --md-code-hl-keyword-color: var(--ts-purple);
+  --md-code-hl-string-color: var(--ts-green);
+  --md-code-hl-name-color: var(--ts-fg);
+  --md-code-hl-operator-color: var(--ts-fg-dim);
+  --md-code-hl-punctuation-color: var(--ts-fg-muted);
+  --md-code-hl-comment-color: var(--ts-fg-dark);
+  --md-code-hl-generic-color: var(--ts-green);
+  --md-code-hl-variable-color: var(--ts-fg);
+
+  /* Typography */
+  --md-typeset-color: var(--ts-fg);
+  --md-typeset-a-color: var(--ts-cyan);
+
+  /* Navigation */
+  --md-footer-bg-color: var(--ts-bg-dark);
+  --md-footer-bg-color--dark: var(--ts-bg-dark);
+  --md-footer-fg-color: var(--ts-fg-dim);
+  --md-footer-fg-color--light: var(--ts-fg-muted);
+  --md-footer-fg-color--lighter: var(--ts-fg-dark);
+
+  /* Admonitions */
+  --md-admonition-bg-color: var(--ts-bg-alt);
+
+  /* Typeset */
+  --md-typeset-table-color: var(--ts-divider);
+  --md-typeset-mark-color: rgba(201, 180, 88, 0.25);
+  --md-typeset-kbd-color: var(--ts-surface);
+  --md-typeset-kbd-border-color: var(--ts-divider);
+  --md-typeset-kbd-accent-color: var(--ts-fg-muted);
+}
+
+/* Header */
+[data-md-color-scheme="slate"] .md-header {
+  background-color: var(--ts-bg-dark);
+  color: var(--ts-fg);
+}
+
+[data-md-color-scheme="slate"] .md-header__title {
+  color: var(--ts-fg);
+}
+
+[data-md-color-scheme="slate"] .md-header__topic {
+  color: var(--ts-fg);
+}
+
+[data-md-color-scheme="slate"] .md-header .md-logo,
+[data-md-color-scheme="slate"] .md-header .md-icon {
+  color: var(--ts-fg);
+}
+
+[data-md-color-scheme="slate"] .md-header__button {
+  color: var(--ts-fg);
+}
+
+[data-md-color-scheme="slate"] .md-header-nav__source {
+  color: var(--ts-fg);
+}
+
+[data-md-color-scheme="slate"] .md-source {
+  color: var(--ts-fg-dim);
+}
+
+/* Tabs and navigation */
+[data-md-color-scheme="slate"] .md-tabs {
+  background-color: var(--ts-bg-dark);
+}
+
+/* Sidebar */
+[data-md-color-scheme="slate"] .md-sidebar {
+  background-color: var(--ts-bg);
+}
+
+[data-md-color-scheme="slate"] .md-nav__link--active {
+  color: var(--ts-green);
+}
+
+/* Search */
+[data-md-color-scheme="slate"] .md-search__input {
+  background-color: var(--ts-surface);
+}
+
+/* Tables */
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
+  background-color: var(--ts-bg-alt);
+  color: var(--ts-green);
+}
+
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) tr:hover td {
+  background-color: var(--ts-card-hover);
+}
+
+/* Inline code */
+[data-md-color-scheme="slate"] .md-typeset code {
+  background-color: var(--ts-bg-code);
+  color: var(--ts-cyan);
+  border-radius: 3px;
+}
+
+/* Code blocks */
+[data-md-color-scheme="slate"] .md-typeset pre > code {
+  color: var(--ts-fg);
+}
+
+/* Links */
+[data-md-color-scheme="slate"] .md-typeset a {
+  color: var(--ts-cyan);
+}
+
+[data-md-color-scheme="slate"] .md-typeset a:hover {
+  color: var(--ts-green);
+}
+
+/* Scrollbar */
+[data-md-color-scheme="slate"] ::-webkit-scrollbar-thumb {
+  background-color: var(--ts-divider);
+}
+
+[data-md-color-scheme="slate"] ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ts-fg-dark);
+}

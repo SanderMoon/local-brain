@@ -6,17 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A minimalist, local-first project management CLI for developers">
+        <meta name="description" content="Plain markdown files. Full project management. Managed by AI, or by you.">
       
       
       
         <link rel="canonical" href="https://sandermoon.github.io/local-brain/mcp-server/">
       
       
-        <link rel="prev" href="../commands/">
+        <link rel="prev" href="../workflows/">
       
       
-        <link rel="next" href="../development/">
+        <link rel="next" href="../skills/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>🤖 MCP Server - Local Brain</title>
+        <title>MCP Server - Local Brain</title>
       
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../stylesheets/terminal-sage.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -64,12 +66,10 @@
   
     
     
-      
     
     
     
-    
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              🤖 MCP Server
+              MCP Server
             
           </span>
         </div>
@@ -122,33 +122,7 @@
     </div>
     
       
-        <form class="md-header__option" data-md-component="palette">
-  
     
-    
-    
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
-    
-      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-      </label>
-    
-  
-    
-    
-    
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
-    
-      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-      </label>
-    
-  
-</form>
-      
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -269,7 +243,7 @@
   <span class="md-ellipsis">
     
   
-    🚀 Quickstart
+    Quickstart
   
 
     
@@ -296,7 +270,34 @@
   <span class="md-ellipsis">
     
   
-    📦 Installation
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TUI Dashboard
   
 
     
@@ -323,7 +324,61 @@
   <span class="md-ellipsis">
     
   
-    📖 Command Reference
+    Command Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflows
   
 
     
@@ -359,7 +414,7 @@
   <span class="md-ellipsis">
     
   
-    🤖 MCP Server
+    MCP Server
   
 
     
@@ -377,7 +432,7 @@
   <span class="md-ellipsis">
     
   
-    🤖 MCP Server
+    MCP Server
   
 
     
@@ -453,22 +508,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#available-tools-17" class="md-nav__link">
+  <a href="#available-tools-16" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Available Tools (17)
+        Available Tools (16)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Available Tools (17)">
+    <nav class="md-nav" aria-label="Available Tools (16)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#context-retrieval-search-7-tools" class="md-nav__link">
+  <a href="#context-retrieval-search-6-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Context Retrieval &amp; Search (7 tools)
+        Context Retrieval &amp; Search (6 tools)
       
     </span>
   </a>
@@ -476,10 +531,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#quick-capture-3-tools" class="md-nav__link">
+  <a href="#quick-capture-2-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Capture (3 tools)
+        Quick Capture (2 tools)
       
     </span>
   </a>
@@ -487,10 +542,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#todo-management-3-tools" class="md-nav__link">
+  <a href="#todo-management-2-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Todo Management (3 tools)
+        Todo Management (2 tools)
       
     </span>
   </a>
@@ -498,10 +553,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#note-management-2-tools" class="md-nav__link">
+  <a href="#note-management-3-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Note Management (2 tools)
+        Note Management (3 tools)
       
     </span>
   </a>
@@ -513,6 +568,17 @@
     <span class="md-ellipsis">
       
         Project Management (2 tools)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#daily-notes-1-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Daily Notes (1 tool)
       
     </span>
   </a>
@@ -633,6 +699,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../development/" class="md-nav__link">
         
   
@@ -640,7 +733,7 @@
   <span class="md-ellipsis">
     
   
-    💻 Development
+    Development
   
 
     
@@ -730,22 +823,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#available-tools-17" class="md-nav__link">
+  <a href="#available-tools-16" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Available Tools (17)
+        Available Tools (16)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Available Tools (17)">
+    <nav class="md-nav" aria-label="Available Tools (16)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#context-retrieval-search-7-tools" class="md-nav__link">
+  <a href="#context-retrieval-search-6-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Context Retrieval &amp; Search (7 tools)
+        Context Retrieval &amp; Search (6 tools)
       
     </span>
   </a>
@@ -753,10 +846,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#quick-capture-3-tools" class="md-nav__link">
+  <a href="#quick-capture-2-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Capture (3 tools)
+        Quick Capture (2 tools)
       
     </span>
   </a>
@@ -764,10 +857,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#todo-management-3-tools" class="md-nav__link">
+  <a href="#todo-management-2-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Todo Management (3 tools)
+        Todo Management (2 tools)
       
     </span>
   </a>
@@ -775,10 +868,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#note-management-2-tools" class="md-nav__link">
+  <a href="#note-management-3-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Note Management (2 tools)
+        Note Management (3 tools)
       
     </span>
   </a>
@@ -790,6 +883,17 @@
     <span class="md-ellipsis">
       
         Project Management (2 tools)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#daily-notes-1-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Daily Notes (1 tool)
       
     </span>
   </a>
@@ -916,7 +1020,7 @@
 
 
 <h1 id="local-brain-mcp-server">Local Brain MCP Server</h1>
-<p>Model Context Protocol server that exposes Local Brain functionality to AI assistants like Claude Desktop.</p>
+<p>MCP server exposing Local Brain to AI assistants (Claude Desktop, Claude Code, etc.).</p>
 <h2 id="quick-start">Quick Start</h2>
 <h3 id="installation">Installation</h3>
 <p><strong>Via Homebrew (macOS, recommended):</strong>
@@ -975,114 +1079,123 @@
 - Homebrew (macOS ARM): <code>/opt/homebrew/bin/brain-mcp</code>
 - Homebrew (macOS Intel): <code>/usr/local/bin/brain-mcp</code>
 - User install: <code>/Users/&lt;you&gt;/.local/bin/brain-mcp</code></p>
-<p><strong>Using Local Brain as a personal AI assistant:</strong></p>
-<p>Create a <code>CLAUDE.md</code> file in your <code>~/brains</code> directory to give Claude Code standing instructions — your preferences, context to load automatically, how to handle tasks. When you run <code>brain storm</code> (see <a href="../commands/">Commands Reference</a>), Claude Code reads this file automatically.</p>
-<blockquote>
-<p>Other AI agents (aider, llm, aichat, etc.) may require a different mechanism to load context — typically a system prompt file or a project-level configuration file. See your agent's documentation for details.</p>
-</blockquote>
-<h2 id="available-tools-17">Available Tools (17)</h2>
-<h3 id="context-retrieval-search-7-tools">Context Retrieval &amp; Search (7 tools)</h3>
-<p><strong><code>get_brain_overview</code></strong> - Complete workspace overview (brain name, focused project, all projects with stats, inbox count)</p>
+<h2 id="available-tools-16">Available Tools (16)</h2>
+<h3 id="context-retrieval-search-6-tools">Context Retrieval &amp; Search (6 tools)</h3>
+<p><strong><code>get_brain_overview</code></strong> - Complete workspace overview: brain name, focused project, all projects with stats, inbox count</p>
 <p><strong><code>get_dump_items</code></strong> - All inbox items with IDs, content, and timestamps</p>
-<p><strong><code>get_all_todos</code></strong> - All tasks across projects with metadata (status, priority, due date, tags, capture/complete dates)
-- <code>include_completed</code> (bool) - Include done tasks
-- <code>project</code> (string, optional) - Filter by project name
-- <code>created_after</code> (string, optional) - Filter by capture date &gt;= YYYY-MM-DD
-- <code>created_before</code> (string, optional) - Filter by capture date &lt;= YYYY-MM-DD
-- <code>completed_after</code> (string, optional) - Filter by completion date &gt;= YYYY-MM-DD
-- <code>completed_before</code> (string, optional) - Filter by completion date &lt;= YYYY-MM-DD</p>
-<p><strong><code>get_project_context</code></strong> - Complete project details (description, todos, repos, notes with optional content)
+<p><strong><code>get_project_context</code></strong> - Full project details: description, todos, repos, notes
 - <code>project_name</code> (string) - Project to retrieve
 - <code>include_completed</code> (bool) - Include done tasks
-- <code>include_note_content</code> (string, optional) - Note content: none|preview|full (default: preview)</p>
-<p><strong><code>search_todos</code></strong> - Filter todos by query, project, status, tags, and dates
-- <code>query</code> (string, optional) - Search term
-- <code>project</code> (string, optional) - Project filter
-- <code>status</code> (string, optional) - Status filter (backlog, open, in-progress, blocked, done)
-- <code>tags</code> ([]string, optional) - Tag filter (OR logic)
-- <code>created_after</code> (string, optional) - Filter by capture date &gt;= YYYY-MM-DD
-- <code>created_before</code> (string, optional) - Filter by capture date &lt;= YYYY-MM-DD
-- <code>completed_after</code> (string, optional) - Filter by completion date &gt;= YYYY-MM-DD
-- <code>completed_before</code> (string, optional) - Filter by completion date &lt;= YYYY-MM-DD</p>
-<p><strong><code>search</code></strong> - Unified search across todos and notes with temporal filtering
+- <code>include_note_content</code> (string, optional) - Note content depth: none|preview|full (default: preview)
+- <code>section</code> (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources</p>
+<p><strong><code>search</code></strong> - Search across todos and notes with filtering by status, priority, tags, and dates
 - <code>query</code> (string, optional) - Search term
 - <code>project</code> (string, optional) - Project filter
 - <code>include_todos</code> (bool, optional) - Include todos (default: true)
 - <code>include_notes</code> (bool, optional) - Include notes (default: true)
-- <code>search_note_content</code> (bool, optional) - Search note content not just titles
-- <code>created_after</code>, <code>created_before</code>, <code>completed_after</code>, <code>completed_before</code> (strings, optional) - Temporal filters</p>
-<p><strong><code>switch_brain</code></strong> - Switch to different brain workspace
-- <code>brain_name</code> (string) - Brain to activate</p>
-<h3 id="quick-capture-3-tools">Quick Capture (3 tools)</h3>
-<p><strong><code>add_task_to_dump</code></strong> - Add task to inbox
-- <code>content</code> (string) - Task description</p>
-<p><strong><code>add_note_to_dump</code></strong> - Add note to inbox
-- <code>title</code> (string) - Note title
-- <code>content</code> (string) - Note content (can be multi-line)</p>
-<p><strong><code>refile_item</code></strong> - Move item from inbox to project
-- <code>item_id</code> (string) - 6-character hex ID
-- <code>project_name</code> (string) - Target project</p>
-<h3 id="todo-management-3-tools">Todo Management (3 tools)</h3>
-<p><strong><code>update_todo</code></strong> - Update todo status and/or metadata in one call
-- <code>todo_id</code> (string) - 6-character hex ID
-- <code>status</code> (string, optional) - backlog | open | in-progress | blocked | done
-- <code>priority</code> (int, optional) - 1 (high), 2 (medium), 3 (low), null to clear
-- <code>due_date</code> (string, optional) - YYYY-MM-DD format or empty to clear
-- <code>add_tags</code> ([]string, optional) - Tags to add
-- <code>remove_tags</code> ([]string, optional) - Tags to remove</p>
-<p><strong><code>create_todo_in_project</code></strong> - Add task directly to project
+- <code>search_note_content</code> (bool, optional) - Search note body text, not just titles
+- <code>status</code> (string, optional) - Filter todos by status (backlog, open, in-progress, blocked, done)
+- <code>priority</code> (int, optional) - Filter todos by priority (1=high, 2=medium, 3=low)
+- <code>tags</code> ([]string, optional) - Filter todos by tags (OR logic)
+- <code>include_completed</code> (bool, optional) - Include completed tasks (default: false)
+- <code>created_after</code>, <code>created_before</code> (strings, optional) - Filter by created date (YYYY-MM-DD)
+- <code>completed_after</code>, <code>completed_before</code> (strings, optional) - Filter by completed date (YYYY-MM-DD)
+- <code>due_after</code>, <code>due_before</code> (strings, optional) - Filter by due date (YYYY-MM-DD)
+- <code>section</code> (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources</p>
+<p><strong><code>set_context</code></strong> - Switch brain and/or set focused project (at least one required)
+- <code>brain_name</code> (string, optional) - Brain to switch to
+- <code>project_name</code> (string, optional) - Project to focus</p>
+<p><strong><code>get_daily_briefing</code></strong> - Daily briefing: overdue/due items, high-priority tasks, in-progress work, blocked items, recent completions, inbox
+- <code>section</code> (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources</p>
+<h3 id="quick-capture-2-tools">Quick Capture (2 tools)</h3>
+<p><strong><code>add_to_dump</code></strong> - Capture a task or note to the inbox
+- <code>type</code> (string) - Item type: "task" or "note"
+- <code>content</code> (string) - Task or note content (multi-line supported for notes)
+- <code>title</code> (string, optional) - Note title (required when type="note", ignored for tasks)</p>
+<p><strong><code>refile_item</code></strong> - Move items from inbox to projects (batch supported)
+- <code>refiles</code> (array) - Refile operations, each with:
+  - <code>item_id</code> (string) - 6-character hex ID
+  - <code>project_name</code> (string) - Target project</p>
+<h3 id="todo-management-2-tools">Todo Management (2 tools)</h3>
+<p><strong><code>update_todo</code></strong> - Update todos: content, status, priority, due date, tags, or delete (batch supported)
+- <code>updates</code> (array) - Todo updates, each with:
+  - <code>todo_id</code> (string) - 6-character hex ID
+  - <code>content</code> (string, optional) - New task text
+  - <code>status</code> (string, optional) - backlog | open | in-progress | blocked | done
+  - <code>priority</code> (int, optional) - 1 (high), 2 (medium), 3 (low), null to clear
+  - <code>due_date</code> (string, optional) - YYYY-MM-DD format, or "" to clear
+  - <code>add_tags</code> ([]string, optional) - Tags to add
+  - <code>remove_tags</code> ([]string, optional) - Tags to remove
+  - <code>delete</code> (bool, optional) - Permanently delete this todo
+- <code>section</code> (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources</p>
+<p><strong><code>create_todo_in_project</code></strong> - Add tasks directly to a project (batch supported)
 - <code>project_name</code> (string) - Target project
-- <code>content</code> (string) - Task description</p>
-<p><strong><code>delete_todo</code></strong> - Delete task permanently (requires user confirmation)
-- <code>todo_id</code> (string) - 6-character hex ID</p>
-<h3 id="note-management-2-tools">Note Management (2 tools)</h3>
-<p><strong><code>create_project_note</code></strong> - Create timestamped note file in project
+- <code>todos</code> (array) - Todos to create, each with:
+  - <code>content</code> (string) - Task description
+  - <code>priority</code> (int, optional) - 1 (high), 2 (medium), 3 (low)
+  - <code>due_date</code> (string, optional) - YYYY-MM-DD format
+  - <code>tags</code> ([]string, optional) - Tags
+  - <code>status</code> (string, optional) - Initial status: backlog (default), open, in-progress, blocked
+- <code>section</code> (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources</p>
+<h3 id="note-management-3-tools">Note Management (3 tools)</h3>
+<p><strong><code>create_project_note</code></strong> - Create a timestamped note file in a project
 - <code>project_name</code> (string) - Target project
 - <code>title</code> (string) - Note title
-- <code>content</code> (string) - Note content</p>
-<p><strong><code>get_note_content</code></strong> - Read note file content
+- <code>content</code> (string) - Note content
+- <code>section</code> (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources</p>
+<p><strong><code>get_note_content</code></strong> - Read a note file's content
 - <code>note_path</code> (string) - Full path to note file</p>
+<p><strong><code>update_note</code></strong> - Replace full content of an existing note file
+- <code>note_path</code> (string) - Full path to note file
+- <code>content</code> (string) - New full content for the note file</p>
 <h3 id="project-management-2-tools">Project Management (2 tools)</h3>
 <p><strong><code>create_project</code></strong> - Create new project
 - <code>name</code> (string) - Project name (alphanumeric, hyphens, underscores)
-- <code>description</code> (string, optional) - Project description</p>
-<p><strong><code>set_focused_project</code></strong> - Set the focused project
-- <code>project_name</code> (string) - Project to focus</p>
+- <code>description</code> (string, optional) - Project description
+- <code>section</code> (string, optional) - PARA section: 01_active (default), 02_areas, or 03_resources</p>
+<p><strong><code>archive_project</code></strong> - Move a project from active to archive (timestamped)
+- <code>name</code> (string) - Name of the project to archive</p>
+<h3 id="daily-notes-1-tool">Daily Notes (1 tool)</h3>
+<p><strong><code>create_daily_note</code></strong> - Create or open a daily note in <code>{brain}/00_daily/YYYY-MM-DD.md</code> with overdue todo briefing
+- <code>date</code> (string, optional) - Date in YYYY-MM-DD format (defaults to today)</p>
 <h2 id="usage-examples">Usage Examples</h2>
 <h3 id="get-started">Get started</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Ask Claude: &quot;What am I working on?&quot;
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>→ Calls get_brain_overview
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>Ask Claude: &quot;Give me my daily briefing&quot;
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>→ Calls get_daily_briefing
 </code></pre></div>
 <h3 id="process-inbox">Process inbox</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Ask Claude: &quot;Help me process my inbox&quot;
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>→ Calls get_dump_items
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>→ Asks where each item should go
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>→ Calls refile_item for each
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>→ Calls refile_item(refiles: [{item_id: &quot;abc123&quot;, project_name: &quot;backend&quot;}, ...])
 </code></pre></div>
 <h3 id="manage-tasks">Manage tasks</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Ask Claude: &quot;Show me all high priority tasks&quot;
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>→ Calls get_all_todos
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>→ Filters by priority
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Ask Claude: &quot;Mark task abc123 as in-progress with high priority&quot;
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>→ Calls update_todo(todo_id: &quot;abc123&quot;, status: &quot;in-progress&quot;, priority: 1)
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>Ask Claude: &quot;What&#39;s overdue?&quot;
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>→ Calls get_all_todos
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>→ Filters by due date
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>→ Calls search(priority: 1)
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>Ask Claude: &quot;Mark task abc123 as in-progress with high priority&quot;
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>→ Calls update_todo(updates: [{todo_id: &quot;abc123&quot;, status: &quot;in-progress&quot;, priority: 1}])
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>Ask Claude: &quot;What&#39;s overdue?&quot;
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>→ Calls search(due_before: &quot;2026-03-25&quot;)
 </code></pre></div>
 <h3 id="create-content">Create content</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Ask Claude: &quot;Add a task to my backend project: Fix auth bug&quot;
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>→ Calls create_todo_in_project(project_name: &quot;backend&quot;, content: &quot;Fix auth bug&quot;)
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>→ Calls create_todo_in_project(project_name: &quot;backend&quot;, todos: [{content: &quot;Fix auth bug&quot;}])
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Ask Claude: &quot;Add a note about today&#39;s standup to project X&quot;
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>→ Calls create_project_note with meeting notes
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Ask Claude: &quot;Write up notes from today&#39;s standup in project X&quot;
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>→ Calls create_project_note(project_name: &quot;X&quot;, title: &quot;Standup notes&quot;, content: &quot;...&quot;)
 </code></pre></div>
 <h2 id="design-principles">Design Principles</h2>
-<p><strong>Efficiency</strong> - Batch operations minimize round-trips (e.g., <code>get_brain_overview</code> replaces 5+ separate calls)</p>
-<p><strong>Safety</strong> - Destructive operations (delete_todo) require user confirmation. No project/brain deletion exposed.</p>
-<p><strong>Privacy</strong> - Local stdio transport only, no network access</p>
-<p><strong>Validation</strong> - All inputs validated before execution with clear error messages</p>
+<ul>
+<li><strong>Efficiency</strong> - Batch operations minimize round-trips (<code>get_brain_overview</code> replaces 5+ separate calls)</li>
+<li><strong>Safety</strong> - Destructive operations (<code>update_todo</code> with <code>delete</code> flag) are explicit. No brain deletion exposed.</li>
+<li><strong>Privacy</strong> - Local stdio transport only, no network access.</li>
+<li><strong>Validation</strong> - All inputs validated before execution with clear error messages.</li>
+</ul>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p><strong>Tools not appearing in Claude Desktop</strong>
 - Verify config file location: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>
@@ -1093,8 +1206,8 @@
 - Check brain directory permissions</p>
 <p><strong>Tool calls failing</strong>
 - Verify you have an active brain configured: <code>brain config show</code>
-- Check item IDs are valid 6-character hex (use get_dump_items or get_all_todos to find IDs)
-- Ensure project names match exactly (use list_projects to see available projects)</p>
+- Check item IDs are valid 6-character hex (use get_dump_items or search to find IDs)
+- Ensure project names match exactly (use get_brain_overview to see available projects)</p>
 <p><strong>Validation errors</strong>
 - Todo IDs must be 6-character lowercase hex (e.g., "abc123" not "ABC123")
 - Dates must be YYYY-MM-DD format (e.g., "2026-02-15")
@@ -1176,7 +1289,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "navigation.sections", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
